@@ -73,7 +73,7 @@ class SpecGenerator:
         self.model_router = model_router
         self.project_path = project_path or Path(".")
 
-    async def generate(self, quest: Quest) -> "QuestSpec":
+    async def generate(self, quest: Quest) -> QuestSpec:
         """
         生成 SPEC 文档
 

@@ -100,13 +100,13 @@ class MemoryManager:
         return self.auto_compact.check_and_compact(session, provider, model)
 
     @classmethod
-    def from_project(cls, project_path: Path) -> "MemoryManager":
+    def from_project(cls, project_path: Path) -> MemoryManager:
         """从项目路径创建"""
         storage_dir = project_path / ".omc" / "memory"
         return cls(MemoryConfig(storage_dir=storage_dir))
 
     @classmethod
-    def from_home(cls) -> "MemoryManager":
+    def from_home(cls) -> MemoryManager:
         """从用户 home 目录创建（全局记忆）"""
         storage_dir = Path.home() / ".oh-my-coder" / "memory"
         return cls(MemoryConfig(storage_dir=storage_dir))

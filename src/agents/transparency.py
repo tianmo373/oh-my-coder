@@ -17,7 +17,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Data structures
@@ -214,7 +214,7 @@ class TraceStore:
     存储路径: .omc/traces/{session_id}/{agent_name}_{timestamp}.jsonl
     """
 
-    _instance: Optional["TraceStore"] = None
+    _instance: TraceStore | None = None
     _lock = threading.Lock()
 
     def __init__(self, base_dir: Path | None = None) -> None:
@@ -224,7 +224,7 @@ class TraceStore:
         self.base_dir.mkdir(parents=True, exist_ok=True)
 
     @classmethod
-    def get_instance(cls) -> "TraceStore":
+    def get_instance(cls) -> TraceStore:
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:

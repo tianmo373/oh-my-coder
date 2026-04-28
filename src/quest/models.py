@@ -205,7 +205,7 @@ class QuestDisplay:
     created_at: str
 
     @classmethod
-    def from_quest(cls, quest: Quest) -> "QuestDisplay":
+    def from_quest(cls, quest: Quest) -> QuestDisplay:
         progress = int(quest.progress() * 10)
         bar = "█" * progress + "░" * (10 - progress)
         duration = quest.duration()

@@ -27,6 +27,11 @@ from rich.table import Table
 
 from src.agents.cross_validation import CrossValidationLayer
 from src.capabilities import app as cap_app
+from src.core.orchestrator import Orchestrator
+from src.core.router import ModelRouter, RouterConfig
+from src.quest import QuestStatus
+from src.wiki import WikiGenerator
+
 from .cli_checkpoint import app as checkpoint_app
 from .cli_commands import app as commands_app
 from .cli_config_ext import app as config_ext_app
@@ -45,10 +50,6 @@ from .cli_skill import app as skill_app
 from .cli_task import app as task_app
 from .cli_trace import app as trace_app
 from .cli_tui import app as tui_app
-from src.core.orchestrator import Orchestrator
-from src.core.router import ModelRouter, RouterConfig
-from src.quest import QuestStatus
-from src.wiki import WikiGenerator
 
 # 版本信息
 __version__ = "1.0.0"

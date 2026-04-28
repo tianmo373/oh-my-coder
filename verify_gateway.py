@@ -113,7 +113,7 @@ try:
     status = gateway.status()
     assert "started_platforms" in status
     assert "handlers" in status
-    for platform_name, info in status["handlers"].items():
+    for _platform_name, info in status["handlers"].items():
         assert "configured" in info
         assert "started" in info
         assert "type" in info

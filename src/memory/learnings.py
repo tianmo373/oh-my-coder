@@ -39,7 +39,7 @@ class LearningEntry:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "LearningEntry":
+    def from_dict(cls, data: dict[str, Any]) -> LearningEntry:
         return cls(**data)
 
 

@@ -78,7 +78,7 @@ class StepExecution:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "StepExecution":
+    def from_dict(cls, data: dict[str, Any]) -> StepExecution:
         """从字典创建"""
         return cls(
             step_id=data["step_id"],
@@ -143,7 +143,7 @@ class TaskHistory:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "TaskHistory":
+    def from_dict(cls, data: dict[str, Any]) -> TaskHistory:
         """从字典创建"""
         return cls(
             history_id=data["history_id"],

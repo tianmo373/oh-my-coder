@@ -49,7 +49,7 @@ class Gene:
         return json.dumps(self.to_dict(), ensure_ascii=False)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Gene":
+    def from_dict(cls, data: dict[str, Any]) -> Gene:
         # 只取 Gene 自身字段，忽略多余 key
         valid = {
             k: v

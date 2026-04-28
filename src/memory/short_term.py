@@ -67,7 +67,7 @@ class SessionContext:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "SessionContext":
+    def from_dict(cls, data: dict[str, Any]) -> SessionContext:
         """反序列化"""
         messages = [Message(**m) for m in data.get("messages", [])]
         return cls(

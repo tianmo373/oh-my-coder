@@ -11,8 +11,6 @@ omc task steps <id>       - 查看任务步骤历史
 
 from __future__ import annotations
 
-from typing import Optional
-
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -75,7 +73,7 @@ def task_list(
         omc task list --status running
         omc task list --status failed -n 50
     """
-    status_enum: Optional[TaskStatus] = None
+    status_enum: TaskStatus | None = None
     if status_filter:
         try:
             status_enum = TaskStatus(status_filter.lower())

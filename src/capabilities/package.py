@@ -49,7 +49,7 @@ class CapabilityPackage:
             json.dump(asdict(self), f, indent=2, ensure_ascii=False)
 
     @classmethod
-    def load(cls, path: Path) -> "CapabilityPackage":
+    def load(cls, path: Path) -> CapabilityPackage:
         """从 JSON 文件加载能力包"""
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
@@ -60,7 +60,7 @@ class CapabilityPackage:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "CapabilityPackage":
+    def from_dict(cls, data: dict[str, Any]) -> CapabilityPackage:
         """从字典创建"""
         return cls(**data)
 

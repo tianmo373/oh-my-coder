@@ -9,8 +9,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from pathlib import Path
 
 import typer
@@ -88,7 +86,7 @@ BUILTIN_TEMPLATES = {
 
 @app.command("list")
 def list_templates(
-    category: Optional[str] = typer.Option(None, "--category", "-c", help="按类别过滤"),
+    category: str | None = typer.Option(None, "--category", "-c", help="按类别过滤"),
 ):
     """列出可用模板"""
     table = Table(title="工作流模板列表")
@@ -157,7 +155,7 @@ def show_template(
 def use_template(
     name: str = typer.Argument(..., help="模板名称"),
     task: str = typer.Option("", "--task", "-t", help="任务描述"),
-    project_path: Optional[Path] = typer.Option(
+    project_path: Path | None = typer.Option(
         None, "--project", "-p", help="项目路径"
     ),
     dry_run: bool = typer.Option(False, "--dry-run", help="只显示将执行的命令"),
@@ -203,7 +201,7 @@ def use_template(
 @app.command("create")
 def create_template(
     name: str = typer.Argument(..., help="新模板名称"),
-    base: Optional[str] = typer.Option(None, "--base", "-b", help="基于现有模板创建"),
+    base: str | None = typer.Option(None, "--base", "-b", help="基于现有模板创建"),
 ):
     """创建新模板（交互式）"""
     console.print(f"[cyan]创建新模板 '{name}'...[/cyan]")

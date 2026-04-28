@@ -8,8 +8,6 @@ omc security sandbox-test     - 测试沙箱路径限制
 
 from __future__ import annotations
 
-from typing import Optional
-
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -46,7 +44,7 @@ def security_check(
         omc security check "rm -rf /tmp/test"
         omc security check "dd if=/dev/zero of=/dev/sda"
     """
-    guard: Optional[PermissionGuard] = None
+    guard: PermissionGuard | None = None
 
     if config_file:
         try:

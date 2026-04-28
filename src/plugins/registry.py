@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -46,7 +46,7 @@ class Plugin:
     metadata: PluginMetadata
     status: PluginStatus = PluginStatus.DISABLED
     module: Any | None = None
-    instance: Optional["PluginBase"] = None
+    instance: PluginBase | None = None
     error: str | None = None
     config: dict[str, Any] = field(default_factory=dict)
 

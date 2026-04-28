@@ -108,7 +108,7 @@ class TaskSummary:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict) -> "TaskSummary":
+    def from_dict(cls, data: dict) -> TaskSummary:
         return cls(**data)
 
 

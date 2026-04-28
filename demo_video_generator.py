@@ -69,7 +69,7 @@ def draw_terminal_frame(img, active_tab=0):
 
     # 窗口按钮
     btn_y = WIN_Y + 17
-    for i, (cx, col) in enumerate(
+    for _i, (cx, col) in enumerate(
         [
             (WIN_X + 24, (210, 87, 70)),
             (WIN_X + 46, (245, 191, 61)),
@@ -232,7 +232,7 @@ def frame_install(progress):
 
     ty = TERM_Y + 20
     line_h = 30
-    for col, text in lines:
+    for _col, text in lines:
         draw.text((TERM_X, ty), text, font=FONT_M, fill=WHITE_TXT if text != "" else BG)
         ty += line_h
 
@@ -375,7 +375,7 @@ def frame_run_explore(progress):
             (f"{YELLOW_TXT}", "📝 主要功能: 模型路由 + 成本控制"),
             (f"{GREEN_TXT}", "✅ 探索完成，生成摘要报告"),
         ]
-        for col, line in outputs:
+        for _col, line in outputs:
             draw.text((TERM_X + 10, ty), line, font=FONT_S2, fill=WHITE_TXT)
             ty += 20
 
@@ -488,7 +488,7 @@ def frame_result(progress):
         (f"{YELLOW_TXT}", "💡 建议: 可用性高，建议集成到 CI/CD"),
     ]
 
-    for i, (col, line) in enumerate(output_lines):
+    for _i, (_col, line) in enumerate(output_lines):
         alpha = 1.0
         if progress < 0.3:
             alpha = min(1.0, (progress - 0.1) / 0.2) if progress > 0.1 else 0.0

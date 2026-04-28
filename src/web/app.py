@@ -162,7 +162,7 @@ task_manager = TaskManager()
 _global_orchestrator = None
 
 
-def get_orchestrator() -> "Orchestrator":
+def get_orchestrator() -> Orchestrator:
     """获取全局 Orchestrator 单例（复用已有 router）"""
     global _global_orchestrator
     if _global_orchestrator is None:

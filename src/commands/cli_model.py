@@ -16,7 +16,7 @@ import json
 import os
 import urllib.request
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any
 
 import typer
 import yaml
@@ -108,7 +108,7 @@ def _get_current_model() -> str:
     return config.get("default_model", "deepseek")
 
 
-def _get_current_api_key(model_id: str) -> Optional[str]:
+def _get_current_api_key(model_id: str) -> str | None:
     """获取当前模型的 API Key（从环境变量推断）"""
     key_map = {
         "deepseek": "DEEPSEEK_API_KEY",

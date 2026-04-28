@@ -280,7 +280,6 @@ def chat_model(
     """
     import asyncio
     import os
-    import sys
 
     from src.models.base import Message
     from src.models.ollama import OLLAMA_DEFAULT_URL, OllamaModel

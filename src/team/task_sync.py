@@ -88,7 +88,7 @@ class TeamTask:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "TeamTask":
+    def from_dict(cls, data: dict[str, Any]) -> TeamTask:
         """从字典创建"""
         return cls(
             task_id=data["task_id"],

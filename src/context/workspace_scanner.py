@@ -92,7 +92,7 @@ class FileNode:
     modified: str = ""
     language: str | None = None  # 代码语言
     summary: str | None = None  # 文件摘要
-    children: list["FileNode"] = field(default_factory=list)
+    children: list[FileNode] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """转换为字典（用于 JSON 序列化）"""

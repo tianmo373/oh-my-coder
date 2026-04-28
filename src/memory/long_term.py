@@ -42,7 +42,7 @@ class ProjectPreference:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ProjectPreference":
+    def from_dict(cls, data: dict[str, Any]) -> ProjectPreference:
         return cls(**data)
 
 
@@ -66,7 +66,7 @@ class UserPreference:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "UserPreference":
+    def from_dict(cls, data: dict[str, Any]) -> UserPreference:
         return cls(**data)
 
 
