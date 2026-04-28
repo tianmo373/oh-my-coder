@@ -13,6 +13,8 @@ Oh My Coder CLI - 命令行入口
 - omc --help             # 帮助信息
 """
 
+from __future__ import annotations
+
 import asyncio
 import os
 from pathlib import Path
@@ -1538,5 +1540,4 @@ def _status_color(status: str) -> str:
 app.add_typer(cap_app, name="cap", help="能力包管理 - 导出、导入和分享 Agent 配置")
 
 if __name__ == "__main__":
-    app()
     app()

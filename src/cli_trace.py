@@ -8,6 +8,8 @@ omc trace 命令 - 查看 Agent 执行记录
     omc trace latest        — 显示最新 session
 """
 
+from __future__ import annotations
+
 import typer
 from rich.console import Console
 from rich.panel import Panel

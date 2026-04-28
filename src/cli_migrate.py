@@ -9,6 +9,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 from pathlib import Path
 
 import typer
@@ -59,7 +61,7 @@ def list_sources():
 
 @app.command("claude")
 def migrate_claude(
-    path: Path | None = typer.Argument(
+    path: Optional[Path] = typer.Argument(
         None,
         help="项目路径（默认当前目录）",
     ),
@@ -112,7 +114,7 @@ def migrate_claude(
 
 @app.command("gemini")
 def migrate_gemini(
-    path: Path | None = typer.Argument(
+    path: Optional[Path] = typer.Argument(
         None,
         help="项目路径（默认当前目录）",
     ),

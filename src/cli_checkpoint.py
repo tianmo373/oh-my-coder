@@ -9,6 +9,8 @@ omc checkpoint --info <id>                 # 查看快照详情
 omc checkpoint --stats                     # 查看统计
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 import typer

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 Context CLI - 工作目录上下文管理命令
 
@@ -294,7 +296,7 @@ def tree(
     scanner = WorkspaceScanner(project_path.resolve())
     tree_node = scanner.scan(max_depth=depth)
 
-    def build_rich_tree(node: "FileNode", filter_ext: str | None = None) -> Tree:
+    def build_rich_tree(node: "FileNode", filter_ext: Optional[str] = None) -> Tree:
         """构建 rich Tree"""
         label = f"[cyan]{node.name}[/cyan]"
         if node.language:
