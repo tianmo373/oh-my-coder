@@ -17,6 +17,7 @@ export enum TaskStatus {
 export interface Task {
     id: string;
     description: string;
+    model?: string;
     workflow?: string;
     project?: string;
     notify?: string;
@@ -144,15 +145,16 @@ export class TaskManager implements vscode.Disposable {
     private async executeTask(task: Task): Promise<TaskResult> {
         const config = vscode.workspace.getConfiguration("omc");
         const apiKey = config.get<string>("apiKey") || process.env.API_KEY || "";
-        const defaultModel = config.get<string>("defaultModel") || "deepseek";
+        // 优先使用任务指定的模型，否则使用配置中的默认模型
+        const taskModel = task.model || config.get<string>("defaultModel") || "deepseek";
 
         // 本地模型不需要 API key
-        if (!apiKey && !this.isLocalModel(defaultModel)) {
+        if (!apiKey && !this.isLocalModel(taskModel)) {
             throw new Error("请配置 API Key：设置中搜索 \"omc.apiKey\" 或设置环境变量 API_KEY");
         }
 
         // 判断使用本地模型路径还是普通 run 路径
-        const useLocalModel = this.isLocalModel(defaultModel);
+        const useLocalModel = this.isLocalModel(taskModel);
         
         return new Promise((resolve, reject) => {
             let args: string[];
@@ -163,14 +165,14 @@ export class TaskManager implements vscode.Disposable {
                     "local",
                     "chat",
                     task.description,
-                    "--model", defaultModel,
+                    "--model", taskModel,
                 ];
             } else {
                 // 标准路径: omc run <task> --model/-m --workflow/-w --project/-p --notify/-n --cross-validate
                 args = [
                     "run",
                     task.description,
-                    "--model", defaultModel,
+                    "--model", taskModel,
                 ];
 
                 // 新增参数映射

@@ -25,6 +25,13 @@ export class CommandManager {
             })
         );
 
+        // 运行任务（带选项 - 从 agentPanel 调用）
+        context.subscriptions.push(
+            vscode.commands.registerCommand('omc.runTaskWithOptions', async (options: { description: string; model: string; workflow?: string }) => {
+                await this.runTaskWithOptions(options);
+            })
+        );
+
         // 探索代码库
         context.subscriptions.push(
             vscode.commands.registerCommand('omc.exploreCode', async () => {
@@ -125,6 +132,30 @@ export class CommandManager {
                 fileName,
                 selectedText,
                 fileContent,
+            });
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.outputChannel.appendLine(`\n❌ 错误: ${errorMessage}`);
+            vscode.window.showErrorMessage(`任务执行失败: ${errorMessage}`);
+        }
+    }
+
+    private async runTaskWithOptions(options: { description: string; model: string; workflow?: string }): Promise<void> {
+        this.outputChannel.appendLine(`\n${'='.repeat(50)}`);
+        this.outputChannel.appendLine(`任务: ${options.description}`);
+        this.outputChannel.appendLine(`模型: ${options.model}`);
+        if (options.workflow) {
+            this.outputChannel.appendLine(`工作流: ${options.workflow}`);
+        }
+        this.outputChannel.appendLine(`${'='.repeat(50)}\n`);
+
+        this.outputChannel.show(true);
+
+        try {
+            await this.taskManager.runTask({
+                description: options.description,
+                model: options.model,
+                workflow: options.workflow,
             });
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);

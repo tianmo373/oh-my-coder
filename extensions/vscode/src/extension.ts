@@ -48,9 +48,9 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
 
-    // 首次启动检测 API Key
+    // 首次启动检测 API Key（通用 API_KEY，支持所有模型）
     const config = vscode.workspace.getConfiguration('omc');
-    const apiKey = config.get<string>('apiKey') || process.env.DEEPSEEK_API_KEY || '';
+    const apiKey = config.get<string>('apiKey') || process.env.API_KEY || '';
     if (!apiKey) {
         setTimeout(() => {
             vscode.window.showWarningMessage(
