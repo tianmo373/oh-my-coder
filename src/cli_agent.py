@@ -12,10 +12,12 @@ Agent 配置 CLI - 导出/导入/管理 Agent 配置
 
 from __future__ import annotations
 
+import time
+
 import contextlib
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 import typer
@@ -102,7 +104,7 @@ def show_agent(
 @app.command("export")
 def export_agent(
     name: str = typer.Argument(..., help="Agent 名称"),
-    output: Path | None = typer.Option(None, "--output", "-o", help="输出文件路径"),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="输出文件路径"),
     include_evolution: bool = typer.Option(
         False, "--evolution", "-e", help="包含进化历史"
     ),
@@ -205,7 +207,7 @@ def export_agent(
 @app.command("import")
 def import_agent(
     source: str = typer.Argument(..., help="配置文件路径或 URL"),
-    name: str | None = typer.Option(None, "--name", "-n", help="新 Agent 名称"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="新 Agent 名称"),
 ):
     """
     从文件或 URL 导入 Agent 配置
@@ -215,7 +217,7 @@ def import_agent(
     - GitHub raw URL
     - HTTP/HTTPS URL
     """
-    source_path: Path | None = None
+    source_path: Optional[Path] = None
     config_data: dict[str, Any]
 
     # 判断是 URL 还是本地文件
@@ -364,7 +366,7 @@ def agent_stats(
 
 @app.command("decisions")
 def list_decisions(
-    category: str | None = typer.Option(
+    category: Optional[str] = typer.Option(
         None,
         "--category",
         "-c",
@@ -567,6 +569,234 @@ def agent_health(
                     )
                 except Exception:
                     pass
+
+
+# ------------------------------------------------------------------
+# Agent 状态持久化命令
+# ------------------------------------------------------------------
+
+
+@app.command("save")
+def save_agent(
+    name: str = typer.Argument(..., help="Agent 名称"),
+    model: str = typer.Option("deepseek", "--model", "-m", help="模型"),
+    description: str = typer.Option("", "--description", "-d", help="描述"),
+    output: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="导出 JSON 文件"
+    ),
+):
+    """
+    保存 Agent 配置到 ~/.oh-my-coder/agents/<name>/
+
+    保存内容：
+    - config.json: Agent 配置快照
+    - state.json: 运行时状态（session_id, tokens 等）
+    """
+    from .agents.persistence.store import AgentConfig, AgentState, AgentStateStore
+
+    store = AgentStateStore()
+
+    # 创建配置
+    config = AgentConfig(
+        name=name,
+        description=description,
+        model=model,
+    )
+
+    # 创建初始状态
+    state = AgentState(
+        agent_name=name,
+        session_id=f"sess-{int(time.time())}",
+        created_at=time.strftime("%Y-%m-%dT%H:%M:%S"),
+    )
+
+    # 保存到磁盘
+    agent_dir = store.save(name, config, state=state)
+
+    console.print(f"[green]✓[/green] Agent '{name}' 已保存到: {agent_dir}")
+
+    # 如果指定了 output，同时导出
+    if output:
+        store.export_agent(name, output, include_history=False)
+        console.print(f"[green]✓[/green] 配置已导出到: {output}")
+
+
+@app.command("restore")
+def restore_agent(
+    name: str = typer.Argument(..., help="Agent 名称"),
+    show_history: bool = typer.Option(False, "--history", "-h", help="显示对话历史"),
+):
+    """
+    从 ~/.oh-my-coder/agents/<name>/ 恢复 Agent 状态
+
+    恢复内容：
+    - config.json → Agent 配置
+    - history.jsonl → 对话历史（可选加载）
+    - state.json → 运行时状态
+    """
+    from .agents.persistence.store import AgentStateStore
+
+    store = AgentStateStore()
+    config, history, state = store.restore(name, include_history=show_history)
+
+    if config is None:
+        console.print(f"[red]错误：Agent '{name}' 未找到[/red]")
+        raise typer.Exit(1)
+
+    # 显示恢复信息
+    info_lines = [
+        f"[bold]名称:[/bold] {config.name}",
+        f"[bold]描述:[/bold] {config.description}",
+        f"[bold]模型:[/bold] {config.model}",
+        f"[bold]Lane:[/bold] {config.lane}",
+        f"[bold]工具:[/bold] {', '.join(config.tools) if config.tools else '无'}",
+    ]
+
+    if state:
+        info_lines.extend(
+            [
+                f"[bold]Session ID:[/bold] {state.session_id}",
+                f"[bold]总 Tokens:[/bold] {state.total_tokens:,}",
+                f"[bold]总成本:[/bold] ¥{state.total_cost:.4f}",
+                f"[bold]最后任务:[/bold] {state.last_task or '无'}",
+            ]
+        )
+
+    console.print(
+        Panel("\n".join(info_lines), title=f"📦 Agent: {name}", border_style="cyan")
+    )
+
+    if show_history and history:
+        console.print(f"\n[cyan]对话历史 ({len(history)} 条):[/cyan]")
+        for i, entry in enumerate(history[-10:], 1):
+            role_color = "green" if entry.role == "user" else "yellow"
+            console.print(
+                f"  [{role_color}]{entry.role}[/{role_color}] {entry.content[:60]}..."
+            )
+
+
+@app.command("export")
+def export_agent_state(
+    name: str = typer.Argument(..., help="Agent 名称"),
+    output: Path = typer.Argument(..., help="输出 JSON 文件路径"),
+    include_history: bool = typer.Option(False, "--history", "-h", help="包含对话历史"),
+    max_history: int = typer.Option(
+        100, "--max-history", "-n", help="最多导出的历史条数"
+    ),
+):
+    """
+    导出 Agent 为单个 JSON 文件（可分享）
+
+    导出内容：
+    - Agent 配置
+    - 运行时状态
+    - 对话历史（可选）
+    """
+    from .agents.persistence.store import AgentStateStore
+
+    store = AgentStateStore()
+
+    try:
+        store.export_agent(
+            name, output, include_history=include_history, max_history=max_history
+        )
+        console.print(f"[green]✓[/green] Agent '{name}' 已导出到: {output}")
+        if include_history:
+            console.print("[dim]（包含对话历史）[/dim]")
+    except FileNotFoundError:
+        console.print(f"[red]错误：Agent '{name}' 未找到[/red]")
+        raise typer.Exit(1)
+
+
+@app.command("import")
+def import_agent_state(
+    source: Path = typer.Argument(..., help="JSON 配置文件路径"),
+    new_name: Optional[str] = typer.Option(None, "--name", "-n", help="新 Agent 名称"),
+    merge_history: bool = typer.Option(False, "--merge", help="合并历史而非覆盖"),
+):
+    """
+    从 JSON 文件导入 Agent 配置
+
+    支持：
+    - 本地 JSON 文件
+    - 导入后可恢复为运行中的 Agent
+    """
+    from .agents.persistence.store import AgentStateStore
+
+    if not source.exists():
+        console.print(f"[red]错误：文件不存在 '{source}'[/red]")
+        raise typer.Exit(1)
+
+    store = AgentStateStore()
+
+    try:
+        imported_name = store.import_agent(
+            source, new_name=new_name, merge_history=merge_history
+        )
+        console.print(f"[green]✓[/green] Agent '{imported_name}' 已导入")
+        console.print(f"  位置: {store.store_root / imported_name}")
+    except Exception as e:
+        console.print(f"[red]导入失败: {e}[/red]")
+        raise typer.Exit(1)
+
+
+@app.command("list-saved")
+def list_saved_agents():
+    """列出所有已保存的 Agent"""
+    from .agents.persistence.store import AgentStateStore
+
+    store = AgentStateStore()
+    saved = store.list_saved()
+
+    if not saved:
+        console.print("[dim]暂无已保存的 Agent[/dim]")
+        console.print(
+            "\n[dim]使用 [green]omc agent save <name>[/green] 保存 Agent[/dim]"
+        )
+        return
+
+    table = Table(title="已保存的 Agent")
+    table.add_column("名称", style="cyan")
+    table.add_column("路径", style="dim")
+
+    for name in sorted(saved):
+        table.add_row(name, str(store.store_root / name))
+
+    console.print(table)
+
+    # 显示统计
+    stats = store.get_stats()
+    console.print(
+        f"\n[dim]共 {stats['total_agents']} 个 Agent，占用 {stats['total_size_bytes']} 字节[/dim]"
+    )
+
+
+@app.command("delete-saved")
+def delete_saved_agent(
+    name: str = typer.Argument(..., help="Agent 名称"),
+    force: bool = typer.Option(False, "--force", "-f", help="强制删除，不确认"),
+):
+    """删除已保存的 Agent 状态"""
+    from .agents.persistence.store import AgentStateStore
+
+    store = AgentStateStore()
+
+    if name not in store.list_saved():
+        console.print(f"[red]错误：Agent '{name}' 未找到[/red]")
+        raise typer.Exit(1)
+
+    if not force:
+        from rich.prompt import Confirm
+
+        if not Confirm.ask(f"确认删除 Agent '{name}'？"):
+            console.print("[dim]已取消[/dim]")
+            raise typer.Exit(0)
+
+    if store.delete(name):
+        console.print(f"[green]✓[/green] Agent '{name}' 已删除")
+    else:
+        console.print("[red]删除失败[/red]")
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":
