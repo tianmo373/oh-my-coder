@@ -139,8 +139,12 @@ class TestAgentStateStore:
     def test_save_and_restore_history(self, tmp_store: AgentStateStore):
         config = AgentConfig(name="explore")
         history = [
-            HistoryEntry(role="user", content="探索项目", timestamp="2026-04-28T10:00:00"),
-            HistoryEntry(role="assistant", content="正在分析...", timestamp="2026-04-28T10:00:05"),
+            HistoryEntry(
+                role="user", content="探索项目", timestamp="2026-04-28T10:00:00"
+            ),
+            HistoryEntry(
+                role="assistant", content="正在分析...", timestamp="2026-04-28T10:00:05"
+            ),
         ]
         tmp_store.save("explore", config, history)
 
@@ -152,10 +156,14 @@ class TestAgentStateStore:
     def test_append_history_mode(self, tmp_store: AgentStateStore):
         config = AgentConfig(name="debugger")
         history1 = [
-            HistoryEntry(role="user", content="第一次", timestamp="2026-04-28T10:00:00"),
+            HistoryEntry(
+                role="user", content="第一次", timestamp="2026-04-28T10:00:00"
+            ),
         ]
         history2 = [
-            HistoryEntry(role="user", content="第二次", timestamp="2026-04-28T10:01:00"),
+            HistoryEntry(
+                role="user", content="第二次", timestamp="2026-04-28T10:01:00"
+            ),
         ]
 
         tmp_store.save("debugger", config, history1)
@@ -254,7 +262,9 @@ class TestAgentStateStore:
     def test_export_without_history(self, tmp_store: AgentStateStore, tmp_path: Path):
         config = AgentConfig(name="no-history-test")
         history = [
-            HistoryEntry(role="user", content="不要导出这条", timestamp="2026-04-28T10:00:00"),
+            HistoryEntry(
+                role="user", content="不要导出这条", timestamp="2026-04-28T10:00:00"
+            ),
         ]
         tmp_store.save("no-history-test", config, history)
 
@@ -280,7 +290,9 @@ class TestAgentStateStore:
         for i in range(3):
             config = AgentConfig(name=f"agent-{i}")
             history = [
-                HistoryEntry(role="user", content=f"msg-{j}", timestamp=f"2026-04-28T10:0{j}:00")
+                HistoryEntry(
+                    role="user", content=f"msg-{j}", timestamp=f"2026-04-28T10:0{j}:00"
+                )
                 for j in range(i + 1)
             ]
             tmp_store.save(f"agent-{i}", config, history)
