@@ -32,7 +32,7 @@ console = Console()
 @app.command("list")
 def list_agents():
     """列出所有可用 Agent"""
-    from .agents.base import list_all_agents
+    from src.agents.base import list_all_agents
 
     agents = list_all_agents()
 
@@ -59,7 +59,7 @@ def show_agent(
     evolution: bool = typer.Option(False, "--evolution", "-e", help="显示进化信息"),
 ):
     """显示 Agent 详细信息"""
-    from .agents.base import get_agent
+    from src.agents.base import get_agent
 
     agent_class = get_agent(name)
     if not agent_class:
@@ -84,7 +84,7 @@ def show_agent(
     console.print(info)
 
     if evolution:
-        from .agents.self_improving import SelfImprovingAgent
+        from src.agents.self_improving import SelfImprovingAgent
 
         sia = SelfImprovingAgent()
         stats = sia.get_evolution_stats(name)
@@ -120,7 +120,7 @@ def export_agent(
     - 进化历史（可选）
     - 成功模式库（可选）
     """
-    from .agents.base import get_agent
+    from src.agents.base import get_agent
 
     agent_class = get_agent(name)
     if not agent_class:
@@ -152,7 +152,7 @@ def export_agent(
     if include_evolution:
         from pathlib import Path
 
-        from .agents.evolution import EvolutionStore
+        from src.agents.evolution import EvolutionStore
 
         state_dir = Path.home() / ".omc" / "state"
         store = EvolutionStore(state_dir)
@@ -171,7 +171,7 @@ def export_agent(
     if include_patterns:
         from pathlib import Path
 
-        from .agents.evolution import EvolutionStore
+        from src.agents.evolution import EvolutionStore
 
         state_dir = Path.home() / ".omc" / "state"
         store = EvolutionStore(state_dir)
@@ -273,7 +273,7 @@ def import_agent(
 
     # 如果包含进化历史，也保存
     if "evolution_history" in config_data:
-        from .agents.evolution import EvolutionRecord, EvolutionStore
+        from src.agents.evolution import EvolutionRecord, EvolutionStore
 
         state_dir = Path.home() / ".omc" / "state"
         store = EvolutionStore(state_dir)
@@ -293,7 +293,7 @@ def import_agent(
 
     # 如果包含成功模式，也保存
     if "success_patterns" in config_data:
-        from .agents.evolution import EvolutionStore
+        from src.agents.evolution import EvolutionStore
 
         state_dir = Path.home() / ".omc" / "state"
         store = EvolutionStore(state_dir)
@@ -315,7 +315,7 @@ def evolve_agent(
     trigger: str = typer.Option("manual", "--trigger", "-t", help="触发原因"),
 ):
     """手动触发 Agent 自进化"""
-    from .agents.self_improving import SelfImprovingAgent
+    from src.agents.self_improving import SelfImprovingAgent
 
     sia = SelfImprovingAgent()
     record = sia.evolve(name, trigger=trigger)
@@ -337,7 +337,7 @@ def agent_stats(
     name: str = typer.Argument(..., help="Agent 名称"),
 ):
     """显示 Agent 进化统计"""
-    from .agents.self_improving import SelfImprovingAgent
+    from src.agents.self_improving import SelfImprovingAgent
 
     sia = SelfImprovingAgent()
     stats = sia.get_evolution_stats(name)
@@ -375,7 +375,7 @@ def list_decisions(
     limit: int = typer.Option(10, "--limit", "-n", help="显示数量"),
 ):
     """列出历史决策记录"""
-    from .agents.self_improving import SelfImprovingAgent
+    from src.agents.self_improving import SelfImprovingAgent
 
     sia = SelfImprovingAgent()
     decisions = sia.list_decisions(category=category, limit=limit)
@@ -410,7 +410,7 @@ def retrieve_decision(
     limit: int = typer.Option(3, "--limit", "-n", help="返回数量"),
 ):
     """检索历史决策，避免重复踩坑"""
-    from .agents.self_improving import SelfImprovingAgent
+    from src.agents.self_improving import SelfImprovingAgent
 
     sia = SelfImprovingAgent()
     decisions = sia.retrieve_past_decisions(problem, limit=limit)
@@ -451,7 +451,7 @@ def record_decision(
     reusable_for: str = typer.Option("", "--reusable-for", help="适用场景"),
 ):
     """记录重要决策"""
-    from .agents.self_improving import SelfImprovingAgent
+    from src.agents.self_improving import SelfImprovingAgent
 
     sia = SelfImprovingAgent()
     decision_id = sia.record_decision(
@@ -470,7 +470,7 @@ def record_decision(
 @app.command("decision-stats")
 def decision_stats():
     """显示决策记忆统计"""
-    from .agents.self_improving import SelfImprovingAgent
+    from src.agents.self_improving import SelfImprovingAgent
 
     sia = SelfImprovingAgent()
     stats = sia.get_decision_stats()
@@ -500,7 +500,7 @@ def agent_health(
     """显示所有 Agent 的健康状态（读取 .omc/state/health/ 目录）"""
     from pathlib import Path
 
-    from .agents.health_check import format_health_display
+    from src.agents.health_check import format_health_display
 
     state_dir = Path.cwd() / ".omc" / "state" / "health"
 
@@ -592,7 +592,7 @@ def save_agent(
     - config.json: Agent 配置快照
     - state.json: 运行时状态（session_id, tokens 等）
     """
-    from .agents.persistence.store import AgentConfig, AgentState, AgentStateStore
+    from src.agents.persistence.store import AgentConfig, AgentState, AgentStateStore
 
     store = AgentStateStore()
 
@@ -634,7 +634,7 @@ def restore_agent(
     - history.jsonl → 对话历史（可选加载）
     - state.json → 运行时状态
     """
-    from .agents.persistence.store import AgentStateStore
+    from src.agents.persistence.store import AgentStateStore
 
     store = AgentStateStore()
     config, history, state = store.restore(name, include_history=show_history)
@@ -692,7 +692,7 @@ def export_agent_state(
     - 运行时状态
     - 对话历史（可选）
     """
-    from .agents.persistence.store import AgentStateStore
+    from src.agents.persistence.store import AgentStateStore
 
     store = AgentStateStore()
 
@@ -721,7 +721,7 @@ def import_agent_state(
     - 本地 JSON 文件
     - 导入后可恢复为运行中的 Agent
     """
-    from .agents.persistence.store import AgentStateStore
+    from src.agents.persistence.store import AgentStateStore
 
     if not source.exists():
         console.print(f"[red]错误：文件不存在 '{source}'[/red]")
@@ -743,7 +743,7 @@ def import_agent_state(
 @app.command("list-saved")
 def list_saved_agents():
     """列出所有已保存的 Agent"""
-    from .agents.persistence.store import AgentStateStore
+    from src.agents.persistence.store import AgentStateStore
 
     store = AgentStateStore()
     saved = store.list_saved()
@@ -777,7 +777,7 @@ def delete_saved_agent(
     force: bool = typer.Option(False, "--force", "-f", help="强制删除，不确认"),
 ):
     """删除已保存的 Agent 状态"""
-    from .agents.persistence.store import AgentStateStore
+    from src.agents.persistence.store import AgentStateStore
 
     store = AgentStateStore()
 

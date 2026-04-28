@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 from typer.testing import CliRunner
 
-from src.cli import __version__, app
+from src.commands.cli import __version__, app
 
 runner = CliRunner()
 
@@ -117,7 +117,7 @@ class TestHelperFunctions:
 
     def test_status_color(self):
         """测试状态颜色映射"""
-        from src.cli import _status_color
+        from src.commands.cli import _status_color
 
         assert "已完成" in _status_color("completed")
         assert "失败" in _status_color("failed")

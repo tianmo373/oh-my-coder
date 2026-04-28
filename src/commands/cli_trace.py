@@ -15,7 +15,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from .agents.transparency import TraceStore
+from src.agents.transparency import TraceStore
 
 console = Console()
 app = typer.Typer(name="trace", help="查看 Agent 执行记录")

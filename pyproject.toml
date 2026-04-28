@@ -48,7 +48,7 @@ dev = [
 ]
 
 [project.scripts]
-omc = "src.cli:app"
+omc = "src.commands.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["."]

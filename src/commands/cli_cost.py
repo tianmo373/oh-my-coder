@@ -29,7 +29,7 @@ def cost(
     ),
 ):
     """根据任务复杂度推荐最优模型，节省成本"""
-    from .agents.cost_optimizer import CostOptimizer
+    from src.agents.cost_optimizer import CostOptimizer
 
     optimizer = CostOptimizer(prefer_local=prefer_local)
 

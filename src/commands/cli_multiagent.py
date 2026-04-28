@@ -15,7 +15,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from .multiagent.coordinator import (
+from src.multiagent.coordinator import (
     SubAgentStatus,
     get_coordinator,
 )

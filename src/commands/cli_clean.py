@@ -45,7 +45,7 @@ def clean(
     - 空文件
     - 过时配置文件
     """
-    from .agents.code_cleaner import CleanerStrategy
+    from src.agents.code_cleaner import CleanerStrategy
 
     project_path = Path(path).resolve()
 
@@ -63,7 +63,7 @@ def clean(
         strategy_obj.dead_code_safe_mode = False
 
     # 导入清理器
-    from .agents.code_cleaner import CodeCleaner
+    from src.agents.code_cleaner import CodeCleaner
 
     cleaner = CodeCleaner(project_path, strategy_obj)
 

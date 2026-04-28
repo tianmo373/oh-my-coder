@@ -15,7 +15,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from .config.agent_config import (
+from src.config.agent_config import (
     list_configs_in_dir,
     load_config_file,
     validate_config_file,

@@ -25,8 +25,8 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-from .agents.cross_validation import CrossValidationLayer
-from .capabilities import app as cap_app
+from src.agents.cross_validation import CrossValidationLayer
+from src.capabilities import app as cap_app
 from .cli_checkpoint import app as checkpoint_app
 from .cli_commands import app as commands_app
 from .cli_config_ext import app as config_ext_app
@@ -45,10 +45,10 @@ from .cli_skill import app as skill_app
 from .cli_task import app as task_app
 from .cli_trace import app as trace_app
 from .cli_tui import app as tui_app
-from .core.orchestrator import Orchestrator
-from .core.router import ModelRouter, RouterConfig
-from .quest import QuestStatus
-from .wiki import WikiGenerator
+from src.core.orchestrator import Orchestrator
+from src.core.router import ModelRouter, RouterConfig
+from src.quest import QuestStatus
+from src.wiki import WikiGenerator
 
 # 版本信息
 __version__ = "1.0.0"
@@ -307,7 +307,7 @@ def run(
 
             # 发送通知
             if notify:
-                from .utils.notify import (
+                from src.utils.notify import (
                     notify_workflow_complete,
                     notify_workflow_complete_dingtalk,
                 )
@@ -497,7 +497,7 @@ def quest(
         )
     )
 
-    from .quest import QuestManager
+    from src.quest import QuestManager
 
     # 步骤验收回调（交互式）
     async def review_callback(quest_id: str, step_id: str, preview: str) -> str:
@@ -584,7 +584,7 @@ def quest_list(
     """
     📋 查看 Quest 列表
     """
-    from .quest import QuestManager, QuestStatus
+    from src.quest import QuestManager, QuestStatus
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -648,7 +648,7 @@ def quest_status(
     """
     📊 查看 Quest 详细状态
     """
-    from .quest import QuestManager
+    from src.quest import QuestManager
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -730,7 +730,7 @@ def quest_exec(
     """
     ▶️ 执行已就绪的 Quest
     """
-    from .quest import QuestManager
+    from src.quest import QuestManager
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -766,7 +766,7 @@ def quest_cancel(
     """
     ⏹️ 取消 Quest
     """
-    from .quest import QuestManager
+    from src.quest import QuestManager
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -786,7 +786,7 @@ def quest_pause(
     """
     ⏸️ 暂停 Quest（在当前步骤完成后暂停）
     """
-    from .quest import QuestManager
+    from src.quest import QuestManager
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -807,7 +807,7 @@ def quest_resume(
     """
     ▶️ 恢复已暂停的 Quest（从断点继续）
     """
-    from .quest import QuestManager
+    from src.quest import QuestManager
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -853,7 +853,7 @@ def quest_notify(
     """
     import asyncio
 
-    from .quest import NotificationConfig, NotificationManager, QuestManager
+    from src.quest import NotificationConfig, NotificationManager, QuestManager
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -891,7 +891,7 @@ def quest_notify(
         console.print(f"[{color}]{title}[/{color}]: {body}")
 
     # 添加控制台回调渠道
-    from .quest.notifications import ConsoleNotificationChannel
+    from src.quest.notifications import ConsoleNotificationChannel
 
     notifier._channels.append(ConsoleNotificationChannel(callback=on_progress))
 
@@ -970,7 +970,7 @@ def quest_wait(
     """
     import asyncio
 
-    from .quest import QuestManager, QuestStatus
+    from src.quest import QuestManager, QuestStatus
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -1042,7 +1042,7 @@ def _show_acceptance_report(quest, console):
     from rich.panel import Panel
     from rich.table import Table
 
-    from .quest import QuestStatus
+    from src.quest import QuestStatus
 
     status_color_map = {
         QuestStatus.COMPLETED: "bold green",
@@ -1132,7 +1132,7 @@ def agents():
     table.add_column("层级", style="green")
 
     # 导入所有 Agent
-    from .agents import (
+    from src.agents import (
         AnalystAgent,
         APIAgent,
         ArchitectAgent,

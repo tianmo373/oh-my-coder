@@ -17,7 +17,7 @@ from pathlib import Path
 
 import typer
 
-from .context import BrowserAwareness, FileNode, WorkspaceScanner
+from src.context import BrowserAwareness, FileNode, WorkspaceScanner
 
 context_app = typer.Typer(
     name="context",

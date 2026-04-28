@@ -18,7 +18,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from .state.task_state import (
+from src.state.task_state import (
     TaskStatus,
     delete_task,
     get_task,

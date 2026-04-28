@@ -18,7 +18,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
 
-from .skills import get_registry
+from src.skills import get_registry
 
 app = typer.Typer(help="Skill 管理 - 列出和执行 Skill")
 console = Console()

@@ -15,8 +15,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from .sandbox.sandbox import Sandbox
-from .security.permissions import (
+from src.sandbox.sandbox import Sandbox
+from src.security.permissions import (
     PermissionGuard,
 )
 
@@ -50,7 +50,7 @@ def security_check(
 
     if config_file:
         try:
-            from .config.agent_config import load_config_file
+            from src.config.agent_config import load_config_file
 
             config = load_config_file(config_file)
             guard = PermissionGuard.from_agent_config(config.to_dict())
