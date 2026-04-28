@@ -1,6 +1,6 @@
 # Oh My Coder - VS Code Extension
 
-> 多智能体 AI 编程助手，支持 12 个国产大模型 + 31 个智能体
+> 多智能体 AI 编程助手，支持 6 个国产大模型 + Ollama 本地模型 + 31 个智能体
 
 ## ✨ 功能特性
 
@@ -30,23 +30,47 @@
 | **DEBUG** | Debugger, Tracer | 调试排错 |
 | **DOMAIN** | TestEngineer, QATester, Designer, Writer, Document, Scientist, GitMaster, Explore, Vision, UML, Analyst, Database, DevOps, API, Auth, Data, Prompt, SkillManage, SelfImproving | 领域专家 |
 
-### 🔧 工作流模板
+### 🔧 工作流模板（10 个）
 
-- **build** - 完整构建流程（规划 → 架构 → 编码 → 验证）
-- **review** - 代码审查（质量检查 + 安全扫描）
-- **debug** - 调试流程（问题定位 → 根因分析 → 修复）
-- **test** - 测试生成（单元测试 + 集成测试）
-- **explore** - 代码库探索
+| 工作流 | 说明 |
+|--------|------|
+| **默认** | 自动选择最佳 Agent |
+| **autopilot** | 自动路由：根据任务类型智能选择工作流 |
+| **build** | 完整构建流程（规划 → 架构 → 编码 → 验证） |
+| **review** | 代码审查（质量检查 + 安全扫描） |
+| **debug** | 调试流程（问题定位 → 根因分析 → 修复） |
+| **test** | 测试生成（单元测试 + 集成测试） |
+| **pair** | 结对编程：人机协作开发模式 |
+| **refactor** | 重构流程：分析 → 识别 → 规划 → 执行 → 验证 |
+| **doc** | 文档生成：自动生成 API 文档和注释 |
+| **sequential** | 顺序执行：按步骤依次完成 |
+| **explore** | 代码库探索 |
 
-### 🌐 支持的模型（12 个国产大模型）
+### 🌐 支持的模型
 
-`deepseek`, `qwen`, `glm`, `kimi`, `hunyuan`, `wenxin`, `doubao`, `minimax`, `tiangong`, `spark`, `baichuan`, `siliconflow`
+#### Production 模型（6 个国产大模型）
+
+| 模型 | 说明 |
+|------|------|
+| `deepseek` | DeepSeek - 高性价比编程模型 |
+| `glm` | 智谱 GLM - 提供 1M tokens 免费额度 |
+| `kimi` | Moonshot Kimi - 长上下文支持 |
+| `doubao` | 字节豆包 - 快速响应 |
+| `minimax` | MiniMax - 多模态能力 |
+| `baichuan` | 百川 - 中文优化 |
+
+#### 本地模型（Ollama）
+
+支持通过 Ollama 运行本地模型：
+- `llama3`, `mistral`, `codellama`, `deepseek-coder` 等
+- 无需 API Key，完全离线运行
+- 在面板中选择 "🖥️ Ollama 本地" 即可
 
 ## 📦 安装
 
 ### 从 VSIX 安装
 
-1. 下载 `oh-my-coder-0.1.0.vsix`
+1. 下载 `oh-my-coder-0.2.0.vsix`
 2. VS Code 中按 `Ctrl+Shift+P`
 3. 输入 "Extensions: Install from VSIX"
 4. 选择下载的文件
@@ -77,7 +101,7 @@
 
 **方式 2：环境变量**
 ```bash
-export DEEPSEEK_API_KEY=your_key_here
+export API_KEY=your_key_here
 ```
 
 **方式 3：GLM 免费体验**
@@ -85,6 +109,17 @@ export DEEPSEEK_API_KEY=your_key_here
 # 一行命令配置 GLM 免费模型
 export OMC_DEFAULT_MODEL=glm
 # GLM 提供 1M tokens 免费额度，无需信用卡
+```
+
+**方式 4：Ollama 本地模型**
+```bash
+# 安装 Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# 拉取模型
+ollama pull llama3
+
+# 无需 API Key，直接使用
 ```
 
 ## 🚀 使用示例
@@ -114,6 +149,13 @@ export OMC_DEFAULT_MODEL=glm
 3. 选择需要的 Agent 类型
 4. 在任务面板中指定工作流
 
+### 5. 使用 Ollama 本地模型
+
+1. 确保 Ollama 已安装并运行
+2. 打开侧边栏（`Ctrl+Shift+O`）
+3. 在模型下拉菜单中选择 "🖥️ Ollama 本地"
+4. 选择要使用的本地模型
+
 ## 🛠️ 开发
 
 ```bash
@@ -141,9 +183,10 @@ npx vsce package
 ### API Key 无效
 
 1. 确认 Key 有效且未过期
-2. 检查环境变量是否正确设置
+2. 检查环境变量是否正确设置（使用 `API_KEY`）
 3. 尝试在设置中直接配置 Key
 4. 使用 GLM 免费模型测试：`omc run "hello" --model glm`
+5. 使用 Ollama 本地模型，无需 API Key
 
 ### CLI 命令找不到
 

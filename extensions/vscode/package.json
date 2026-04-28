@@ -1,7 +1,7 @@
 {
   "name": "oh-my-coder",
   "displayName": "Oh My Coder",
-  "description": "多智能体 AI 编程助手 - 31 个专业 Agent + 9 个国产大模型",
+  "description": "多智能体 AI 编程助手 - 31 个专业 Agent + 6 个国产大模型 + Ollama 本地模型",
   "version": "0.2.0",
   "publisher": "vobc",
   "engines": {
@@ -18,7 +18,8 @@
     "coding",
     "chinese",
     "deepseek",
-    "multi-agent"
+    "multi-agent",
+    "ollama"
   ],
   "activationEvents": [
     "onStartupFinished"
