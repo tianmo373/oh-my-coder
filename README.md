@@ -2,7 +2,7 @@
 
 > 🤖 多智能体 AI 编程助手，支持国内大模型
 
-🎯 **GLM-4.7-Flash 开源免费 · 12 家国产大模型 · 31 个专业 Agent · 多 Agent 协作 · 完全开源**
+🎯 **GLM-4.7-Flash 开源免费 · 6 个生产就绪模型 + Ollama 本地模型 · 31 个专业 Agent · 多 Agent 协作 · 完全开源**
 
 [![CI](https://github.com/VOBC/oh-my-coder/actions/workflows/test.yml/badge.svg)](https://github.com/VOBC/oh-my-coder/actions)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -59,7 +59,7 @@
 
 | 对比项 | Claude Code | oh-my-coder |
 |--------|-------------|-------------|
-| **模型** | 仅 Claude（需翻墙） | **12个国产模型**（GLM-4.7-Flash 完全免费） |
+| **模型** | 仅 Claude（需翻墙） | **6个生产模型 + Ollama**（GLM-4.7-Flash 完全免费） |
 | **价格** | 需 Claude Pro ($25/月) | **完全免费开源** |
 | **数据隐私** | 上传到海外服务器 | **本地处理，不上传** |
 | **中国用户** | 封号风险高 | **完全支持** |
@@ -82,7 +82,7 @@ omc run "你好，介绍一下你自己"
 ### 1️⃣ 国产模型全家桶（12家 vs 单家）
 - **Claude Code**：仅支持 Claude（需翻墙，$25/月）
 - **Gemini CLI**：仅支持 Google Gemini
-- **oh-my-coder**：✅ **12家国产模型**（GLM-4.7-Flash、DeepSeek-V3、通义千问、Kimi、豆包等），GLM-4.7-Flash **完全免费**
+- **oh-my-coder**：✅ **6个生产模型 + Ollama**（GLM-4.7-Flash、DeepSeek-V4、智谱 GLM、Kimi、豆包、百川），GLM-4.7-Flash **完全免费**
 
 ### 2️⃣ 中文友好（中文文档 vs 英文为主）
 - **Claude Code / Gemini CLI**：英文为主，中文支持有限
@@ -139,7 +139,7 @@ omc run "你好，介绍一下你自己"
 | 多Agent协作 | ✅ 31个 | ✅ 32个 | ❌ | ❌ | ❌ | ✅ |
 | 开源免费 | ✅ MIT | ✅ | ⚠️ 企业版付费 | ❌ $20/月 | ❌ $19/月 | ✅ |
 | 国内直连 | ✅ | ❌ 需翻墙 | ✅ | ❌ 需翻墙 | ❌ 需翻墙 | ✅ |
-| 国产模型支持 | ✅ 12家 | ❌ | ✅ 混元 | ❌ | ❌ | ❌ |
+| 国产模型支持 | ✅ 6个生产 + Ollama | ❌ | ✅ 混元 | ❌ | ❌ | ❌ |
 | 中文交互 | ✅ | ❌ | ✅ | ✅ | ✅ | ⚠️ |
 | 本地运行 | ✅ | ⚠️ 需Claude Code | ❌ | ❌ | ❌ | ✅ |
 | 自托管 | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
@@ -194,7 +194,7 @@ omc config set -k MIMOX_API_KEY -v "your_key"
 
 | 模型 | 免费额度 | 上下文 | 推荐理由 |
 |------|----------|--------|----------|
-| **DeepSeek V3.2** | 新用户赠送余额 | **128K** | 首选，代码能力强，输入 2 元/百万 tokens |
+| **DeepSeek V4** | 新用户赠送余额 | **128K** | 首选，代码能力强，性价比高 |
 | **智谱 GLM-4.7-Flash** | **完全免费** | **200K** | 零成本，中文优化，128K 输出 |
 | **小米 MiMo** | 免费一周活动 | 长上下文 | 小米出品，大文件处理 |
 
@@ -358,6 +358,44 @@ print(resp.json()["result"])
 | `"审查 src/auth 目录"` | `review` | 调用 CodeReviewerAgent + SecurityReviewerAgent，返回质量报告和安全建议 |
 | `"修复注册接口的空指针异常"` | `debug` | 调用 TracerAgent 追踪调用链 → DebuggerAgent 定位根因 → 自动修复 |
 | `"为 order.py 生成单元测试"` | `test` | 调用 TestEngineerAgent 分析函数 → 生成 pytest 测试用例 → 执行验证 |
+
+---
+
+## 💻 VS Code 插件
+
+Oh My Coder 提供官方 VS Code 插件，在编辑器内即可使用所有功能。
+
+### 安装方式
+
+#### 方式 1：从 VSIX 安装（推荐）
+
+1. 下载最新 VSIX 文件：`extensions/vscode/oh-my-coder-0.2.0.vsix`
+2. 打开 VS Code，按 `Cmd+Shift+P`（macOS）或 `Ctrl+Shift+P`（Windows/Linux）
+3. 输入 `Extensions: Install from VSIX...`
+4. 选择下载的 `.vsix` 文件
+
+#### 方式 2：从 Marketplace 安装（待发布）
+
+> 🚧 即将上架 VS Code Marketplace，敬请期待
+
+### 功能特性
+
+| 功能 | 说明 |
+|------|------|
+| **6 个生产模型** | DeepSeek V4 / R1、智谱 GLM-4、Kimi、百川 |
+| **Ollama 本地模型** | 支持本地运行，完全离线 |
+| **10 个工作流模板** | build / review / debug / test / autopilot / pair / refactor 等 |
+| **状态栏增强** | 实时显示当前模型、任务状态 |
+| **历史记录** | 记录任务执行历史，支持模型/工作流筛选 |
+| **任务视图** | 查看当前任务进度、Agent 执行情况 |
+| **Agents 视图** | 浏览 31 个专业 Agent |
+
+### 使用方法
+
+1. 打开 VS Code，左侧活动栏会出现 OMC 图标
+2. 点击图标打开侧边栏，显示三个视图：任务、历史、Agents
+3. 底部状态栏显示当前模型（如 `🤖 OMC [DeepSeek]`）
+4. 按 `Cmd+Shift+P` 输入 `OMC: Run Task` 开始新任务
 
 ---
 
@@ -582,7 +620,7 @@ python -m src.cli context browser
 ---
 ## 💡 支持的模型
 
-共 **13 个**模型，系统自动按性价比选择：✅ 7 个生产就绪，⚠️ 6 个 Beta。
+共 **7 个**模型，系统自动按性价比选择：✅ 6 个生产就绪，⚠️ 1 个本地模型。
 
 > 📖 [完整模型配置指南（环境变量、默认模型、状态说明）](docs/guide/model-config.md)
 
@@ -590,25 +628,24 @@ python -m src.cli context browser
 
 | 模型 ID | 名称 | 提供商 | 上下文 | 状态 |
 |---------|------|--------|--------|------|
-| `deepseek-chat` | DeepSeek V3 | DeepSeek | 128K | ✅ production |
+| `deepseek-chat` | DeepSeek V4 | DeepSeek | 128K | ✅ production |
 | `deepseek-reasoner` | DeepSeek R1 | DeepSeek | 128K | ✅ production |
 | `glm-4-flash` | GLM-4-Flash | 智谱 | 200K | ✅ production |
 | `glm-4v-flash` | GLM-4V-Flash（视觉） | 智谱 | 4K 图 | ✅ production |
-| `qwen-plus` | Qwen2.5-72B | 阿里 | 128K | ✅ production |
-| `qwen-vl-plus` | Qwen2.5-VL-72B（视觉） | 阿里 | 128K | ✅ production |
-| `doubao-pro-32k` | Doubao-Pro-32K | 字节 | 32K | ✅ production |
+| `moonshot-v1-128k` | Kimi-V3-Pro | Moonshot | 128K | ✅ production |
+| `Baichuan4` | Baichuan4-Turbo | 百川 | 128K | ✅ production |
 
-### Beta / 预览
+### 本地模型（Ollama）
 
 | 模型 ID | 名称 | 提供商 | 上下文 | 状态 |
 |---------|------|--------|--------|------|
-| `moonshot-v1-128k` | Kimi-V3-Pro | Moonshot | 128K | ⚠️ beta |
-| `MiniMax-Text-01` | MiMo-Text-01 | MiniMax | 1M | ⚠️ beta |
-| `tiangong-3` | 天工AI 3.0 | 天工 | 128K | ⚠️ beta |
-| `Baichuan4` | Baichuan4-Turbo | 百川 | 128K | ⚠️ beta |
-| `ernie-4.0-8k-latest` | 文心一言 4.0 | 百度 | 8K | ⚠️ beta |
-| `hunyuan-turbo` | 腾讯混元 Turbo | 腾讯 | 32K | ⚠️ beta |
-| `generalv4.0` | Spark-4.0-Ultra | 讯飞 | 32K | ⚠️ beta |
+| `ollama` | Ollama 本地模型 | 本地 | 取决于模型 | ✅ production |
+
+> 💡 **Ollama 使用说明**：
+> - 安装 Ollama：https://ollama.ai
+> - 拉取模型：`ollama pull llama3.2`
+> - 列出模型：`ollama list`
+> - 聊天：`ollama chat llama3.2`
 
 ### 环境变量一览
 
