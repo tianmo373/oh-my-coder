@@ -5,6 +5,7 @@
 // - Top: Import/Export JSON, Reset to defaults
 // - Encryption: simple XOR + base64 for localStorage
 import React, { useState, useEffect, useCallback } from 'react';
+import { PRODUCTION_MODELS as FALLBACK_MODELS } from '../models/productionModels';
 
 interface ModelInfo {
   id: string;
@@ -46,15 +47,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   baichuan: '百川智能',
 };
 
-// ── Fallback Models for Vite dev mode ─────────────────────────────────────────
-const FALLBACK_MODELS: ModelInfo[] = [
-  { id: 'deepseek-chat', name: 'DeepSeek V3', provider: 'deepseek', tier: 'medium', context: 64000 },
-  { id: 'deepseek-reasoner', name: 'DeepSeek R1', provider: 'deepseek', tier: 'high', context: 64000 },
-  { id: 'glm-4-flash', name: 'GLM-4-Flash', provider: 'glm', tier: 'free', context: 128000 },
-  { id: 'doubao-pro-32k', name: 'Doubao-Pro-32K', provider: 'doubao', tier: 'medium', context: 32000 },
-  { id: 'kimi-moonshot', name: 'Kimi', provider: 'kimi', tier: 'medium', context: 200000 },
-  { id: 'qwen-plus', name: 'Qwen2.5-72B', provider: 'tongyi', tier: 'high', context: 128000 },
-];
+// Fallback models imported from productionModels.ts (single source of truth)
 
 // ── Simple Encryption for localStorage ─────────────────────────────────────────
 const ENCRYPTION_KEY = 'omc-v1-key-2024'; // Simple XOR key
