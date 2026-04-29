@@ -9,7 +9,7 @@
 #
 #   # 方式二：手动三步
 #   git clone https://github.com/VOBC/oh-my-coder.git && cd oh-my-coder
-#   ./install.sh
+#   ./scripts/install.sh
 #   omc run "实现一个待办事项 CLI"
 #
 #   # 方式三：已有项目，本地安装

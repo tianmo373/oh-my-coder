@@ -24,7 +24,7 @@ cd oh-my-coder
 export DEEPSEEK_API_KEY=your_api_key
 
 # 启动服务
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 访问
@@ -34,7 +34,7 @@ docker-compose up -d
 ### 停止服务
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ---
@@ -215,7 +215,7 @@ pip install -e .[dev]
 
 ```bash
 # Docker
-docker-compose logs -f web
+docker compose logs -f web
 
 # Systemd
 sudo journalctl -u ohmycoder -f

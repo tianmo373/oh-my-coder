@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - "install.sh"
+      - "scripts/install.sh"
       - ".github/workflows/install-test.yml"
   pull_request:
     paths:
-      - "install.sh"
+      - "scripts/install.sh"
       - ".github/workflows/install-test.yml"
 
 permissions:
@@ -37,7 +37,7 @@ jobs:
       - name: ShellCheck install.sh
         uses: ludeeus/action-shellcheck@master
         with:
-          additional_files: install.sh
+          additional_files: scripts/install.sh
 
       # ── 测试 2: 指定版本 Python（需要 >= 3.9）─────────────────────────
       - name: Set up Python ${{ matrix.python-version }}
@@ -98,7 +98,7 @@ jobs:
       # ── 测试 4: install.sh --help ────────────────────────────────────
       - name: Test install.sh --help
         run: |
-          bash install.sh --help | grep -q "usage:" && echo "✓ --help works"
+          bash scripts/install.sh --help | grep -q "usage:" && echo "✓ --help works"
 
       # ── 测试 5: API Key 跳过逻辑 ────────────────────────────────────
       - name: Test API key skip (empty input = skip)
@@ -111,7 +111,7 @@ jobs:
           cd "$REPO_DIR"
           
           # 模拟跳过 API 配置（输入空行）
-          printf '\n' | bash install.sh --dir "$REPO_DIR" 2>&1 | grep -E "(跳过|已创建)" || true
+          printf '\n' | bash scripts/install.sh --dir "$REPO_DIR" 2>&1 | grep -E "(跳过|已创建)" || true
           
           # 验证 .env.example 被复制
           ls "$REPO_DIR/.env" && echo "✓ .env created"

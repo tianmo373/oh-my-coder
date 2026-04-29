@@ -18,7 +18,7 @@ pip install -e .
 安装脚本支持交互式配置 API Key：
 
 ```bash
-bash install.sh
+bash scripts/install.sh
 ```
 
 ## 配置 API Key

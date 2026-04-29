@@ -73,6 +73,7 @@ site/
 # Desktop app
 desktop/node_modules/
 web-ui/node_modules/
+extensions/vscode/node_modules/
 
 # Health files
 health/
@@ -92,3 +93,4 @@ P0-*.md
 P1-*.md
 P2-*.md
 task-summary_*.md
+*.vsix
