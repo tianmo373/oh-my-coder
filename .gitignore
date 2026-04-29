@@ -84,3 +84,11 @@ projects/
 memory/
 task-summary_*.md
 
+
+# 临时工作文件
+.consolidate-state.json
+memory-maintenance_*.md
+P0-*.md
+P1-*.md
+P2-*.md
+task-summary_*.md
