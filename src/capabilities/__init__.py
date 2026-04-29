@@ -39,7 +39,7 @@ def _get_manager() -> CapabilityPackageManager:
 @app.command("export")
 def export_capability(
     name: str = typer.Argument(..., help="能力包名称"),
-    version: str = typer.Option("1.0.0", "--version", "-v", help="版本号 (semver)"),
+    version: str = typer.Option("0.2.0", "--version", "-v", help="版本号 (semver)"),
     description: str = typer.Option(None, "--description", "-d", help="功能描述"),
     author: str = typer.Option(None, "--author", "-a", help="作者"),
     tags: str = typer.Option(None, "--tags", "-t", help="标签（逗号分隔）"),

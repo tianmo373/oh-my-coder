@@ -12,7 +12,7 @@ MCP SDK 在 Python 3.10+ 时自动启用（pip install mcp），
 Python 3.9 使用原生手动实现（无外部依赖）。
 """
 
-__version__ = "1.0.0"
+__version__ = "0.2.0"
 
 # Try importing MCP SDK (Python 3.10+), falls back to native impl
 try:

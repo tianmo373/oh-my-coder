@@ -24,7 +24,7 @@ class Gene:
     tags: list[str] = field(default_factory=list)  # [python, pytest, bug-fix]
     description: str = ""  # 一句话描述
     capabilities: list[str] = field(default_factory=list)  # 具体能力列表
-    version: str = "1.0.0"  # 版本号
+    version: str = "0.2.0"  # 版本号
     author: str = "anonymous"  # 作者
     created_at: str = ""  # ISO 格式时间
     signature: str | None = None  # 未来对接 zCloak

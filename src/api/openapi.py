@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
 # API 版本
-API_VERSION = "1.0.0"
+API_VERSION = "0.2.0"
 
 
 def custom_openapi(app: FastAPI) -> dict:

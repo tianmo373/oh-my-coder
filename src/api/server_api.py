@@ -260,7 +260,7 @@ def create_app(
             "设置了 API Key 后，所有请求需在 Header 中添加：\n"
             "`X-API-Key: your-api-key`"
         ),
-        version="1.0.0",
+        version="0.2.0",
     )
 
     _store = store or TaskStore()
@@ -294,7 +294,7 @@ def create_app(
 
     @app.get("/")
     async def root() -> dict[str, str]:
-        return {"service": "Oh My Coder Server", "version": "1.0.0"}
+        return {"service": "Oh My Coder Server", "version": "0.2.0"}
 
     @app.get("/health")
     async def health() -> dict[str, str]:

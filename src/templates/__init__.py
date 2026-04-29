@@ -48,7 +48,7 @@ class TemplateMetadata(BaseModel):
     display_name: str
     description: str
     category: TemplateCategory
-    version: str = "1.0.0"
+    version: str = "0.2.0"
     author: str = ""
     tags: list[str] = []
     icon: str = "📦"

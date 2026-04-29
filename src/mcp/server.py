@@ -32,7 +32,7 @@ class McpServer:
     - ping                — 心跳检测
     """
 
-    VERSION = "1.0.0"
+    VERSION = "0.2.0"
     PROTOCOL_VERSION = "2024-11-05"
 
     def __init__(self, workspace: Path | None = None):

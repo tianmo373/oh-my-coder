@@ -13,30 +13,18 @@ Oh My Coder CLI - 命令行入口
 - omc --help             # 帮助信息
 """
 
-from __future__ import annotations
-
 import asyncio
 import os
 from pathlib import Path
 
 import typer
-
-# ============================================================
-# 启动时加载环境变量（优先级：用户级 > 项目级）
-# ============================================================
-from dotenv import load_dotenv
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-from src.agents.cross_validation import CrossValidationLayer
-from src.capabilities import app as cap_app
-from src.core.orchestrator import Orchestrator
-from src.core.router import ModelRouter, RouterConfig
-from src.quest import QuestStatus
-from src.wiki import WikiGenerator
-
+from .agents.cross_validation import CrossValidationLayer
+from .capabilities import app as cap_app
 from .cli_checkpoint import app as checkpoint_app
 from .cli_commands import app as commands_app
 from .cli_config_ext import app as config_ext_app
@@ -55,16 +43,10 @@ from .cli_skill import app as skill_app
 from .cli_task import app as task_app
 from .cli_trace import app as trace_app
 from .cli_tui import app as tui_app
-
-# 用户级配置 ~/.omc/.env（最高优先级）
-_user_env = Path.home() / ".omc" / ".env"
-if _user_env.exists():
-    load_dotenv(_user_env, override=True)
-
-# 项目级配置 .env（次优先级）
-_project_env = Path(".env")
-if _project_env.exists():
-    load_dotenv(_project_env, override=True)
+from .core.orchestrator import Orchestrator
+from .core.router import ModelRouter, RouterConfig
+from .quest import QuestStatus
+from .wiki import WikiGenerator
 
 # 版本信息
 __version__ = "0.2.0"
@@ -132,14 +114,6 @@ except Exception:
 from .cli_model import app as model_app  # noqa: E402
 
 app.add_typer(model_app, name="model", help="模型管理 - 查看/切换默认模型")
-
-# models 子命令 - 模型配置分享
-try:
-    from .cli_models import app as models_app  # noqa: E402
-
-    app.add_typer(models_app, name="models", help="模型配置分享 - 分享/浏览社区配置")
-except Exception:
-    pass
 
 # gateway 子命令（懒导入，避免 gateway 依赖缺失时报错）
 try:
@@ -331,7 +305,7 @@ def run(
 
             # 发送通知
             if notify:
-                from src.utils.notify import (
+                from .utils.notify import (
                     notify_workflow_complete,
                     notify_workflow_complete_dingtalk,
                 )
@@ -521,7 +495,7 @@ def quest(
         )
     )
 
-    from src.quest import QuestManager
+    from .quest import QuestManager
 
     # 步骤验收回调（交互式）
     async def review_callback(quest_id: str, step_id: str, preview: str) -> str:
@@ -608,7 +582,7 @@ def quest_list(
     """
     📋 查看 Quest 列表
     """
-    from src.quest import QuestManager, QuestStatus
+    from .quest import QuestManager, QuestStatus
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -672,7 +646,7 @@ def quest_status(
     """
     📊 查看 Quest 详细状态
     """
-    from src.quest import QuestManager
+    from .quest import QuestManager
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -754,7 +728,7 @@ def quest_exec(
     """
     ▶️ 执行已就绪的 Quest
     """
-    from src.quest import QuestManager
+    from .quest import QuestManager
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -790,7 +764,7 @@ def quest_cancel(
     """
     ⏹️ 取消 Quest
     """
-    from src.quest import QuestManager
+    from .quest import QuestManager
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -810,7 +784,7 @@ def quest_pause(
     """
     ⏸️ 暂停 Quest（在当前步骤完成后暂停）
     """
-    from src.quest import QuestManager
+    from .quest import QuestManager
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -831,7 +805,7 @@ def quest_resume(
     """
     ▶️ 恢复已暂停的 Quest（从断点继续）
     """
-    from src.quest import QuestManager
+    from .quest import QuestManager
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -877,7 +851,7 @@ def quest_notify(
     """
     import asyncio
 
-    from src.quest import NotificationConfig, NotificationManager, QuestManager
+    from .quest import NotificationConfig, NotificationManager, QuestManager
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -915,7 +889,7 @@ def quest_notify(
         console.print(f"[{color}]{title}[/{color}]: {body}")
 
     # 添加控制台回调渠道
-    from src.quest.notifications import ConsoleNotificationChannel
+    from .quest.notifications import ConsoleNotificationChannel
 
     notifier._channels.append(ConsoleNotificationChannel(callback=on_progress))
 
@@ -994,7 +968,7 @@ def quest_wait(
     """
     import asyncio
 
-    from src.quest import QuestManager, QuestStatus
+    from .quest import QuestManager, QuestStatus
 
     project_path = project_path.resolve()
     manager = QuestManager(project_path)
@@ -1066,7 +1040,7 @@ def _show_acceptance_report(quest, console):
     from rich.panel import Panel
     from rich.table import Table
 
-    from src.quest import QuestStatus
+    from .quest import QuestStatus
 
     status_color_map = {
         QuestStatus.COMPLETED: "bold green",
@@ -1156,7 +1130,7 @@ def agents():
     table.add_column("层级", style="green")
 
     # 导入所有 Agent
-    from src.agents import (
+    from .agents import (
         AnalystAgent,
         APIAgent,
         ArchitectAgent,
@@ -1564,4 +1538,5 @@ def _status_color(status: str) -> str:
 app.add_typer(cap_app, name="cap", help="能力包管理 - 导出、导入和分享 Agent 配置")
 
 if __name__ == "__main__":
+    app()
     app()
