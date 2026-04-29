@@ -22,9 +22,11 @@ import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import httpx
+import yaml
 
 from ..models.base import (
     BaseModel,
@@ -35,6 +37,11 @@ from ..models.base import (
     Usage,
 )
 from ..models.deepseek import DeepSeekModel
+
+# ============================================================
+# 用户自定义模型目录
+# ============================================================
+USER_MODELS_DIR = Path.home() / ".omc" / "models"
 
 # ============================================================
 # Logger
@@ -441,9 +448,79 @@ class ModelRouter:
             except Exception as e:
                 logger.warning(f"字节豆包初始化失败: {e}")
 
+        # ============================================================
+        # 加载用户自定义模型配置 (~/.omc/models/*.yaml)
+        # ============================================================
+        if USER_MODELS_DIR.exists():
+            self._load_user_models()
+
         # 记录可用提供商
         available = list(self._models.keys())
         logger.info(f"可用模型提供商: {available or '无'}")
+
+    def _load_user_models(self) -> None:
+        """
+        加载用户自定义模型配置 (~/.omc/models/*.yaml)
+
+        支持用户添加任意 OpenAI 兼容的模型提供商。
+        配置文件格式见：examples/model-config.yaml
+        """
+        if not USER_MODELS_DIR.exists():
+            return
+
+        loaded_count = 0
+        for yaml_file in USER_MODELS_DIR.glob("*.yaml"):
+            try:
+                with open(yaml_file, encoding="utf-8") as f:
+                    cfg = yaml.safe_load(f)
+
+                if not cfg or not isinstance(cfg, dict):
+                    continue
+
+                # 校验必要字段
+                required = ["provider", "model"]
+                if not all(k in cfg for k in required):
+                    logger.warning(f"跳过 {yaml_file.name}: 缺少必要字段")
+                    continue
+
+                provider = cfg["provider"]
+                model_name = cfg["model"]
+
+                # 如果该 provider 已有内置模型，跳过
+                if provider in self._models:
+                    logger.debug(f"跳过 {provider}: 已有内置模型")
+                    continue
+
+                # 获取 API Key
+                api_key_env = cfg.get("api_key_env", f"{provider.upper()}_API_KEY")
+                api_key = os.getenv(api_key_env)
+
+                if not api_key:
+                    logger.debug(f"跳过 {provider}: 环境变量 {api_key_env} 未设置")
+                    continue
+
+                # 使用 OpenAI 兼容接口（DeepSeekModel）初始化
+                base_url = cfg.get("endpoint")
+
+                for tier in ["low", "medium", "high"]:
+                    model_cfg = ModelConfig(
+                        api_key=api_key,
+                        base_url=base_url,
+                        model_name=model_name,
+                    )
+                    # 复用 DeepSeek 模型（OpenAI 兼容）
+                    self._models.setdefault(provider, {})[tier] = DeepSeekModel(
+                        model_cfg, ModelTier(tier)
+                    )
+
+                loaded_count += 1
+                logger.info(f"用户模型已加载: {provider}/{model_name}")
+
+            except Exception as e:
+                logger.warning(f"加载 {yaml_file.name} 失败: {e}")
+
+        if loaded_count > 0:
+            logger.info(f"已加载 {loaded_count} 个用户自定义模型")
 
     def select(
         self,
