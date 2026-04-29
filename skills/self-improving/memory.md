@@ -11,11 +11,18 @@
 <!-- Patterns observed 3+ times, subject to decay -->
 
 - **配置文件优先级**：ruff.toml > pyproject.toml，修改配置前先确认哪个文件生效（2 次踩坑：ruff、eslint）
+- **写入→读取链路验证**：任何涉及「配置写入→运行时读取」的功能，必须做端到端验证（写→读→确认）。遗漏型 bug 多发于模块衔接处（cli_self_config.py 写 ~/.omc/.env → router.py 读 os.getenv()，中间缺少 load_dotenv() 胶水代码）
 - **时间戳取模不唯一**：CI 环境可能同一毫秒执行两次 → 用单调计数器（1 次，但影响严重）
 - **bandit nosec 行号**：多行语句中每个含问题字面量的行都需要 nosec（1 次）
 
 ## Recent (last 7 days)
 <!-- New corrections pending confirmation -->
+
+- [2026-04-29] 写入→读取链路需端到端验证（load_dotenv 遗漏）
+  Type: design-pattern
+  Context: Bug #9，cli_self_config.py 写 ~/.omc/.env，router.py 读 os.getenv()，CLI 启动时漏了 load_dotenv() 注入 os.environ。属于模块衔接处的遗漏型 bug。
+  预防：涉及「写入→读取」链路的功能，完成后加端到端验证测试。
+  Confirmed: true
 
 - [2026-04-27] 时间戳取模 → 单调计数器
   Type: technical
