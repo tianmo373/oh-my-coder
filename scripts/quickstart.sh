@@ -59,7 +59,7 @@ check_python() {
 clone_repo() {
     if [ -d "$INSTALL_DIR" ]; then
         info "目录已存在: $INSTALL_DIR"
-        read -p "是否更新代码? [Y/n]: " -n 1 -r
+        read -rp "是否更新代码? [Y/n]: " -n 1
         echo
         if [[ ! $REPLY =~ ^[Nn]$ ]]; then
             git -C "$INSTALL_DIR" pull origin main 2>/dev/null || warn "git pull 失败"
@@ -83,6 +83,8 @@ install_deps() {
         info "虚拟环境已存在"
     fi
 
+    # shellcheck source=/dev/null
+    # shellcheck source=/dev/null
     source .venv/bin/activate
     pip install --upgrade pip -q
     pip install -e . -q
@@ -104,17 +106,17 @@ setup_api_key() {
     echo "  3) 通义千问（阿里）"
     echo "  4) Kimi（月暗）"
     echo ""
-    read -p "请输入选项 [1-4] 或直接回车: " choice
+    read -rp "请输入选项 [1-4] 或直接回车: " choice
 
     local env_file="$INSTALL_DIR/.env"
     case $choice in
-        1) read -p "DeepSeek API Key: " key
+        1) read -rp "DeepSeek API Key: " key
            [ -n "$key" ] && echo "DEEPSEEK_API_KEY=$key" > "$env_file" && ok "已保存 DeepSeek Key" ;;
-        2) read -p "智谱 API Key: " key
+        2) read -rp "智谱 API Key: " key
            [ -n "$key" ] && echo "GLM_API_KEY=$key" > "$env_file" && ok "已保存智谱 Key" ;;
-        3) read -p "通义千问 API Key: " key
+        3) read -rp "通义千问 API Key: " key
            [ -n "$key" ] && echo "TONGYI_API_KEY=$key" > "$env_file" && ok "已保存通义千问 Key" ;;
-        4) read -p "Kimi API Key: " key
+        4) read -rp "Kimi API Key: " key
            [ -n "$key" ] && echo "KIMI_API_KEY=$key" > "$env_file" && ok "已保存 Kimi Key" ;;
         *)
            if [ ! -f "$env_file" ]; then
@@ -128,6 +130,7 @@ setup_api_key() {
 # 运行 Demo
 run_demo() {
     cd "$INSTALL_DIR"
+    # shellcheck source=/dev/null
     source .venv/bin/activate
 
     echo ""

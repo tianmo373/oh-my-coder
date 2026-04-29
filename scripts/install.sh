@@ -71,8 +71,8 @@ check_python() {
     fi
     
     PYTHON_VERSION=$(${PYTHON_CMD} --version 2>&1 | sed 's/Python //')
-    PYTHON_MAJOR=$(echo $PYTHON_VERSION | cut -d. -f1)
-    PYTHON_MINOR=$(echo $PYTHON_VERSION | cut -d. -f2)
+    PYTHON_MAJOR=$(echo "$PYTHON_VERSION" | cut -d. -f1)
+    PYTHON_MINOR=$(echo "$PYTHON_VERSION" | cut -d. -f2)
     
     if [[ "$PYTHON_MAJOR" -lt 3 ]] || [[ "$PYTHON_MAJOR" -eq 3 && "$PYTHON_MINOR" -lt 9 ]]; then
         print_error "Python 版本过低: ${PYTHON_VERSION}，需要 ${MIN_PYTHON_VERSION}+"
@@ -129,6 +129,7 @@ setup_venv() {
     fi
     
     # 激活虚拟环境
+    # shellcheck source=/dev/null
     source .venv/bin/activate
     
     # 升级 pip
@@ -142,6 +143,7 @@ install_dependencies() {
     print_step "安装项目依赖..."
     
     cd "${INSTALL_DIR}"
+    # shellcheck source=/dev/null
     source .venv/bin/activate
     
     # 安装项目（包含所有依赖）
@@ -168,7 +170,7 @@ configure_api_key() {
             print_step "自动模式：跳过 API Key 配置"
             return
         fi
-        read -p "是否要重新配置? (y/N): " -n 1 -r
+        read -rp "是否要重新配置? (y/N): " -n 1
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
             print_step "跳过 API Key 配置"
@@ -195,12 +197,12 @@ configure_api_key() {
     echo "  4) Kimi（月暗）"
     echo "  5) 其他（稍后手动配置）"
     echo ""
-    read -p "请输入选项 [1-5] 或直接回车跳过: " choice
+    read -rp "请输入选项 [1-5] 或直接回车跳过: " choice
     
     case $choice in
         1)
             echo ""
-            read -p "请输入 DeepSeek API Key: " api_key
+            read -rp "请输入 DeepSeek API Key: " api_key
             if [ -n "$api_key" ]; then
                 echo "DEEPSEEK_API_KEY=$api_key" > .env
                 print_success "已保存 DeepSeek API Key"
@@ -208,7 +210,7 @@ configure_api_key() {
             ;;
         2)
             echo ""
-            read -p "请输入通义千问 API Key: " api_key
+            read -rp "请输入通义千问 API Key: " api_key
             if [ -n "$api_key" ]; then
                 echo "TONGYI_API_KEY=$api_key" > .env
                 print_success "已保存通义千问 API Key"
@@ -216,7 +218,7 @@ configure_api_key() {
             ;;
         3)
             echo ""
-            read -p "请输入智谱 GLM API Key: " api_key
+            read -rp "请输入智谱 GLM API Key: " api_key
             if [ -n "$api_key" ]; then
                 echo "GLM_API_KEY=$api_key" > .env
                 print_success "已保存智谱 GLM API Key"
@@ -224,7 +226,7 @@ configure_api_key() {
             ;;
         4)
             echo ""
-            read -p "请输入 Kimi API Key: " api_key
+            read -rp "请输入 Kimi API Key: " api_key
             if [ -n "$api_key" ]; then
                 echo "KIMI_API_KEY=$api_key" > .env
                 print_success "已保存 Kimi API Key"
@@ -245,6 +247,7 @@ verify_installation() {
     print_step "验证安装..."
     
     cd "${INSTALL_DIR}"
+    # shellcheck source=/dev/null
     source .venv/bin/activate
     
     # 测试 CLI 是否可用
@@ -369,7 +372,7 @@ main() {
             cd "${INSTALL_DIR}"
             git pull origin main 2>/dev/null || print_warning "git pull 失败，请手动更新"
         else
-            read -p "是否更新代码? (Y/n): " -n 1 -r
+            read -rp "是否更新代码? (Y/n): " -n 1
             echo
             if [[ ! $REPLY =~ ^[Nn]$ ]]; then
                 cd "${INSTALL_DIR}"

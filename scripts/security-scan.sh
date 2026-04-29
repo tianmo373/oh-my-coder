@@ -21,7 +21,7 @@ echo ""
 
 # 1. str(e) 检查
 echo "1️⃣  扫描 str(e) 异常信息泄露..."
-STRE_COUNT=$(grep -rn "str(e)" src/ tests/ --include="*.py" 2>/dev/null | grep -v "# safe" | grep -v "__pycache__" | grep -v "test_security_patterns.py" | grep -v "str(e)\[:" | wc -l)
+STRE_COUNT=$(grep -rn "str(e)" src/ tests/ --include="*.py" 2>/dev/null | grep -v "# safe" | grep -v "__pycache__" | grep -vc "test_security_patterns.py\|str(e)\[:")
 if [ "$STRE_COUNT" -gt 0 ]; then
     echo -e "${RED}❌ 发现 $STRE_COUNT 处 str(e)${NC}"
     grep -rn "str(e)" src/ tests/ --include="*.py" | grep -v "# safe" | grep -v "__pycache__" | head -10
@@ -33,7 +33,7 @@ fi
 # 2. in url 检查 (只检查 assert 语句中的不安全用法)
 echo ""
 echo "2️⃣  扫描 in url 不安全模式..."
-INURL_COUNT=$(grep -rn "assert.*in.*url\|in url" src/ tests/ --include="*.py" 2>/dev/null | grep -v "urlparse" | grep -v "__pycache__" | grep -v "# noqa" | wc -l)
+INURL_COUNT=$(grep -rn "assert.*in.*url\|in url" src/ tests/ --include="*.py" 2>/dev/null | grep -vc "urlparse\|__pycache__\|# noqa")
 if [ "$INURL_COUNT" -gt 0 ]; then
     echo -e "${YELLOW}⚠️  发现 $INURL_COUNT 处 in url 模式${NC}"
     grep -rn "in.*url\|in url" src/ tests/ --include="*.py" | grep -v "urlparse" | grep -v "__pycache__" | head -5
@@ -45,7 +45,7 @@ fi
 # 3. MD5/SHA1 检查
 echo ""
 echo "3️⃣  扫描弱加密算法..."
-MD5_COUNT=$(grep -rn "hashlib\.md5\|hashlib\.sha1" src/ tests/ --include="*.py" 2>/dev/null | grep -v "# safe" | grep -v "__pycache__" | grep -v "test_security" | wc -l)
+MD5_COUNT=$(grep -rn "hashlib\.md5\|hashlib\.sha1" src/ tests/ --include="*.py" 2>/dev/null | grep -vc "# safe\|__pycache__\|test_security")
 if [ "$MD5_COUNT" -gt 0 ]; then
     echo -e "${YELLOW}⚠️  发现 $MD5_COUNT 处 MD5/SHA1${NC}"
     grep -rn "hashlib\.md5\|hashlib\.sha1" src/ tests/ --include="*.py" | grep -v "# safe" | grep -v "__pycache__" | head -5
@@ -75,7 +75,7 @@ fi
 # 5. 硬编码密钥检查
 echo ""
 echo "5️⃣  扫描硬编码敏感信息..."
-SECRETS_COUNT=$(grep -rn "api_key\|apikey\|password\|secret\|token" src/ tests/ --include="*.py" 2>/dev/null | grep -E "(=\s*[\"'][^\"']{8,}[\"'])" | grep -v "example\|test\|mock\|__pycache__" | wc -l)
+SECRETS_COUNT=$(grep -rn "api_key\|apikey\|password\|secret\|token" src/ tests/ --include="*.py" 2>/dev/null | grep -E "(=\s*[\"'][^\"']{8,}[\"'])" | grep -vc "example\|test\|mock\|__pycache__")
 if [ "$SECRETS_COUNT" -gt 0 ]; then
     echo -e "${YELLOW}⚠️  发现 $SECRETS_COUNT 处可能的硬编码密钥${NC}"
     WARNINGS=$((WARNINGS + SECRETS_COUNT))
@@ -86,7 +86,7 @@ fi
 # 6. subprocess shell=True 检查
 echo ""
 echo "6️⃣  扫描命令注入风险..."
-SHELL_COUNT=$(grep -rn "shell=True" src/ tests/ --include="*.py" 2>/dev/null | grep -v "__pycache__" | wc -l)
+SHELL_COUNT=$(grep -rn "shell=True" src/ tests/ --include="*.py" 2>/dev/null | grep -vc "__pycache__")
 if [ "$SHELL_COUNT" -gt 0 ]; then
     echo -e "${YELLOW}⚠️  发现 $SHELL_COUNT 处 shell=True${NC}"
     grep -rn "shell=True" src/ tests/ --include="*.py" | grep -v "__pycache__" | head -5

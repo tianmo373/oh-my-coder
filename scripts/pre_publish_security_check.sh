@@ -64,8 +64,7 @@ for ext in py js ts go json yaml yml; do
         ! -name "demo.py" \
         ! -name "*.demo.*" \
         ! -name ".env*" \
-        2>/dev/null \
-        -exec grep -l -E "$REAL_KEY_PATTERN" {} \; || true)
+        -exec grep -l -E "$REAL_KEY_PATTERN" {} \; 2>/dev/null || true)
     if [[ -n "$result" ]]; then
         FOUND_KEYS="$FOUND_KEYS"$'\n'"$result"
     fi
