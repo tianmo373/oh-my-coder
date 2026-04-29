@@ -2,7 +2,7 @@
 
 > 🤖 多智能体 AI 编程助手，支持国内大模型
 
-🎯 **GLM-4.7-Flash 开源免费 · 6 个生产就绪模型 + Ollama 本地模型 · 31 个专业 Agent · 多 Agent 协作 · 完全开源**
+🎯 **GLM-4.7-Flash 开源免费 · 6 个生产就绪模型 + Ollama 本地模型 · 32 个专业 Agent · 多 Agent 协作 · 完全开源**
 
 [![CI](https://github.com/VOBC/oh-my-coder/actions/workflows/test.yml/badge.svg)](https://github.com/VOBC/oh-my-coder/actions)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -15,6 +15,8 @@
 **灵感来源**: [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (28.9k ⭐)
 
 ![Agent System](docs/screenshots/demo-agents.svg)
+
+> 🎬 **[Demo 视频 (v0.2.0)](docs/screenshots/demo-v0.2.0.mp4)** - 70秒快速了解核心功能
 
 ---
 
