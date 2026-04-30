@@ -24,6 +24,77 @@ MemoryManager
 └── Tier 2 (Archive)   # 完整存档，无限存储
 ```
 
+## AutoCompact：自动上下文压缩
+
+**用途**：在会话消息接近模型上下文窗口限制时，自动压缩历史消息，释放上下文空间。
+
+**压缩阈值**：
+- `warning_threshold`（默认 70%）：提示警告
+- `compact_threshold`（默认 85%）：触发压缩
+
+**压缩流程**（每条消息经过以下处理）：
+
+1. **去重（tool_call）**：`enable_deduplication=True` 时，连续相同的 tool_call 响应只保留最后一条，摘要追加 `[去重: N 次重复 tool_call]`
+2. **错误清理**：`enable_purge_errors=True` 时，清理超过 `max_age_rounds` 轮次的 error 类型消息（保留最后 1 条），摘要追加 `[已清理 N 个历史错误]`
+3. **分片**：保留 system 消息 + 最后 20% + 摘要
+4. **摘要生成**：按消息类型统计（文件读取、命令执行、错误、搜索、函数调用、其他工具）
+
+**CompactResult 字段**：
+
+| 字段 | 说明 |
+|------|------|
+| `triggered` | 是否触发了压缩 |
+| `tokens_before` / `tokens_after` | 压缩前后 token 数 |
+| `tokens_saved` | 节省的 token 数（property） |
+| `messages_removed` | 清理的消息数 |
+| `warning_level` | 警告级别（ok/warning/critical/compacted） |
+| `deduplicated_count` | 去重的连续重复 tool_call 数 |
+| `error_removed_count` | 清理的历史 error 消息数 |
+
+**配置参数**：
+
+```python
+from src.memory.auto_compact import AutoCompact
+
+ac = AutoCompact(
+    memory_manager,
+    model_context_window=128000,   # 模型上下文窗口
+    compact_threshold=0.85,         # 压缩阈值（默认 85%）
+    warning_threshold=0.70,         # 警告阈值（默认 70%）
+    enable_deduplication=True,      # 工具调用去重（默认开启）
+    enable_purge_errors=True,      # 历史错误清理（默认开启）
+)
+```
+
+**强制压缩与手动 sweep**：
+
+```python
+# 自动检查（阈值触发）
+result = ac.check_and_compact(session)
+
+# 强制压缩（跳过阈值检查）
+result = ac.check_and_compact(session, force=True)
+
+# 从最后用户消息处截断，再压缩
+result = ac.check_and_compact(session, since_last_user=True)
+```
+
+**CLI 命令**：
+
+```bash
+# 查看压缩统计
+omc compact stats
+
+# 手动触发压缩（最新会话）
+omc compact sweep
+
+# 从最后用户消息开始裁剪，再压缩
+omc compact sweep --since-last-user
+
+# 预览压缩结果，不实际执行
+omc compact sweep --dry-run
+```
+
 ## Tier 0：核心记忆
 
 **用途**：注入到系统 Prompt，每个请求都携带。
@@ -121,6 +192,20 @@ best_practices = mm.get_learnings_by_category("best-practice")
 ## CLI 命令
 
 ```bash
+# ========== 自动压缩 ==========
+# 查看压缩统计
+omc compact stats
+
+# 手动触发压缩（最新会话）
+omc compact sweep
+
+# 从最后用户消息开始裁剪，再压缩
+omc compact sweep --since-last-user
+
+# 预览压缩结果，不实际执行
+omc compact sweep --dry-run
+
+# ========== 记忆管理 ==========
 # 查看记忆统计
 omc memory stats
 
