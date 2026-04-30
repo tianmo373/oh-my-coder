@@ -27,11 +27,11 @@ from .agents.cross_validation import CrossValidationLayer
 from .capabilities import app as cap_app
 from .cli_checkpoint import app as checkpoint_app
 from .cli_commands import app as commands_app
+from .cli_compact import app as compact_app
 from .cli_config_ext import app as config_ext_app
 from .cli_context import context_app
 from .cli_lsp import app as lsp_app
 from .cli_mcp import app as mcp_app
-from .cli_compact import app as compact_app
 from .cli_memory import app as memory_app
 from .cli_migrate import app as migrate_app
 from .cli_multiagent import app as multiagent_app
