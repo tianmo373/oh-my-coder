@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Generate a terminal execution demo GIF for oh-my-coder CLI."""
 
-from PIL import Image, ImageDraw, ImageFont
 import os
+
+from PIL import Image, ImageDraw, ImageFont
 
 # Config
 OUTPUT_PATH = "/Users/vobc/.qclaw/workspace-agent-bf627e2b/docs/screenshots/demo.gif"
@@ -72,7 +73,7 @@ def render_frame(lines, cursor_y, font):
     """Render a single frame."""
     img = Image.new("RGB", (WIDTH, HEIGHT), BG_COLOR)
     draw = ImageDraw.Draw(img)
-    
+
     # Draw each line
     y = 30
     for i, line in enumerate(lines):
@@ -81,24 +82,26 @@ def render_frame(lines, cursor_y, font):
             "command": CMD_COLOR,
             "output": OUTPUT_COLOR,
         }.get(line["type"], OUTPUT_COLOR)
-        
+
         draw.text((20, y), line["text"], font=font, fill=color)
-        
+
         # Cursor blinking effect for prompt lines
         if line["type"] == "prompt" and i == cursor_y:
             # Draw blinking cursor
             text_width = draw.textlength(line["text"], font=font)
             cursor_x = 20 + text_width
             if frame_num % 2 == 0:  # Blink effect
-                draw.rectangle((cursor_x, y+4, cursor_x+10, y+20), fill=PROMPT_COLOR)
-        
+                draw.rectangle(
+                    (cursor_x, y + 4, cursor_x + 10, y + 20), fill=PROMPT_COLOR
+                )
+
         y += 26
-    
+
     # Draw status bar at bottom
-    draw.rectangle((0, HEIGHT-30, WIDTH, HEIGHT), fill=(40, 44, 48))
-    draw.text((15, HEIGHT-24), "oh-my-coder CLI", font=font, fill=(120, 120, 130))
-    draw.text((WIDTH-100, HEIGHT-24), "zsh", font=font, fill=(120, 120, 130))
-    
+    draw.rectangle((0, HEIGHT - 30, WIDTH, HEIGHT), fill=(40, 44, 48))
+    draw.text((15, HEIGHT - 24), "oh-my-coder CLI", font=font, fill=(120, 120, 130))
+    draw.text((WIDTH - 100, HEIGHT - 24), "zsh", font=font, fill=(120, 120, 130))
+
     return img
 
 
@@ -107,21 +110,21 @@ def get_lines_for_frame(frame_num):
     """Determine which lines to show at this frame."""
     # Simple animation: reveal lines progressively
     lines = []
-    
+
     # Reveal lines gradually
     reveal_speed = 3  # frames per line reveal
     current_line_idx = frame_num // reveal_speed
-    
+
     for i in range(min(current_line_idx + 1, len(TERMINAL_LINES))):
         line = TERMINAL_LINES[i].copy()
-        
+
         # Animate typing for command/prompt lines
         if line["type"] in ("command", "prompt") and i == current_line_idx:
             char_reveal = (frame_num % reveal_speed) * 3
             line["text"] = line["text"][:char_reveal]
-        
+
         lines.append(line)
-    
+
     return lines
 
 
