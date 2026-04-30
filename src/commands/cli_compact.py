@@ -8,7 +8,6 @@ omc compact - 自动压缩工具
 """
 
 from __future__ import annotations
-from typing import Optional
 
 from pathlib import Path
 

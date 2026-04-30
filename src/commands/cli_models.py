@@ -9,7 +9,6 @@ Models CLI - 模型配置分享与浏览
 """
 
 from __future__ import annotations
-from typing import Optional
 
 import json
 import os

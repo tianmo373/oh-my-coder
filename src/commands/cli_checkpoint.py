@@ -10,7 +10,6 @@ omc checkpoint --stats                     # 查看统计
 """
 
 from __future__ import annotations
-from typing import Optional
 
 from pathlib import Path
 

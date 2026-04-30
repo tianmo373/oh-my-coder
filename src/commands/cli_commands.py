@@ -16,7 +16,6 @@ echo "Project: $PROJECT"
 """
 
 from __future__ import annotations
-from typing import Optional
 
 import os
 import re
@@ -209,7 +208,7 @@ echo "清理完成!"
 @app.command()
 def run(
     name: str = typer.Argument(..., help="命令名称"),
-    args: Optional[list[str]] = typer.Argument(None, help="命令参数"),
+    args: list[str] | None = typer.Argument(None, help="命令参数"),
     dry_run: bool = typer.Option(False, "--dry-run", help="仅显示将要执行的命令"),
 ):
     if args is None:

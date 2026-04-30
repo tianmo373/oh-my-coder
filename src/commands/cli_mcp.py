@@ -8,7 +8,6 @@ omc mcp --status             # 查看 MCP 连接状态
 """
 
 from __future__ import annotations
-from typing import Optional
 
 import contextlib
 import json

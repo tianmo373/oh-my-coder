@@ -9,7 +9,6 @@ omc multiagent remove <agent_id>   - 移除 Agent
 """
 
 from __future__ import annotations
-from typing import Optional
 
 import typer
 from rich.console import Console
