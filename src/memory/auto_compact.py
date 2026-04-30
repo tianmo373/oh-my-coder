@@ -381,10 +381,10 @@ class AutoCompact:
         )
 
     def _generate_summary(self, messages: list[Message]) -> str:
-        """生成消息摘要（简单实现）
+        """生成消息摘要
 
-        实际生产环境可以调用 LLM 生成更智能的摘要。
-        这里使用简单的关键词提取和统计。
+        按消息类型分类统计，输出格式：
+        省略了 X 条消息（Y 个文件读取, Z 个命令, W 个错误, ...）
 
         Args:
             messages: 需要摘要的消息列表
@@ -392,27 +392,52 @@ class AutoCompact:
         Returns:
             str: 摘要文本
         """
-        user_count = sum(1 for m in messages if m.role == "user")
-        assistant_count = sum(1 for m in messages if m.role == "assistant")
+        file_reads = 0
+        commands = 0
+        errors = 0
+        function_calls = 0
+        searches = 0
+        other_tool = 0
 
-        # 提取关键词（简单实现：找出现频率较高的词）
-        all_text = " ".join(m.content for m in messages)
-        words = [w.lower() for w in all_text.split() if len(w) > 3 and w.isalpha()]
+        for msg in messages:
+            if msg.role == "tool":
+                name = (msg.metadata.get("name") or "").lower()
+                content_lower = msg.content.lower()
+                is_err = (
+                    msg.metadata.get("is_error") is True
+                    or "error" in name
+                    or "exception" in name
+                    or any(k in content_lower for k in ["error:", "traceback", "exception:", "failed:"])
+                )
+                if is_err:
+                    errors += 1
+                elif name in ("read", "read_file", "read_file_list"):
+                    file_reads += 1
+                elif name in ("bash", "execute", "command", "run_command"):
+                    commands += 1
+                elif name in ("grep", "search", "web_search", "find"):
+                    searches += 1
+                elif name in ("edit", "write", "write_file", "create_file"):
+                    function_calls += 1
+                else:
+                    other_tool += 1
 
-        # 统计词频
-        word_freq = {}
-        for w in words:
-            word_freq[w] = word_freq.get(w, 0) + 1
+        parts = []
+        if file_reads > 0:
+            parts.append(f"{file_reads} 个文件读取")
+        if commands > 0:
+            parts.append(f"{commands} 个命令")
+        if errors > 0:
+            parts.append(f"{errors} 个错误")
+        if searches > 0:
+            parts.append(f"{searches} 次搜索")
+        if function_calls > 0:
+            parts.append(f"{function_calls} 个函数调用")
+        if other_tool > 0:
+            parts.append(f"{other_tool} 个其他工具")
 
-        # 取 top 5 关键词
-        top_keywords = sorted(word_freq.items(), key=lambda x: -x[1])[:5]
-        keywords_str = ", ".join(w for w, _ in top_keywords) if top_keywords else "无"
-
-        return (
-            f"省略了 {len(messages)} 条消息 "
-            f"({user_count} user, {assistant_count} assistant)。"
-            f"关键词: {keywords_str}"
-        )
+        detail = ", ".join(parts) if parts else "无工具调用"
+        return f"省略了 {len(messages)} 条消息（{detail}）"
 
 
     # ------------------------------------------------------------------ P1-2: Error Purge ---------------------------------------------------------

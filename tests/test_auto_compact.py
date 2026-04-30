@@ -197,8 +197,8 @@ class TestAutoCompact:
 
         # 摘要应该包含消息数量
         assert "4" in summary or "省略" in summary
-        # 应该包含关键词
-        assert "关键词" in summary
+        # 格式：省略了 X 条消息（...）
+        assert "省略了" in summary and "条消息" in summary
 
 
 class TestMemoryManagerIntegration:
