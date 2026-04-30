@@ -602,8 +602,6 @@ class Orchestrator:
 
             agent_name = step.agent_name
             retry_count = 0
-            health_checker_attr = getattr(self, "_health_checker", None)
-            max_retries = health_checker_attr.max_retries if health_checker_attr else 3
 
             while True:
                 # ---- 注册健康检查：Agent 开始执行 ----
