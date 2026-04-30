@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 """
 记忆管理器 - 统一入口
 
@@ -64,6 +66,43 @@ class MemoryManager:
             compact_threshold=config.compact_threshold,
             warning_threshold=config.warning_threshold,
         )
+        self._stats_file = config.storage_dir / "compact_stats.json"
+
+    @property
+    def compact_stats(self) -> dict:
+        """返回当前会话的压缩统计（持久化）"""
+        if not self._stats_file.exists():
+            return self._empty_stats()
+        try:
+            with open(self._stats_file, encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError):
+            return self._empty_stats()
+
+    def record_compact(self, result) -> None:
+        """记录一次压缩事件到持久化存储"""
+        stats = self.compact_stats
+        stats["total_compact_count"] += 1
+        stats["total_tokens_saved"] += result.tokens_saved
+        stats["total_messages_removed"] += result.messages_removed
+        stats["total_deduplicated"] += getattr(result, "deduplicated_count", 0)
+        stats["total_errors_removed"] += getattr(result, "error_removed_count", 0)
+        try:
+            self._stats_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(self._stats_file, "w", encoding="utf-8") as f:
+                json.dump(stats, f, ensure_ascii=False, indent=2)
+        except OSError:
+            pass
+
+    @staticmethod
+    def _empty_stats() -> dict:
+        return {
+            "total_compact_count": 0,
+            "total_tokens_saved": 0,
+            "total_messages_removed": 0,
+            "total_deduplicated": 0,
+            "total_errors_removed": 0,
+        }
 
     @staticmethod
     def _get_encoder() -> str | None:
@@ -97,7 +136,10 @@ class MemoryManager:
         Returns:
             CompactResult: 压缩结果
         """
-        return self.auto_compact.check_and_compact(session, provider, model)
+        result = self.auto_compact.check_and_compact(session, provider, model)
+        if result.compacted:
+            self.record_compact(result)
+        return result
 
     @classmethod
     def from_project(cls, project_path: Path) -> MemoryManager:
