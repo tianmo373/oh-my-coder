@@ -46,7 +46,7 @@ class MemoryConfig:
     tier0_max_tokens: int = 500
     tier1_max_tokens: int = 2000
     # 自动压缩配置
-    compact_threshold: float = 0.85
+    compact_threshold: float = 0.95
     warning_threshold: float = 0.70
 
 

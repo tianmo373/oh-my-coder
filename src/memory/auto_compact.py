@@ -1,7 +1,7 @@
 """Auto Compact - 上下文自动压缩
 
 当会话 token 接近模型上下文窗口限制时，自动压缩早期消息。
-参考 OpenCode 的 95% 阈值策略，但使用更保守的 85%。
+参考 OpenCode 的 95% 阈值策略，但使用 95%。
 """
 
 import json
@@ -42,7 +42,7 @@ class AutoCompact:
         self,
         memory_manager,
         model_context_window: int = DEFAULT_CONTEXT_WINDOW,
-        compact_threshold: float = 0.85,
+        compact_threshold: float = 0.95,
         warning_threshold: float = 0.70,
         enable_deduplication: bool = True,
         enable_purge_errors: bool = True,
@@ -51,7 +51,7 @@ class AutoCompact:
         Args:
             memory_manager: MemoryManager 实例，用于 count_tokens
             model_context_window: 模型上下文窗口大小（默认 128k）
-            compact_threshold: 触发压缩的阈值（默认 0.85 = 85%）
+            compact_threshold: 触发压缩的阈值（默认 0.95 = 95%）
             warning_threshold: 发出警告的阈值（默认 0.70 = 70%）
             enable_deduplication: 是否启用工具调用去重（默认 True）
             enable_purge_errors: 是否启用历史错误消息清理（默认 True）
