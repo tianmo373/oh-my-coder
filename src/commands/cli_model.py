@@ -1085,3 +1085,98 @@ def main(ctx: typer.Context) -> None:
 
 if __name__ == "__main__":
     app()
+
+
+# =============================================================================
+# 按模型独立配置（temperature / max_tokens）
+# =============================================================================
+
+
+MODEL_CONFIG_FILE = Path.home() / ".omc" / "model_config.yaml"
+
+
+def _load_model_config() -> dict:
+    if MODEL_CONFIG_FILE.exists():
+        try:
+            with open(MODEL_CONFIG_FILE, encoding="utf-8") as f:
+                return yaml.safe_load(f) or {}
+        except Exception:
+            pass
+    return {}
+
+
+def _save_model_config(data: dict) -> None:
+    MODEL_CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(MODEL_CONFIG_FILE, "w", encoding="utf-8") as f:
+        yaml.dump(data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
+
+
+@app.command("config")
+def model_config_cmd(
+    ctx: typer.Context,
+    model_name: str = typer.Argument(None, help="模型 ID（如 deepseek, glm）"),
+    get: bool = typer.Option(False, "--get", help="获取该模型的配置"),
+    set_key: str = typer.Option(None, "--set", help="设置参数，格式: temperature=0.7"),
+    list_all: bool = typer.Option(False, "--list", help="列出所有模型的配置"),
+) -> None:
+    """查看/设置按模型独立的 temperature 和 max_tokens"""
+    cfg = _load_model_config()
+
+    if list_all:
+        if not cfg:
+            console.print("[dim]尚无模型级配置，使用默认值[/dim]")
+            return
+        table = Table(title="各模型独立配置")
+        table.add_column("模型", style="cyan")
+        table.add_column("temperature", style="yellow")
+        table.add_column("max_tokens", style="green")
+        for mname, mv in cfg.items():
+            table.add_row(
+                mname,
+                str(mv.get("temperature", "-")),
+                str(mv.get("max_tokens", "-")),
+            )
+        console.print(table)
+        return
+
+    if model_name is None:
+        console.print(ctx.get_help())
+        return
+
+    if model_name not in SUPPORTED_MODELS:
+        console.print(f"[red]✗ 不支持的模型: {model_name}[/red]")
+        console.print("支持的模型:", ", ".join(SUPPORTED_MODELS.keys()))
+        raise typer.Exit(1)
+
+    if set_key:
+        # 解析 key=value
+        if "=" not in set_key:
+            console.print("[red]✗ --set 格式应为 key=value，如 temperature=0.7[/red]")
+            raise typer.Exit(1)
+        k, v = set_key.split("=", 1)
+        k = k.strip()
+        if k not in ("temperature", "max_tokens"):
+            console.print("[red]✗ 仅支持 temperature 和 max_tokens[/red]")
+            raise typer.Exit(1)
+        try:
+            v = float(v) if k == "temperature" else int(v)
+        except ValueError:
+            console.print(f"[red]✗ {k} 的值必须是数字[/red]")
+            raise typer.Exit(1)
+
+        if model_name not in cfg:
+            cfg[model_name] = {}
+        old_val = cfg[model_name].get(k)
+        cfg[model_name][k] = v
+        _save_model_config(cfg)
+        console.print(f"[green]✓[/] {model_name}.{k}: {old_val} → {v}")
+        return
+
+    # 显示该模型配置
+    mv = cfg.get(model_name, {})
+    if not mv:
+        console.print(f"[dim]模型 {model_name} 使用全局默认值[/dim]")
+    else:
+        console.print(f"[bold cyan]模型 {model_name} 的独立配置:[/bold cyan]")
+        for k, v in mv.items():
+            console.print(f"  {k}: [yellow]{v}[/yellow]")
