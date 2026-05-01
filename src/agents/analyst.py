@@ -18,8 +18,10 @@ Analyst Agent - 需求分析智能体
 """
 
 from dataclasses import dataclass
+from typing import Optional
 
 from ..core.router import TaskType
+from ..tools.sourcegraph import SearchResult, search
 from .base import (
     AgentContext,
     AgentLane,
@@ -62,6 +64,7 @@ class AnalystAgent(BaseAgent):
     - 使用 HIGH tier 模型（深度推理）
     - 苏格拉底式提问，澄清需求
     - 输出结构化需求文档
+    - 可选 Sourcegraph 代码搜索增强
     """
 
     name = "analyst"
@@ -69,7 +72,35 @@ class AnalystAgent(BaseAgent):
     lane = AgentLane.BUILD_ANALYSIS
     default_tier = "high"
     icon = "📊"
-    tools = ["file_read", "search"]
+    tools = ["file_read", "search", "sourcegraph"]
+
+    # Sourcegraph 配置
+    use_sourcegraph: bool = False
+    sourcegraph_limit: int = 10
+
+    def search_code(
+        self,
+        query: str,
+        language: Optional[str] = None,  # noqa: UP045
+        repo: Optional[str] = None,  # noqa: UP045
+    ) -> SearchResult:
+        """
+        搜索公开代码库（通过 Sourcegraph）
+
+        Args:
+            query: 搜索关键词或 Sourcegraph 查询语法
+            language: 语言过滤（如 rust/python/go）
+            repo: 仓库过滤（支持 glob 模式）
+
+        Returns:
+            SearchResult: 搜索结果
+        """
+        return search(
+            query=query,
+            language=language,
+            repo=repo,
+            limit=self.sourcegraph_limit,
+        )
 
     @property
     def system_prompt(self) -> str:
@@ -83,12 +114,14 @@ class AnalystAgent(BaseAgent):
 2. 约束发现 - 识别技术、时间、资源约束
 3. 风险识别 - 发现潜在的坑和风险点
 4. 苏格拉底式提问 - 通过提问澄清需求
+5. 代码搜索 - 通过 Sourcegraph 搜索公开代码库，参考已有实现
 
 ## 工作原则
 1. **不要猜测** - 有疑问就提问，不要假设
 2. **结构化输出** - 使用 Markdown 和表格组织信息
 3. **优先级明确** - 区分必须、应该、可以
 4. **可验证性** - 每个需求都有验收标准
+5. **参考实现** - 搜索公开代码库，了解业界最佳实践
 
 ## 输出格式
 
@@ -131,7 +164,8 @@ class AnalystAgent(BaseAgent):
         步骤：
         1. 分析用户输入
         2. 结合项目上下文
-        3. 调用模型深度分析
+        3. 可选：搜索相关代码（Sourcegraph）
+        4. 调用模型深度分析
         """
         # 添加项目上下文
         if context.previous_outputs.get("explore"):
@@ -139,6 +173,26 @@ class AnalystAgent(BaseAgent):
             prompt.append(
                 {"role": "user", "content": f"## 项目探索结果\n\n{explore_result}"}
             )
+
+        # Sourcegraph 代码搜索增强（可选）
+        if self.use_sourcegraph and kwargs.get("search_query"):
+            search_query = kwargs["search_query"]
+            search_lang = kwargs.get("search_language")
+            search_repo = kwargs.get("search_repo")
+
+            result = self.search_code(search_query, language=search_lang, repo=search_repo)
+
+            if result.total_matches > 0:
+                code_context = result.format_code(limit=5)
+                prompt.append(
+                    {
+                        "role": "user",
+                        "content": f"## 相关代码参考（Sourcegraph 搜索）\n\n{code_context}",
+                    }
+                )
+            elif result.warnings:
+                # 记录警告但不中断
+                context.metadata["sourcegraph_warnings"] = result.warnings
 
         # 添加分析提示
         analysis_hint = """
