@@ -411,6 +411,9 @@ BUILTIN_CATWALK_MODELS: list[dict[str, Any]] = [
 
 
 # =============================================================================
+RECOMMENDED_TIERS = {"free", "low"}
+
+
 # 命令实现
 # =============================================================================
 
@@ -483,6 +486,9 @@ def list_models(
         if source:
             all_configs = [c for c in all_configs if c.get("_source") == source]
 
+        # Count total before recommended filter (for footer hint)
+        total_before_recommend = len(all_configs)
+
         # Apply status filter (not combined with source/tier/provider)
         if status or all or beta:
             all_configs = filter_by_status(
@@ -499,6 +505,13 @@ def list_models(
                 show_beta=False,
                 show_deprecated=False,
             )
+
+        # Default: only show recommended models (free/low tier) unless --all
+        if not all:
+            all_configs = [c for c in all_configs if c.get("tier") in RECOMMENDED_TIERS]
+            recommended_count = len(all_configs)
+        else:
+            recommended_count = len([c for c in all_configs if c.get("tier") in RECOMMENDED_TIERS])
 
         if json_output:
             # JSON 输出（供 AI 消费）
@@ -579,8 +592,14 @@ def list_models(
         console.print(f"[dim]内置模型目录: {CATWALK_DIR}（只读）[/dim]")
         console.print(f"[dim]用户模型目录: {USER_MODELS_DIR}[/dim]")
         console.print("[dim]提示: 使用 [cyan]omc model catwalk[/cyan] 交互式浏览[/dim]")
+        console.print(
+            f"[dim]显示 {recommended_count} 个推荐模型，共 {total_before_recommend} 个。使用 --all 查看全部[/dim]"
+        )
     else:
         # 简单模式
+        # Count total for footer hint
+        total_simple = len(SUPPORTED_MODELS)
+
         table = Table(title="支持的模型列表")
         table.add_column("模型 ID", style="cyan")
         table.add_column("名称", style="green")
@@ -600,12 +619,16 @@ def list_models(
             }
             status_str = status_map.get(status_raw, status_raw)
             # Filtering logic:
-            # --all: show all; --beta: show only beta; default: production only
+            # --all: show all; --beta: show only beta; default: production + recommended only
             if beta:
                 if status_raw != "beta" and status_raw != "deprecated":
                     continue
-            elif not all and status_raw != "production":
-                continue
+            elif not all:
+                if status_raw != "production":
+                    continue
+                # Also filter by recommended tier (low) unless --all
+                if info.get("tier") not in RECOMMENDED_TIERS:
+                    continue
             table.add_row(
                 model_id,
                 info["name"],
@@ -619,6 +642,18 @@ def list_models(
         console.print(f"[dim]配置文件: {CONFIG_FILE}[/dim]")
         console.print(f"[dim]当前模型: {current}[/dim]")
         console.print("[dim]使用 [cyan]--extended[/cyan] 查看 Catwalk 详细模式[/dim]")
+        # Recommended count for simple mode
+        simple_recommended = sum(
+            1 for m, i in SUPPORTED_MODELS.items() if i.get("tier") in RECOMMENDED_TIERS
+        )
+        if not all:
+            console.print(
+                f"[dim]显示 {simple_recommended} 个推荐模型，共 {total_simple} 个。使用 --all 查看全部[/dim]"
+            )
+        else:
+            console.print(
+                f"[dim]共 {total_simple} 个模型（含 {simple_recommended} 个推荐）[/dim]"
+            )
 
         # 检查新模型（非阻塞，使用缓存或快速发现）
         if get_discovery_summary and not json_output:
