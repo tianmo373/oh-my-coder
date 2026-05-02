@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 成本优化 CLI - omc cost 命令
 
@@ -9,7 +10,6 @@
   omc cost --list                           # 列出所有可用模型
 """
 
-from __future__ import annotations
 
 import typer
 from rich.console import Console

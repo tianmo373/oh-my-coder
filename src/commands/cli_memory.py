@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 omc memory - 分层记忆查询命令
 
@@ -8,7 +9,6 @@ omc memory - 分层记忆查询命令
   omc memory stats    # 查看记忆统计（条数、token 数）
 """
 
-from __future__ import annotations
 
 from pathlib import Path
 

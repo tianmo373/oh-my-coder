@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Gateway - 多平台统一消息网关
 
@@ -30,7 +31,6 @@ CLI:
     omc gateway status
 """
 
-from __future__ import annotations
 
 import asyncio
 import logging

@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 omc compact - 自动压缩工具
 
@@ -7,7 +8,6 @@ omc compact - 自动压缩工具
   omc compact sweep --since-last-user  # 从最后用户消息开始压缩
 """
 
-from __future__ import annotations
 
 from pathlib import Path
 

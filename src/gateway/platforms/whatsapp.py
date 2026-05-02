@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 WhatsApp Business Cloud API 平台处理器
 
@@ -7,7 +8,6 @@ WhatsApp Business Cloud API 平台处理器
 文档：https://developers.facebook.com/docs/whatsapp/cloud-api
 """
 
-from __future__ import annotations
 
 import asyncio
 import contextlib

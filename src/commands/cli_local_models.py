@@ -1,10 +1,10 @@
+from __future__ import annotations
 """
 本地模型 CLI 命令
 
 管理 Ollama 本地模型：检查状态、列出模型、拉取模型等。
 """
 
-from __future__ import annotations
 
 import typer
 from rich.console import Console

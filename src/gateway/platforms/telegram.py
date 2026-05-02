@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Telegram Bot 平台处理器
 
@@ -5,7 +6,6 @@ Telegram Bot 平台处理器
 支持：消息接收、消息发送、命令处理、回复。
 """
 
-from __future__ import annotations
 
 import logging
 from typing import Any

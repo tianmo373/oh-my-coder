@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Agent 自进化模块 - Evolution System
 
@@ -14,7 +15,6 @@ Agent 自进化模块 - Evolution System
 └── {yyyy-MM-dd}-{slug}.md  # 每次重要决策记录
 """
 
-from __future__ import annotations
 
 import json
 import re

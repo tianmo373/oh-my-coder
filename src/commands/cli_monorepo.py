@@ -1,10 +1,10 @@
+from __future__ import annotations
 """
 Monorepo 工作区感知 CLI
 
 支持 pnpm workspace、lerna、bazel 等 monorepo 结构
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path

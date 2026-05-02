@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Checkpoint & Rollback 系统
 
@@ -19,7 +20,6 @@ Checkpoint & Rollback 系统
         └── <file2>
 """
 
-from __future__ import annotations
 
 import hashlib
 import json

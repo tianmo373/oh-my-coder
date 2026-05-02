@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Oh My Coder CLI - 命令行入口
 
@@ -13,7 +14,6 @@ Oh My Coder CLI - 命令行入口
 - omc --help             # 帮助信息
 """
 
-from __future__ import annotations
 
 import asyncio
 import os
@@ -349,17 +349,12 @@ def run(
 
             # 发送通知
             if notify:
-                from src.core.orchestrator import WorkflowStatus
                 from src.utils.notify import (
                     notify_workflow_complete,
                     notify_workflow_complete_dingtalk,
                 )
 
-                status = (
-                    "completed"
-                    if result.status == WorkflowStatus.COMPLETED
-                    else "failed"
-                )
+                status = "completed" if result.success else "failed"
                 steps = len(result.steps) if hasattr(result, "steps") else 1
                 exec_time = getattr(result, "execution_time", 0.0)
 

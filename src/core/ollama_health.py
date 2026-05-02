@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Ollama 健康检查模块
 
@@ -20,7 +21,6 @@ Ollama 健康检查模块
     print(info["running"], info["models"])
 """
 
-from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field

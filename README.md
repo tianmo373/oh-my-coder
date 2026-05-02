@@ -13,20 +13,12 @@
 [![Stars](https://img.shields.io/github/stars/VOBC/oh-my-coder?style=flat-square&logo=github)](https://github.com/VOBC/oh-my-coder/stargazers)
 [![Tests](https://img.shields.io/github/actions/workflow/status/VOBC/oh-my-coder/test.yml?branch=main&label=Tests)](https://github.com/VOBC/oh-my-coder/actions)
 
-<!-- Watch 提示 -->
-<p align="center">
- <sub>⭐ 如果这个项目对你有帮助，请点个 <a href="https://github.com/VOBC/oh-my-coder"><b>⭐ Star</b></a> 和 <a href="https://github.com/VOBC/oh-my-coder/subscription">👁 Watch</a> 关注更新！</sub>
-</p>
-
 **💡 灵感来源**: [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (28.9k ⭐) — 我们为国内开发者提供零门槛替代方案
 
 ![Agent System](docs/screenshots/demo-agents.svg)
 
-<!-- Demo GIF -->
-<p align="center">
- <img src="assets/demo.gif" alt="oh-my-coder Demo" width="800"/>
-</p>
-
+<!-- DEMO GIF 占位：P24 完成后替换为实际 GIF -->
+<!-- 建议尺寸：800x450，展示 omc run 命令执行过程 -->
 - [🎯 为什么选择 Oh My Coder？](#-为什么选择-oh-my-coder)
 - [🚀 Claude Code 迁移指南](#-claude-code-迁移指南)
 - [💰 零成本起步](#️-零成本起步) **[NEW]**
@@ -972,11 +964,6 @@ MIT License - 详见 [LICENSE](LICENSE)
 - **分享给朋友** — 让更多需要的人知道这个工具
 
 ---
-
-
-### 📅 更新日志
-
-查看完整变更记录请访问 [CHANGELOG.md](./CHANGELOG.md) 或关注 [Releases](https://github.com/VOBC/oh-my-coder/releases)。
 
 ## 📈 Star History
 

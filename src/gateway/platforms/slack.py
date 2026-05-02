@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Slack 平台处理器
 
@@ -7,7 +8,6 @@ Slack 平台处理器
 文档：https://api.slack.com/apis/connected
 """
 
-from __future__ import annotations
 
 import asyncio
 import contextlib

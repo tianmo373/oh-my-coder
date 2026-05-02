@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Gateway - 多平台消息网关
 
@@ -10,7 +11,6 @@ Gateway - 多平台消息网关
 - 消息格式统一：{ platform, user_id, chat_id, text, raw }
 """
 
-from __future__ import annotations
 
 import asyncio
 import logging

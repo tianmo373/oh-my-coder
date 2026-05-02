@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 安全/权限 CLI 命令
 
@@ -6,7 +7,6 @@ omc security list             - 列出内置危险模式
 omc security sandbox-test     - 测试沙箱路径限制
 """
 
-from __future__ import annotations
 
 import typer
 from rich.console import Console

@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 本地模型发现模块
 
@@ -22,7 +23,6 @@
         print(info.parameter_size, info.quantization, info.template)
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any

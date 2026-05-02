@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Model CLI - 模型切换 + Catwalk 模型仓库
 
@@ -10,13 +11,12 @@ Model CLI - 模型切换 + Catwalk 模型仓库
 - omc model export <name> [--yaml]  # 导出模型配置
 """
 
-from __future__ import annotations
 
 import json
 import os
 import urllib.request
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import typer
 import yaml
@@ -108,7 +108,7 @@ def _get_current_model() -> str:
     return config.get("default_model", "deepseek")
 
 
-def _get_current_api_key(model_id: str) -> str | None:
+def _get_current_api_key(model_id: str) -> Optional[str]:
     """获取当前模型的 API Key（从环境变量推断）"""
     key_map = {
         "deepseek": "DEEPSEEK_API_KEY",
@@ -221,13 +221,13 @@ def _save_model_config(data: dict) -> Path:
 # 内嵌模型数据，避免依赖外部 models/ 目录
 BUILTIN_CATWALK_MODELS: list[dict[str, Any]] = [
     {
-        "name": "DeepSeek V4",
+        "name": "DeepSeek V3",
         "provider": "deepseek",
         "api_key_env": "DEEPSEEK_API_KEY",
         "endpoint": "https://api.deepseek.com/v1",
         "model": "deepseek-chat",
         "tier": "low",
-        "pricing": {"input": 1, "output": 2},
+        "pricing": {"input": 2, "output": 8},
         "context": 64000,
         "features": ["function_call", "streaming"],
     },
@@ -411,9 +411,6 @@ BUILTIN_CATWALK_MODELS: list[dict[str, Any]] = [
 
 
 # =============================================================================
-RECOMMENDED_TIERS = {"free", "low"}
-
-
 # 命令实现
 # =============================================================================
 
@@ -486,9 +483,6 @@ def list_models(
         if source:
             all_configs = [c for c in all_configs if c.get("_source") == source]
 
-        # Count total before recommended filter (for footer hint)
-        total_before_recommend = len(all_configs)
-
         # Apply status filter (not combined with source/tier/provider)
         if status or all or beta:
             all_configs = filter_by_status(
@@ -504,15 +498,6 @@ def list_models(
                 show_production=True,
                 show_beta=False,
                 show_deprecated=False,
-            )
-
-        # Default: only show recommended models (free/low tier) unless --all
-        if not all:
-            all_configs = [c for c in all_configs if c.get("tier") in RECOMMENDED_TIERS]
-            recommended_count = len(all_configs)
-        else:
-            recommended_count = len(
-                [c for c in all_configs if c.get("tier") in RECOMMENDED_TIERS]
             )
 
         if json_output:
@@ -594,14 +579,8 @@ def list_models(
         console.print(f"[dim]内置模型目录: {CATWALK_DIR}（只读）[/dim]")
         console.print(f"[dim]用户模型目录: {USER_MODELS_DIR}[/dim]")
         console.print("[dim]提示: 使用 [cyan]omc model catwalk[/cyan] 交互式浏览[/dim]")
-        console.print(
-            f"[dim]显示 {recommended_count} 个推荐模型，共 {total_before_recommend} 个。使用 --all 查看全部[/dim]"
-        )
     else:
         # 简单模式
-        # Count total for footer hint
-        total_simple = len(SUPPORTED_MODELS)
-
         table = Table(title="支持的模型列表")
         table.add_column("模型 ID", style="cyan")
         table.add_column("名称", style="green")
@@ -621,16 +600,12 @@ def list_models(
             }
             status_str = status_map.get(status_raw, status_raw)
             # Filtering logic:
-            # --all: show all; --beta: show only beta; default: production + recommended only
+            # --all: show all; --beta: show only beta; default: production only
             if beta:
                 if status_raw != "beta" and status_raw != "deprecated":
                     continue
-            elif not all:
-                if status_raw != "production":
-                    continue
-                # Also filter by recommended tier (low) unless --all
-                if info.get("tier") not in RECOMMENDED_TIERS:
-                    continue
+            elif not all and status_raw != "production":
+                continue
             table.add_row(
                 model_id,
                 info["name"],
@@ -644,18 +619,6 @@ def list_models(
         console.print(f"[dim]配置文件: {CONFIG_FILE}[/dim]")
         console.print(f"[dim]当前模型: {current}[/dim]")
         console.print("[dim]使用 [cyan]--extended[/cyan] 查看 Catwalk 详细模式[/dim]")
-        # Recommended count for simple mode
-        simple_recommended = sum(
-            1 for m, i in SUPPORTED_MODELS.items() if i.get("tier") in RECOMMENDED_TIERS
-        )
-        if not all:
-            console.print(
-                f"[dim]显示 {simple_recommended} 个推荐模型，共 {total_simple} 个。使用 --all 查看全部[/dim]"
-            )
-        else:
-            console.print(
-                f"[dim]共 {total_simple} 个模型（含 {simple_recommended} 个推荐）[/dim]"
-            )
 
         # 检查新模型（非阻塞，使用缓存或快速发现）
         if get_discovery_summary and not json_output:
@@ -896,7 +859,7 @@ def import_model(
 
 @app.command("export")
 def export_model(
-    name: str = typer.Argument(..., help="模型名称（完整名称，如 'DeepSeek V4'）"),
+    name: str = typer.Argument(..., help="模型名称（完整名称，如 'DeepSeek V3'）"),
     yaml_out: bool = typer.Option(False, "--yaml", help="输出 YAML 格式（默认 JSON）"),
     copy: bool = typer.Option(False, "--copy", help="复制配置文本到剪贴板"),
 ) -> None:
@@ -1087,100 +1050,3 @@ def main(ctx: typer.Context) -> None:
 
 if __name__ == "__main__":
     app()
-
-
-# =============================================================================
-# 按模型独立配置（temperature / max_tokens）
-# =============================================================================
-
-
-MODEL_CONFIG_FILE = Path.home() / ".omc" / "model_config.yaml"
-
-
-def _load_model_config() -> dict:
-    if MODEL_CONFIG_FILE.exists():
-        try:
-            with open(MODEL_CONFIG_FILE, encoding="utf-8") as f:
-                return yaml.safe_load(f) or {}
-        except Exception:
-            pass
-    return {}
-
-
-def _save_model_config(data: dict) -> None:
-    MODEL_CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(MODEL_CONFIG_FILE, "w", encoding="utf-8") as f:
-        yaml.dump(
-            data, f, allow_unicode=True, sort_keys=False, default_flow_style=False
-        )
-
-
-@app.command("config")
-def model_config_cmd(
-    ctx: typer.Context,
-    model_name: str = typer.Argument(None, help="模型 ID（如 deepseek, glm）"),
-    get: bool = typer.Option(False, "--get", help="获取该模型的配置"),
-    set_key: str = typer.Option(None, "--set", help="设置参数，格式: temperature=0.7"),
-    list_all: bool = typer.Option(False, "--list", help="列出所有模型的配置"),
-) -> None:
-    """查看/设置按模型独立的 temperature 和 max_tokens"""
-    cfg = _load_model_config()
-
-    if list_all:
-        if not cfg:
-            console.print("[dim]尚无模型级配置，使用默认值[/dim]")
-            return
-        table = Table(title="各模型独立配置")
-        table.add_column("模型", style="cyan")
-        table.add_column("temperature", style="yellow")
-        table.add_column("max_tokens", style="green")
-        for mname, mv in cfg.items():
-            table.add_row(
-                mname,
-                str(mv.get("temperature", "-")),
-                str(mv.get("max_tokens", "-")),
-            )
-        console.print(table)
-        return
-
-    if model_name is None:
-        console.print(ctx.get_help())
-        return
-
-    if model_name not in SUPPORTED_MODELS:
-        console.print(f"[red]✗ 不支持的模型: {model_name}[/red]")
-        console.print("支持的模型:", ", ".join(SUPPORTED_MODELS.keys()))
-        raise typer.Exit(1)
-
-    if set_key:
-        # 解析 key=value
-        if "=" not in set_key:
-            console.print("[red]✗ --set 格式应为 key=value，如 temperature=0.7[/red]")
-            raise typer.Exit(1)
-        k, v = set_key.split("=", 1)
-        k = k.strip()
-        if k not in ("temperature", "max_tokens"):
-            console.print("[red]✗ 仅支持 temperature 和 max_tokens[/red]")
-            raise typer.Exit(1)
-        try:
-            v = float(v) if k == "temperature" else int(v)
-        except ValueError:
-            console.print(f"[red]✗ {k} 的值必须是数字[/red]")
-            raise typer.Exit(1)
-
-        if model_name not in cfg:
-            cfg[model_name] = {}
-        old_val = cfg[model_name].get(k)
-        cfg[model_name][k] = v
-        _save_model_config(cfg)
-        console.print(f"[green]✓[/] {model_name}.{k}: {old_val} → {v}")
-        return
-
-    # 显示该模型配置
-    mv = cfg.get(model_name, {})
-    if not mv:
-        console.print(f"[dim]模型 {model_name} 使用全局默认值[/dim]")
-    else:
-        console.print(f"[bold cyan]模型 {model_name} 的独立配置:[/bold cyan]")
-        for k, v in mv.items():
-            console.print(f"  {k}: [yellow]{v}[/yellow]")

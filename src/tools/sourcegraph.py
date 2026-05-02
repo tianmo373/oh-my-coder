@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Sourcegraph 集成 - 让 AI 能搜索公开代码库
 
@@ -9,7 +10,6 @@ Sourcegraph 集成 - 让 AI 能搜索公开代码库
 免费 API Key: https://sourcegraph.com/user/settings/tokens
 """
 
-from __future__ import annotations
 
 import json
 import os

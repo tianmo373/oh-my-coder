@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 成本优化建议模块 - Cost Optimization
 
@@ -14,7 +15,6 @@
 - 高：>10 文件 / 新架构 / 重构
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum

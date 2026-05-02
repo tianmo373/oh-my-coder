@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 钉钉（DingTalk）平台处理器
 
@@ -7,7 +8,6 @@
 文档：https://open.dingtalk.com/document/orgapp/asynchronous-sending-of-enterprise-text-messages
 """
 
-from __future__ import annotations
 
 import asyncio
 import contextlib

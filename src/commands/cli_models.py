@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Models CLI - 模型配置分享与浏览
 
@@ -8,7 +9,6 @@ Models CLI - 模型配置分享与浏览
 - omc models remove     # 删除已分享的配置
 """
 
-from __future__ import annotations
 
 import json
 import os

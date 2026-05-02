@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 交叉验证层 - Agent 交叉验证机制
 
@@ -20,7 +21,6 @@ CLI run --cross-validate 时，工作流结束后自动执行交叉验证。
 每个交叉验证结果写入 .omc/state/cross_validation/<validation_id>.json
 """
 
-from __future__ import annotations
 
 import json
 import time

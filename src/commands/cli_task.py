@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 任务状态 CLI 命令
 
@@ -9,7 +10,6 @@ omc task delete <id>      - 删除任务
 omc task steps <id>       - 查看任务步骤历史
 """
 
-from __future__ import annotations
 
 import typer
 from rich.console import Console

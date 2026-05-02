@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Agent 健康检查与故障自动重分配
 
@@ -12,7 +13,6 @@ HealthChecker 类：
 - HealthCheckResult: 每次检查的结果（可记录日志）
 """
 
-from __future__ import annotations
 
 import asyncio
 import contextlib

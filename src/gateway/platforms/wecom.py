@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 企业微信（WeCom）平台处理器
 
@@ -7,7 +8,6 @@
 文档：https://developer.work.weixin.qq.com/document/path/91716
 """
 
-from __future__ import annotations
 
 import asyncio
 import contextlib

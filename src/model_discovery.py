@@ -1,10 +1,10 @@
+from __future__ import annotations
 """
 Model Discovery - 动态模型发现系统
 
 从各厂商 API 拉取可用模型列表，检测新模型
 """
 
-from __future__ import annotations
 
 import json
 import os

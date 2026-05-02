@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 权限治理模块
 
@@ -8,7 +9,6 @@
 - omc security check <cmd> 预检命令
 """
 
-from __future__ import annotations
 
 import contextlib
 import re
@@ -139,7 +139,7 @@ class PermissionGuard:
 
         # 2. 配置文件黑名单
         for pattern, compiled in zip(
-            self.rules.denied_patterns, self._denied_re, strict=False
+            self.rules.denied_patterns, self._denied_re
         ):
             if compiled.search(command):
                 return CheckResult(
@@ -151,7 +151,7 @@ class PermissionGuard:
         # 3. 白名单模式
         if self._allowed_re:
             for pattern, compiled in zip(
-                self.rules.allowed_patterns, self._allowed_re, strict=False
+                self.rules.allowed_patterns, self._allowed_re
             ):
                 if compiled.search(command):
                     return CheckResult(allowed=True, reason=f"匹配白名单: {pattern}")

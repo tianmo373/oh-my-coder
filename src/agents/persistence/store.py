@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Agent 状态持久化存储
 
@@ -8,7 +9,6 @@ Agent 状态持久化存储
 - import: 从 JSON 导入 Agent 配置
 """
 
-from __future__ import annotations
 
 import json
 import time

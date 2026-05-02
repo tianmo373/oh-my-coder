@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 MCP CLI 命令
 
@@ -7,7 +8,6 @@ omc mcp --list               # 列出可用工具
 omc mcp --status             # 查看 MCP 连接状态
 """
 
-from __future__ import annotations
 
 import contextlib
 import json

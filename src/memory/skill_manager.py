@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Skill 自进化系统 - SkillManager
 
@@ -37,7 +38,6 @@ updated_at: 2026-04-12
 当发现 SQL 查询响应慢时...
 """
 
-from __future__ import annotations
 
 import json
 import re

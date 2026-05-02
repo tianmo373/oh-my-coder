@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 智能测试增强模块 - Smart Test Enhancement
 
@@ -8,7 +9,6 @@
 4. 测试报告：生成详细的测试结果报告
 """
 
-from __future__ import annotations
 
 import subprocess
 from dataclasses import dataclass, field

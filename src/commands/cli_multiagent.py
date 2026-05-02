@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 多 Agent 协作 CLI 命令
 
@@ -8,7 +9,6 @@ omc multiagent list                - 列出所有子 Agent
 omc multiagent remove <agent_id>   - 移除 Agent
 """
 
-from __future__ import annotations
 
 import typer
 from rich.console import Console

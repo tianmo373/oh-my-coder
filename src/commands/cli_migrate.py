@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Optional
 """
 记忆迁移 CLI - 从其他工具导入配置
 
@@ -7,7 +9,6 @@
 - omc migrate list              # 列出支持的迁移来源
 """
 
-from __future__ import annotations
 
 from pathlib import Path
 
@@ -59,7 +60,7 @@ def list_sources():
 
 @app.command("claude")
 def migrate_claude(
-    path: Path | None = typer.Argument(
+    path: Optional[Path] = typer.Argument(
         None,
         help="项目路径（默认当前目录）",
     ),
@@ -112,7 +113,7 @@ def migrate_claude(
 
 @app.command("gemini")
 def migrate_gemini(
-    path: Path | None = typer.Argument(
+    path: Optional[Path] = typer.Argument(
         None,
         help="项目路径（默认当前目录）",
     ),

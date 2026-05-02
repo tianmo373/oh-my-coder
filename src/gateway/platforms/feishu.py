@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 飞书 / Lark 平台处理器
 
@@ -7,7 +8,6 @@
 文档：https://open.feishu.cn/document/server-docs/im-v1/message-content-description/create
 """
 
-from __future__ import annotations
 
 import asyncio
 import contextlib

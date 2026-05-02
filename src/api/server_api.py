@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 远程 Server API - REST API 接口定义
 
@@ -11,7 +12,6 @@
 前置：omc server --port 8080
 """
 
-from __future__ import annotations
 
 import asyncio
 import contextlib

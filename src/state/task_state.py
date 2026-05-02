@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 任务状态管理模块
 
@@ -8,7 +9,6 @@
 - omc task list 查看所有任务
 """
 
-from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field

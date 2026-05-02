@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Agent 配置 CLI 命令
 
@@ -6,7 +7,6 @@ omc config validate <file> - 验证配置文件
 omc config list           - 列出本地配置
 """
 
-from __future__ import annotations
 
 from pathlib import Path
 

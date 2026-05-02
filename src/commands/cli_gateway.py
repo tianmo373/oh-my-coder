@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Gateway CLI - 多平台网关命令
 
@@ -6,7 +7,6 @@ omc gateway start --discord <token>
 omc gateway status
 """
 
-from __future__ import annotations
 
 import asyncio
 import os

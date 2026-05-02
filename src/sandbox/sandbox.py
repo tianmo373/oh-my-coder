@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 沙箱安全模块
 
@@ -8,7 +9,6 @@
 - 简单但有效的隔离机制
 """
 
-from __future__ import annotations
 
 import os
 import subprocess

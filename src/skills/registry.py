@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Skill 注册中心 - 统一管理和执行 Skill
 
@@ -8,7 +9,6 @@ Skill 注册中心 - 统一管理和执行 Skill
 - 支持 CLI 调用：omc skill list / omc skill run <name>
 """
 
-from __future__ import annotations
 
 import importlib.util
 import logging
