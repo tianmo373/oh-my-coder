@@ -173,6 +173,14 @@ try:
 except Exception:
     pass
 
+# init 子命令 - 交互式初始化引导
+try:
+    from .cli_init import app as init_app  # noqa: E402
+
+    app.add_typer(init_app, name="init", help="初始化引导 - 交互式配置 oh-my-coder")
+except Exception:
+    pass
+
 console = Console()
 
 

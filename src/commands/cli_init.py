@@ -1,0 +1,256 @@
+"""
+Init CLI - 交互式初始化引导
+
+命令：
+- omc init  # 交互式引导新用户完成首次配置
+"""
+
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+
+import typer
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
+
+console = Console()
+
+app = typer.Typer(
+    name="init",
+    help="初始化引导 - 交互式配置 oh-my-coder",
+    add_completion=False,
+)
+
+# 配置文件路径（与 cli_model.py 一致）
+CONFIG_DIR = Path.home() / ".config" / "oh-my-coder"
+CONFIG_FILE = CONFIG_DIR / "config.json"
+
+# 版本号（与 cli.py 一致）
+__version__ = "0.2.0"
+
+# ── 可选模型列表 ──────────────────────────────────────────────
+
+MODEL_CHOICES = [
+    ("deepseek", "DeepSeek", "高性价比，推荐首选", "low"),
+    ("glm", "智谱 GLM", "GLM-4-Flash 免费使用", "low"),
+    ("tongyi", "通义千问", "阿里云出品", "medium"),
+    ("wenxin", "文心一言", "百度出品", "medium"),
+    ("doubao", "字节豆包", "字节跳动出品", "medium"),
+    ("hunyuan", "腾讯混元", "腾讯出品", "medium"),
+    ("kimi", "Kimi", "月之暗面出品", "medium"),
+    ("minimax", "MiniMax", "高性价比", "medium"),
+    ("spark", "讯飞星火", "科大讯飞出品", "medium"),
+    ("baichuan", "百川智能", "百川出品", "medium"),
+    ("tiangong", "天工 AI", "天工出品", "medium"),
+    ("mimo", "小米 MiMo", "小米出品", "medium"),
+]
+
+# API Key 环境变量映射
+API_KEY_ENV_MAP = {
+    "deepseek": "DEEPSEEK_API_KEY",
+    "glm": "ZHIPU_API_KEY",
+    "tongyi": "DASHSCOPE_API_KEY",
+    "wenxin": "QIANFAN_API_KEY",
+    "doubao": "ARK_API_KEY",
+    "hunyuan": "HUNYUAN_API_KEY",
+    "kimi": "MOONSHOT_API_KEY",
+    "minimax": "MINIMAX_API_KEY",
+    "spark": "SPARK_API_KEY",
+    "baichuan": "BAICHUAN_API_KEY",
+    "tiangong": "TIANGONG_API_KEY",
+    "mimo": "MIMO_API_KEY",
+}
+
+
+# ── 工具函数 ──────────────────────────────────────────────────
+
+
+def _load_config() -> dict:
+    """加载现有配置"""
+    if CONFIG_FILE.exists():
+        try:
+            with open(CONFIG_FILE, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+
+def _save_config(config: dict) -> None:
+    """保存配置文件"""
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+
+
+def _get_env_file() -> Path:
+    """获取 .env 文件路径"""
+    return Path.home() / ".omc" / ".env"
+
+
+def _save_api_key(model_id: str, api_key: str) -> None:
+    """保存 API Key 到 .env 文件"""
+    env_var = API_KEY_ENV_MAP.get(model_id, f"{model_id.upper()}_API_KEY")
+    env_file = _get_env_file()
+    env_file.parent.mkdir(parents=True, exist_ok=True)
+
+    lines: list[str] = []
+    if env_file.exists():
+        with open(env_file, encoding="utf-8") as f:
+            lines = f.readlines()
+
+    # 更新或追加
+    found = False
+    for i, line in enumerate(lines):
+        if line.strip().startswith(f"{env_var}="):
+            lines[i] = f"{env_var}={api_key}\n"
+            found = True
+            break
+    if not found:
+        lines.append(f"{env_var}={api_key}\n")
+
+    with open(env_file, "w", encoding="utf-8") as f:
+        f.writelines(lines)
+
+
+# ── 主命令 ────────────────────────────────────────────────────
+
+
+@app.callback(invoke_without_command=True)
+def init_wizard(
+    ctx: typer.Context,
+) -> None:
+    """交互式初始化引导 - 首次使用推荐运行"""
+    if ctx.invoked_subcommand is not None:
+        return
+
+    # ── Step 1: 欢迎界面 ──
+    console.print()
+    console.print(
+        Panel.fit(
+            f"[bold cyan]🚀 欢迎使用 Oh My Coder v{__version__}[/bold cyan]\n\n"
+            "[dim]多智能体 AI 编程助手 · 31个专业 Agent · 12种国产模型[/dim]\n"
+            "[dim]不用翻墙，国内网络直接用[/dim]\n\n"
+            "[bold]接下来只需 3 步即可开始使用：[/bold]",
+            title="✨ 初始化向导",
+            border_style="cyan",
+        )
+    )
+    console.print()
+
+    # ── Step 2: 选择模型 ──
+    console.print("[bold yellow]📋 Step 1/3: 选择默认模型[/bold yellow]")
+    console.print()
+
+    model_table = Table(show_header=True, header_style="bold cyan", expand=True)
+    model_table.add_column("#", style="dim", width=4)
+    model_table.add_column("模型 ID", style="green")
+    model_table.add_column("名称", style="white")
+    model_table.add_column("说明")
+    model_table.add_column("成本", style="dim")
+
+    for i, (mid, name, note, tier) in enumerate(MODEL_CHOICES, 1):
+        tier_label = "🟢 免费/低成本" if tier == "low" else "🟡 中等"
+        model_table.add_row(str(i), mid, name, note, tier_label)
+
+    console.print(model_table)
+    console.print()
+
+    # 加载现有配置作为默认值
+    existing_config = _load_config()
+    current_default = existing_config.get("default_model", "deepseek")
+
+    model_choice = Prompt.ask(
+        "选择默认模型",
+        choices=[m[0] for m in MODEL_CHOICES],
+        default=current_default,
+    )
+    console.print(f"  ✅ 已选择: [bold green]{model_choice}[/bold green]")
+    console.print()
+
+    # ── Step 3: 输入 API Key ──
+    console.print("[bold yellow]🔑 Step 2/3: 配置 API Key[/bold yellow]")
+    console.print()
+
+    env_var = API_KEY_ENV_MAP.get(model_choice, f"{model_choice.upper()}_API_KEY")
+    existing_key = os.getenv(env_var, "")
+
+    if existing_key:
+        console.print(f"  检测到已有 [cyan]{env_var}[/cyan]，按 Enter 跳过")
+        api_key = Prompt.ask(
+            f"输入 {env_var}",
+            password=True,
+            default="",
+        )
+        if api_key == "":
+            api_key = existing_key
+            console.print("  ✅ 保留已有 Key")
+    else:
+        console.print(f"  环境变量: [cyan]{env_var}[/cyan]")
+        api_key = Prompt.ask(
+            f"输入 {env_var}",
+            password=True,
+        )
+
+    if api_key and api_key != existing_key:
+        _save_api_key(model_choice, api_key)
+        console.print("  ✅ API Key 已保存")
+    console.print()
+
+    # ── Step 4: 设置工作目录 ──
+    console.print("[bold yellow]📁 Step 3/3: 设置工作目录[/bold yellow]")
+    console.print()
+
+    current_dir = existing_config.get("work_dir", str(Path.cwd()))
+    work_dir = Prompt.ask(
+        "工作目录路径",
+        default=current_dir,
+    )
+    console.print(f"  ✅ 工作目录: [bold green]{work_dir}[/bold green]")
+    console.print()
+
+    # ── Step 5: 配置验证 ──
+    console.print("[bold yellow]📋 确认配置[/bold yellow]")
+    console.print()
+
+    summary_table = Table.grid(padding=(0, 2))
+    summary_table.add_column(style="bold", justify="right")
+    summary_table.add_column()
+    summary_table.add_row("默认模型:", f"[green]{model_choice}[/green]")
+    summary_table.add_row("API Key:", "[dim]已配置 ✓[/dim]" if api_key else "[yellow]未配置[/yellow]")
+    summary_table.add_row("工作目录:", work_dir)
+    summary_table.add_row("配置文件:", str(CONFIG_FILE))
+
+    console.print(Panel(summary_table, title="配置摘要", border_style="cyan"))
+    console.print()
+
+    if not Confirm.ask("确认以上配置？", default=True):
+        console.print("[yellow]已取消，可重新运行 omc init[/yellow]")
+        raise typer.Exit(0)
+
+    # ── Step 6: 保存并完成 ──
+    config = existing_config.copy()
+    config["default_model"] = model_choice
+    config["work_dir"] = work_dir
+    config["initialized"] = True
+    _save_config(config)
+
+    console.print()
+    console.print(
+        Panel.fit(
+            "[bold green]✅ 配置完成！[/bold green]\n\n"
+            "[bold]接下来试试：[/bold]\n"
+            "  [cyan]omc agents list[/cyan]       查看可用 Agent\n"
+            "  [cyan]omc model list[/cyan]        查看所有模型\n"
+            "  [cyan]omc models --recommend[/cyan] 获取模型推荐\n"
+            "  [cyan]omc run <任务>[/cyan]        开始编程\n\n"
+            "[dim]配置文件: ~/.config/oh-my-coder/config.json[/dim]\n"
+            "[dim]API Key: ~/.omc/.env[/dim]",
+            title="🎉 初始化成功",
+            border_style="green",
+        )
+    )
