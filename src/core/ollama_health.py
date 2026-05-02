@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Ollama 健康检查模块
 

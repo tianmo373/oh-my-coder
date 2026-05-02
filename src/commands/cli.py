@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Oh My Coder CLI - 命令行入口
 

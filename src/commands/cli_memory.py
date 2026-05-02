@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 omc memory - 分层记忆查询命令
 

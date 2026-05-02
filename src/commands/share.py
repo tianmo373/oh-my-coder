@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 omc share - 会话分享命令
 
@@ -14,7 +15,7 @@ import json
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -57,10 +58,10 @@ def _share_path(share_id: str) -> Path:
 
 
 def export_session(
-    task_id: Optional[str] = None,
-    history_dir: Optional[Path] = None,
+    task_id: str | None = None,
+    history_dir: Path | None = None,
     include_config: bool = True,
-    tags: Optional[list[str]] = None,
+    tags: list[str] | None = None,
     expires_hours: int = 0,
 ) -> dict[str, Any]:
     """
@@ -176,7 +177,7 @@ def _sanitize_config(config: dict[str, Any]) -> dict[str, Any]:
     return safe
 
 
-def import_session(share_id: str, target_dir: Optional[Path] = None) -> dict[str, Any]:
+def import_session(share_id: str, target_dir: Path | None = None) -> dict[str, Any]:
     """
     通过分享 ID 导入会话。
 
@@ -283,7 +284,7 @@ def delete_share(share_id: str) -> bool:
     return True
 
 
-def get_share(share_id: str) -> Optional[dict[str, Any]]:
+def get_share(share_id: str) -> dict[str, Any] | None:
     """获取分享详情"""
     share_file = _share_path(share_id)
     if not share_file.exists():
@@ -303,10 +304,10 @@ def get_share(share_id: str) -> Optional[dict[str, Any]]:
 
 @app.command("create")
 def share_create(
-    task_id: Optional[str] = typer.Option(
+    task_id: str | None = typer.Option(
         None, "--task", "-t", help="指定任务 ID（空则导出最近一次）"
     ),
-    tags: Optional[str] = typer.Option(None, "--tags", help="标签，逗号分隔"),
+    tags: str | None = typer.Option(None, "--tags", help="标签，逗号分隔"),
     no_config: bool = typer.Option(False, "--no-config", help="不包含配置信息"),
     expires: int = typer.Option(
         0, "--expires", "-e", help="过期时间（小时），0=永不过期"

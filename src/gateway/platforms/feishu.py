@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 飞书 / Lark 平台处理器
 

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 多 Agent 协作 CLI 命令
 

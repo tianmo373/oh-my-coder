@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 安全/权限 CLI 命令
 

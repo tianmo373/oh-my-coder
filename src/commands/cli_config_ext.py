@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Agent 配置 CLI 命令
 

@@ -179,9 +179,7 @@ def _show_all_recommendations() -> None:
     console.print(
         "[dim]💡 使用 [cyan]omc models --recommend --task <type>[/cyan] 查看特定类型推荐[/dim]"
     )
-    console.print(
-        f"[dim]   可用类型: {', '.join(VALID_TASKS)}[/dim]"
-    )
+    console.print(f"[dim]   可用类型: {', '.join(VALID_TASKS)}[/dim]")
     console.print()
 
 

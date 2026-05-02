@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Sourcegraph 集成 - 让 AI 能搜索公开代码库
 

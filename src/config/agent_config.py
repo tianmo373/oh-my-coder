@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Agent 配置模块 - 支持 YAML/JSON 配置加载
 

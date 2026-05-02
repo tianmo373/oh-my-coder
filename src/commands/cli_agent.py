@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Agent 配置 CLI - 导出/导入/管理 Agent 配置
 
@@ -16,7 +17,7 @@ import contextlib
 import json
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 import typer
@@ -103,7 +104,7 @@ def show_agent(
 @app.command("export")
 def export_agent(
     name: str = typer.Argument(..., help="Agent 名称"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="输出文件路径"),
+    output: Path | None = typer.Option(None, "--output", "-o", help="输出文件路径"),
     include_evolution: bool = typer.Option(
         False, "--evolution", "-e", help="包含进化历史"
     ),
@@ -206,7 +207,7 @@ def export_agent(
 @app.command("import")
 def import_agent(
     source: str = typer.Argument(..., help="配置文件路径或 URL"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="新 Agent 名称"),
+    name: str | None = typer.Option(None, "--name", "-n", help="新 Agent 名称"),
 ):
     """
     从文件或 URL 导入 Agent 配置
@@ -216,7 +217,7 @@ def import_agent(
     - GitHub raw URL
     - HTTP/HTTPS URL
     """
-    source_path: Optional[Path] = None
+    source_path: Path | None = None
     config_data: dict[str, Any]
 
     # 判断是 URL 还是本地文件
@@ -365,7 +366,7 @@ def agent_stats(
 
 @app.command("decisions")
 def list_decisions(
-    category: Optional[str] = typer.Option(
+    category: str | None = typer.Option(
         None,
         "--category",
         "-c",
@@ -580,7 +581,7 @@ def save_agent(
     name: str = typer.Argument(..., help="Agent 名称"),
     model: str = typer.Option("deepseek", "--model", "-m", help="模型"),
     description: str = typer.Option("", "--description", "-d", help="描述"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="导出 JSON 文件"),
+    output: Path | None = typer.Option(None, "--output", "-o", help="导出 JSON 文件"),
 ):
     """
     保存 Agent 配置到 ~/.oh-my-coder/agents/<name>/
@@ -708,7 +709,7 @@ def export_agent_state(
 @app.command("import")
 def import_agent_state(
     source: Path = typer.Argument(..., help="JSON 配置文件路径"),
-    new_name: Optional[str] = typer.Option(None, "--name", "-n", help="新 Agent 名称"),
+    new_name: str | None = typer.Option(None, "--name", "-n", help="新 Agent 名称"),
     merge_history: bool = typer.Option(False, "--merge", help="合并历史而非覆盖"),
 ):
     """

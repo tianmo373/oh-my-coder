@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Gateway - 多平台统一消息网关
 

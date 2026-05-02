@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 MCP CLI 命令
 

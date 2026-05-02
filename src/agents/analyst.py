@@ -180,7 +180,9 @@ class AnalystAgent(BaseAgent):
             search_lang = kwargs.get("search_language")
             search_repo = kwargs.get("search_repo")
 
-            result = self.search_code(search_query, language=search_lang, repo=search_repo)
+            result = self.search_code(
+                search_query, language=search_lang, repo=search_repo
+            )
 
             if result.total_matches > 0:
                 code_context = result.format_code(limit=5)

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 成本优化 CLI - omc cost 命令
 

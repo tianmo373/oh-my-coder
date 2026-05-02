@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional
+
 """
 记忆迁移 CLI - 从其他工具导入配置
 
@@ -60,7 +60,7 @@ def list_sources():
 
 @app.command("claude")
 def migrate_claude(
-    path: Optional[Path] = typer.Argument(
+    path: Path | None = typer.Argument(
         None,
         help="项目路径（默认当前目录）",
     ),
@@ -113,7 +113,7 @@ def migrate_claude(
 
 @app.command("gemini")
 def migrate_gemini(
-    path: Optional[Path] = typer.Argument(
+    path: Path | None = typer.Argument(
         None,
         help="项目路径（默认当前目录）",
     ),

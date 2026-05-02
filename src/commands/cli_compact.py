@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 omc compact - 自动压缩工具
 

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 远程 Server API - REST API 接口定义
 

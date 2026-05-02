@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 omc self-config 命令 - 自配置 Skill
 
@@ -13,7 +14,7 @@ import contextlib
 import json
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -123,7 +124,7 @@ MODEL_PROVIDERS = {
 }
 
 
-def parse_config_intent(text: str) -> Optional[dict[str, Any]]:
+def parse_config_intent(text: str) -> dict[str, Any] | None:
     """解析配置意图"""
     text_lower = text.lower()
 
@@ -149,7 +150,7 @@ def parse_config_intent(text: str) -> Optional[dict[str, Any]]:
     return None
 
 
-def detect_api_key_in_text(text: str) -> Optional[str]:
+def detect_api_key_in_text(text: str) -> str | None:
     """从文本中提取 API Key"""
     # 常见的 API Key 格式
     patterns = [
@@ -169,7 +170,7 @@ def detect_api_key_in_text(text: str) -> Optional[str]:
     return None
 
 
-async def execute_config(config: dict[str, Any], api_key: Optional[str] = None) -> bool:
+async def execute_config(config: dict[str, Any], api_key: str | None = None) -> bool:
     """执行配置"""
     action = config.get("action")
 
@@ -185,7 +186,7 @@ async def execute_config(config: dict[str, Any], api_key: Optional[str] = None) 
     return False
 
 
-async def _set_api_key(config: dict[str, Any], api_key: Optional[str] = None) -> bool:
+async def _set_api_key(config: dict[str, Any], api_key: str | None = None) -> bool:
     """设置 API Key"""
     provider = config.get("provider")
     raw_text = config.get("raw_text", "")
@@ -353,8 +354,8 @@ def config(
     intent: str = typer.Argument(
         None, help="配置意图，如'配置 GLM API KEY'或'切换到 DeepSeek 模型'"
     ),
-    key: Optional[str] = typer.Option(None, "--key", "-k", help="直接提供 API Key"),
-    provider: Optional[str] = typer.Option(
+    key: str | None = typer.Option(None, "--key", "-k", help="直接提供 API Key"),
+    provider: str | None = typer.Option(
         None, "--provider", "-p", help="指定模型提供商"
     ),
     non_interactive: bool = typer.Option(

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 企业微信（WeCom）平台处理器
 

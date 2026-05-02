@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 钉钉（DingTalk）平台处理器
 

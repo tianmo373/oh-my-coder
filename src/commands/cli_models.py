@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Models CLI - 模型配置分享与浏览
 
@@ -406,9 +407,7 @@ from src.commands.cli_models_recommend import show_recommend
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    recommend: bool = typer.Option(
-        False, "--recommend", help="显示模型精选推荐"
-    ),
+    recommend: bool = typer.Option(False, "--recommend", help="显示模型精选推荐"),
     task: str = typer.Option(
         None, "--task", "-t", help="推荐的任务类型: coding/reasoning/creative/fast/chat"
     ),

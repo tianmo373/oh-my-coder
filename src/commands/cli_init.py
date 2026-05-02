@@ -221,7 +221,9 @@ def init_wizard(
     summary_table.add_column(style="bold", justify="right")
     summary_table.add_column()
     summary_table.add_row("默认模型:", f"[green]{model_choice}[/green]")
-    summary_table.add_row("API Key:", "[dim]已配置 ✓[/dim]" if api_key else "[yellow]未配置[/yellow]")
+    summary_table.add_row(
+        "API Key:", "[dim]已配置 ✓[/dim]" if api_key else "[yellow]未配置[/yellow]"
+    )
     summary_table.add_row("工作目录:", work_dir)
     summary_table.add_row("配置文件:", str(CONFIG_FILE))
 

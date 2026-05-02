@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 omc trace 命令 - 查看 Agent 执行记录
 

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Gateway CLI - 多平台网关命令
 

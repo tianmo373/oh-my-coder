@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Slack 平台处理器
 

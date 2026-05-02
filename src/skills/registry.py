@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Skill 注册中心 - 统一管理和执行 Skill
 
