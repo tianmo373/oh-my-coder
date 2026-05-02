@@ -73,7 +73,9 @@ site/
 # Desktop app
 desktop/node_modules/
 web-ui/node_modules/
-extensions/vscode/node_modules/
+.github/vscode-extension/node_modules/
+desktop/node_modules/
+web-ui/node_modules/
 
 # Health files
 health/

@@ -25,7 +25,7 @@ echo "项目根目录: $PROJECT_ROOT"
 echo ""
 
 echo "1️⃣  ruff check..."
-python3 -m ruff check src/ tests/ config/ examples/ || {
+python3 -m ruff check src/ tests/ docs/examples/ || {
     echo -e "${RED}✗ ruff check 失败${NC}"
     exit 1
 }
@@ -33,7 +33,7 @@ echo -e "${GREEN}✓ ruff check 通过${NC}"
 echo ""
 
 echo "2️⃣  black check..."
-python3 -m black src/ tests/ config/ examples/ || {
+python3 -m black src/ tests/ docs/examples/ || {
     echo -e "${RED}✗ black check 失败${NC}"
     exit 1
 }
