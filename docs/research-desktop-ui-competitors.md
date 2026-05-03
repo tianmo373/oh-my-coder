@@ -171,7 +171,7 @@
 
 ### 2.4 Claude Code
 
-**官方链接：** [https://claude.ai/code](https://claude.ai/code)
+**官方链接：** `https://claude.ai/code`
 
 **产品定位：** Anthropic 官方 CLI 工具 + VS Code 扩展 + JetBrains 插件 + 桌面应用，五种运行环境。
 

@@ -9,13 +9,13 @@
 [![PyPI version](https://img.shields.io/pypi/v/oh-my-coder?color=blue&label=PyPI)](https://pypi.org/project/oh-my-coder/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/oh-my-coder?color=green&label=Downloads)](https://pypi.org/project/oh-my-coder/)
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](../../LICENSE)
 [![Stars](https://img.shields.io/github/stars/VOBC/oh-my-coder?style=flat-square&logo=github)](https://github.com/VOBC/oh-my-coder/stargazers)
 [![Tests](https://img.shields.io/github/actions/workflow/status/VOBC/oh-my-coder/test.yml?branch=main&label=Tests)](https://github.com/VOBC/oh-my-coder/actions)
 
 **💡 灵感来源**: [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (28.9k ⭐) — 我们为国内开发者提供零门槛替代方案
 
-![Agent System](docs/screenshots/demo-agents.svg) <!-- TODO: 请替换为实际截图 -->
+![Agent System](docs/screenshots/demo-agents.svg)
 
 <!-- DEMO GIF 占位：P24 完成后替换为实际 GIF -->
 <!-- 建议尺寸：800x450，展示 omc run 命令执行过程 -->
@@ -26,10 +26,10 @@
 - [🚀 快速开始](#-快速开始)
 - [👀 快速示例](#-快速示例)
 - [🏗️ 架构设计](#️-架构设计)
-- [🤖 Agent 系统（31 个专业 Agent）](docs/agents/agent-list.md)
+- [🤖 Agent 系统（31 个专业 Agent）](../../docs/agents/agent-list.md)
 - [🧙 Quest Mode（异步自主编程）](#️-quest-mode异步自主编程)
 - [🧠 主动学习模块](#-主动学习模块)
-- [🧠 分层记忆系统](docs/guide/memory-system.md)
+- [🧠 分层记忆系统](../../docs/guide/memory-system.md)
 - [🌐 多平台 Gateway](#-多平台-gateway)
 - [📂 工作目录上下文感知](#️-工作目录上下文感知)
 - [🧠 支持的模型](#-支持的模型)
@@ -200,7 +200,7 @@ omc config set -k MIMOX_API_KEY -v "your_key"
 
 ## ⚡ 快速开始
 
-> 📖 [完整安装与配置指南](docs/guide/quickstart-detailed.md)（安装依赖、API Key 配置、模型特定配置、运行方式）
+> 📖 [完整安装与配置指南](../../docs/guide/quickstart-detailed.md)（安装依赖、API Key 配置、模型特定配置、运行方式）
 
 ### 三步上手
 
@@ -534,7 +534,7 @@ Oh My Coder 内置 **31 个专业 Agent**，覆盖代码生成、审查、测试
 | 🧙 **协调** | PromptAgent + SelfImproving + SkillManage + Critic | 提示词·自进化·经验沉淀 |
 | 🛡️ **安全** | Debugger + Tracer + Performance | 调试追踪·性能分析 |
 
-> 📖 [完整 Agent 清单（含通道分类与职责说明）](docs/agents/agent-list.md)
+> 📖 [完整 Agent 清单（含通道分类与职责说明）](../../docs/agents/agent-list.md)
 
 ---
 
@@ -542,7 +542,7 @@ Oh My Coder 内置 **31 个专业 Agent**，覆盖代码生成、审查、测试
 
 
 
-> 📖 [完整说明请看 Quest Mode 文档](docs/features/quest-mode.md)
+> 📖 [完整说明请看 Quest Mode 文档](../../docs/features/quest-mode.md)
 
 ---
 
@@ -618,7 +618,7 @@ python -m src.cli context browser
 
 共 **7 个**模型，系统自动按性价比选择：✅ 6 个生产就绪，⚠️ 1 个本地模型。
 
-> 📖 [完整模型配置指南（环境变量、默认模型、状态说明）](docs/guide/model-config.md)
+> 📖 [完整模型配置指南（环境变量、默认模型、状态说明）](../../docs/guide/model-config.md)
 
 ### 生产就绪（推荐优先使用）
 
@@ -827,7 +827,7 @@ oh-my-coder/
 
 ## 🧪 测试
 
-> 📖 [完整说明请看 测试文档](docs/dev/testing.md)
+> 📖 [完整说明请看 测试文档](../../docs/dev/testing.md)
 
 ## 📋 开发进度
 
@@ -923,7 +923,7 @@ python3 -m black src/ tests/
 
 ## 📄 License
 
-MIT License - 详见 [LICENSE](LICENSE)
+MIT License - 详见 [LICENSE](../../LICENSE)
 
 ---
 

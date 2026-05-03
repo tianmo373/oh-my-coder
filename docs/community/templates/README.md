@@ -50,4 +50,4 @@ omc template use bug-fix --task "修复登录页面崩溃问题"
 
 ---
 
-*由 oh-my-coder 社区维护，贡献请见 [CONTRIBUTING.md](../CONTRIBUTING.md)*
+*由 oh-my-coder 社区维护，贡献请参见 [项目 CONTRIBUTING.md](https://github.com/VOBC/oh-my-coder/blob/main/CONTRIBUTING.md)*
