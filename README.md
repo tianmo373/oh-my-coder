@@ -830,6 +830,8 @@ oh-my-coder/
 │   ├── test_web.py          # Web 界面测试
 │   └── test_integration.py   # 集成测试
 ```
+
+```
 oh-my-coder/
 ├── src/                   # 核心源码（31 个 Agent）
 ├── desktop/               # Electron 桌面端
