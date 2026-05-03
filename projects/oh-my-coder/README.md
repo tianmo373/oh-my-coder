@@ -15,7 +15,7 @@
 
 **💡 灵感来源**: [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (28.9k ⭐) — 我们为国内开发者提供零门槛替代方案
 
-![Agent System](docs/screenshots/demo-agents.svg)
+![Agent System](../../docs/screenshots/demo-agents.svg)
 
 <!-- DEMO GIF 占位：P24 完成后替换为实际 GIF -->
 <!-- 建议尺寸：800x450，展示 omc run 命令执行过程 -->
@@ -200,7 +200,7 @@ omc config set -k MIMOX_API_KEY -v "your_key"
 
 ## ⚡ 快速开始
 
-> 📖 [完整安装与配置指南](../../docs/guide/quickstart-detailed.md)（安装依赖、API Key 配置、模型特定配置、运行方式）
+> 📖 [完整安装与配置指南](../../docs/guide/quick-start.md)（安装依赖、API Key 配置、模型特定配置、运行方式）
 
 ### 三步上手
 
