@@ -29,7 +29,7 @@ docker compose up -d
 
 ### 访问
 
-打开浏览器访问 http://localhost:8000
+打开浏览器访问 `http://localhost:8000`
 
 ### 停止服务
 
