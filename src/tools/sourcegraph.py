@@ -86,7 +86,7 @@ class SearchResult:
                 lines.append(f"[yellow]⚠ {w}[/yellow]")
         lines.append("")
         for i, m in enumerate(self.matches[:limit], 1):
-            stars = f"⭐{m.repo_stars}" if m.repo_stars else ""
+            stars = f"⭐{m.repository_stars}" if m.repository_stars else ""
             lang = f"[blue]{m.language}[/blue]" if m.language else ""
             lines.append(
                 f"  {i}. [green]{m.repo}[/green]{stars} {m.file_path}:{m.line_number} {lang}"
@@ -116,7 +116,7 @@ class SearchResult:
                         "file": m.file_path,
                         "line": m.line_number,
                         "language": m.language,
-                        "stars": m.repo_stars,
+                        "stars": m.repository_stars,
                         "symbols": m.symbols,
                         "preview": m.content_preview[:200],
                         "url": m.url,
@@ -265,7 +265,7 @@ def _sg_api_search(query: str, **kwargs: Any) -> SearchResult | None:
                 match = SearchMatch(
                     repo=repo_name,
                     file_path=file_path,
-                    repo_stars=repo_info.get("stars", {}).get("totalCount", 0),
+                    repository_stars=repo_info.get("stars", {}).get("totalCount", 0),
                     repo_description=repo_info.get("description", ""),
                     content_preview=lm.get("preview", ""),
                     line_number=lm.get("lineNumber", 0),

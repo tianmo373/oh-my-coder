@@ -213,6 +213,64 @@ def init_wizard(
     console.print(f"  ✅ 工作目录: [bold green]{work_dir}[/bold green]")
     console.print()
 
+    # ── Step 4: Sourcegraph 配置（可选）──
+    console.print("[bold yellow]🔍 Step 4/4: Sourcegraph 搜索增强（可选）[/bold yellow]")
+    console.print()
+
+    sg_status = check_status()
+    has_api = sg_status["api"]["available"]
+    has_cli = sg_status["cli"]["available"]
+
+    if has_api:
+        console.print("  [green]✓[/green] Sourcegraph API 已配置")
+        use_sg = Confirm.ask("是否启用 Sourcegraph 搜索增强？", default=True)
+    elif has_cli:
+        console.print("  [green]✓[/green] src CLI 已安装")
+        use_sg = Confirm.ask(
+            "是否启用 Sourcegraph 搜索增强？（已有 src CLI）",
+            default=True,
+        )
+    else:
+        console.print("  Sourcegraph 可以让你的需求分析 Agent 搜索公开代码库")
+        console.print("  [dim]参考: https://sourcegraph.com 获取免费 API Key[/dim]")
+        use_sg = Confirm.ask(
+            "是否配置 Sourcegraph？",
+            default=False,
+        )
+        if use_sg:
+            console.print()
+            console.print("  选择配置方式:")
+            sg_choice = Prompt.ask(
+                "配置方式",
+                choices=["1", "2"],
+                default="1",
+            )
+            if sg_choice == "1":
+                # API Key 配置
+                console.print(f"  环境变量: [cyan]SOURCEGRAPH_API_KEY[/cyan]")
+                sg_api_key = Prompt.ask(
+                    "输入 Sourcegraph API Key",
+                    password=True,
+                )
+                if sg_api_key:
+                    ok, msg = setup_api_key(sg_api_key)
+                    if ok:
+                        console.print(f"  [green]✓[/green] {msg}")
+                    else:
+                        console.print(f"  [red]✗[/red] {msg}")
+            else:
+                # src CLI 安装
+                console.print("[dim]正在安装 src CLI...[/dim]")
+                from src.tools.sourcegraph import install_src_cli
+                ok, msg = install_src_cli()
+                if ok:
+                    console.print(f"  [green]✓[/green] {msg}")
+                else:
+                    console.print(f"  [red]✗[/red] {msg}")
+                    console.print("  [dim]手动安装: brew install sourcegraph/tap/src[/dim]")
+
+    console.print()
+
     # ── Step 5: 配置验证 ──
     console.print("[bold yellow]📋 确认配置[/bold yellow]")
     console.print()
@@ -225,6 +283,7 @@ def init_wizard(
         "API Key:", "[dim]已配置 ✓[/dim]" if api_key else "[yellow]未配置[/yellow]"
     )
     summary_table.add_row("工作目录:", work_dir)
+    summary_table.add_row("Sourcegraph:", f"[dim]已配置 ✓[/dim]" if (has_api or has_cli) else "[dim]未配置[/dim]")
     summary_table.add_row("配置文件:", str(CONFIG_FILE))
 
     console.print(Panel(summary_table, title="配置摘要", border_style="cyan"))

@@ -251,6 +251,11 @@ def run(
         "--cross-validate",
         help="工作流结束后执行 Agent 交叉验证（独立视角审视产出）",
     ),
+    use_sourcegraph: bool = typer.Option(
+        False,
+        "--use-sourcegraph",
+        help="Analyst Agent 使用 Sourcegraph 搜索公开代码库增强分析",
+    ),
 ):
     """执行编程任务"""
     # 前置检查
@@ -308,6 +313,7 @@ def run(
                     {
                         "project_path": str(project_path.absolute()),
                         "task": task,
+                        "use_sourcegraph": use_sourcegraph,
                     },
                     skip_checkpoint=no_checkpoint,
                 )

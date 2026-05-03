@@ -470,8 +470,8 @@ class Orchestrator:
         """注册 Agent 实例"""
         self._agents[agent.name] = agent
 
-    def get_agent(self, name: str):
-        """获取 Agent 实例"""
+    def get_agent(self, name: str, **override_attrs):
+        """获取 Agent 实例，**override_attrs 允许覆写实例属性（如 use_sourcegraph）"""
         if name not in self._agents:
             # 动态加载
             from ..agents.base import get_agent
@@ -483,7 +483,24 @@ class Orchestrator:
             else:
                 raise ValueError(f"未知的 Agent: {name}")
 
-        return self._agents[name]
+        agent = self._agents[name]
+        # 覆写实例属性（如 use_sourcegraph）
+        for attr, val in override_attrs.items():
+            if hasattr(agent, attr):
+                setattr(agent, attr, val)
+            else:
+                # Agent 不支持此属性，静默跳过（如其他 agent 收到 sourcegraph 参数）
+                pass
+        return agent
+
+    def _sourcegraph_overrides(self, context: dict[str, Any]) -> dict[str, Any]:
+        """从 context 中提取 Sourcegraph 配置参数，传递给 Agent 实例"""
+        overrides: dict[str, Any] = {}
+        if context.get("use_sourcegraph"):
+            overrides["use_sourcegraph"] = True
+        if "sourcegraph_limit" in context:
+            overrides["sourcegraph_limit"] = context["sourcegraph_limit"]
+        return overrides
 
     async def execute_workflow(
         self,
@@ -616,7 +633,7 @@ class Orchestrator:
                 )
 
                 try:
-                    agent = self.get_agent(agent_name)
+                    agent = self.get_agent(agent_name, **self._sourcegraph_overrides(context))
                     agent_context = self._build_agent_context(agent_name, context)
 
                     output = await asyncio.wait_for(
@@ -726,7 +743,7 @@ class Orchestrator:
         for level in levels:
             tasks = []
             for step in level:
-                agent = self.get_agent(step.agent_name)
+                agent = self.get_agent(step.agent_name, **self._sourcegraph_overrides(context))
                 agent_context = self._build_agent_context(step.agent_name, context)
                 tasks.append(
                     asyncio.wait_for(
@@ -788,7 +805,7 @@ class Orchestrator:
                     continue
 
             try:
-                agent = self.get_agent(step.agent_name)
+                agent = self.get_agent(step.agent_name, **self._sourcegraph_overrides(context))
                 agent_context = self._build_agent_context(step.agent_name, context)
 
                 output = await asyncio.wait_for(
