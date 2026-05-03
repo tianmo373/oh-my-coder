@@ -4,7 +4,7 @@
 
 ## 🌐 Web 界面预览
 
-启动后访问 **http://localhost:8000**：
+启动后访问 `http://localhost:8000`：
 
 > 📸 截图位置：`docs/screenshots/`（运行后请添加 `web-ui.png` 和 `cli-demo.png`）
 

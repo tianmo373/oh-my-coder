@@ -545,8 +545,7 @@
 
 ### 截图/界面资源
 
-- **Cursor UI 详解**：https://zhuanlan.zhihu.com/p/26745647855
-- **Windsurf 界面截图**：https://blog.csdn.net/chusi777/article/details/143994369
+
 - **OpenCode/Crush GitHub**：https://github.com/charmbracelet/crush
 - **Cline VS Code 扩展截图**：https://github.com/cline/cline
 - **Windsurf 官网**：https://windsurf.com
@@ -554,7 +553,7 @@
 ### 技术参考
 
 - **Bubble Tea 框架**：https://github.com/charmbracelet/bubbletea（TUI 构建框架）
-- **Lip Gloss**：https://github.com/charmbracelet/lip gloss（终端样式库）
+- **Lip Gloss**：https://github.com/charmbracelet/lipgloss（终端样式库）
 - **OpenCode README**：https://github.com/opencode-ai/opencode
 - **Crush README**：https://github.com/charmbracelet/crush
 - **Aider 文档**：https://aider.chat/docs/
@@ -563,11 +562,7 @@
 
 ### 截图 URL（来自产品 GitHub README）
 
-- Crush UI GIF：https://private-user-images.githubusercontent.com/25087/471774478-58280caf-851b-470a-b6f7-d5c4ea8a1968.gif
 - Cline Demo GIF：https://media.githubusercontent.com/media/cline/cline/main/assets/docs/demo.gif
-- Cline Settings：https://private-user-images.githubusercontent.com/7799382/374832520-3cf21e04-7ce9-4d22-a7b9-ba2c595e88a4.png
-- Cline Diff View：https://private-user-images.githubusercontent.com/7799382/374832624-81be79a8-1fdb-4028-9129-5fe055e01e76.png
-- Cline Terminal：https://private-user-images.githubusercontent.com/7799382/374860276-ee14e6f7-20b8-4391-9091-8e8e25561929.png
 
 ---
 
