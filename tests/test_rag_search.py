@@ -305,35 +305,31 @@ class DataHandler:
 class TestSearchConfig:
     """SearchConfig 测试"""
 
-    def test_default_config(self):
-        """测试默认配置"""
-        config = SearchConfig()
+    @pytest.mark.parametrize("config_kwargs,expected_values", [
+        ({}, {"max_results": 10, "min_score": 0.3, "hybrid_alpha": 0.5, "context_lines": 3}),
+        ({"max_results": 20, "min_score": 0.6, "hybrid_alpha": 0.7, "context_lines": 5},
+         {"max_results": 20, "min_score": 0.6, "hybrid_alpha": 0.7, "context_lines": 5}),
+    ])
+    def test_search_config(self, config_kwargs, expected_values):
+        """测试默认和自定义配置"""
+        config = SearchConfig(**config_kwargs)
 
-        assert config.max_results == 10
-        assert config.min_score == 0.3
-        assert config.hybrid_alpha == 0.5
-        assert config.context_lines == 3
-
-    def test_custom_config(self):
-        """测试自定义配置"""
-        config = SearchConfig(
-            max_results=20,
-            min_score=0.6,
-            hybrid_alpha=0.7,
-            context_lines=5
-        )
-
-        assert config.max_results == 20
-        assert config.min_score == 0.6
-        assert config.hybrid_alpha == 0.7
-        assert config.context_lines == 5
+        assert config.max_results == expected_values["max_results"]
+        assert config.min_score == expected_values["min_score"]
+        assert config.hybrid_alpha == expected_values["hybrid_alpha"]
+        assert config.context_lines == expected_values["context_lines"]
 
 
 class TestSearchResult:
     """SearchResult 测试"""
 
-    def test_search_result_creation(self):
-        """测试搜索结果创建"""
+    @pytest.mark.parametrize("highlights,expected_count", [
+        ([], 0),
+        (["important line"], 1),
+        (["line1", "line2"], 2),
+    ])
+    def test_search_result_creation(self, highlights, expected_count):
+        """测试搜索结果创建（含高亮）"""
         result = SearchResult(
             element_id="test123",
             file_path="test.py",
@@ -345,27 +341,12 @@ class TestSearchResult:
             end_line=5,
             docstring="Test function",
             signature="def test_func()",
+            highlights=highlights,
         )
 
         assert result.element_id == "test123"
         assert result.relevance_score == 0.85
-        assert result.highlights == []
-
-    def test_search_result_with_highlights(self):
-        """测试带高亮的搜索结果"""
-        result = SearchResult(
-            element_id="test123",
-            file_path="test.py",
-            name="test_func",
-            type="function",
-            relevance_score=0.85,
-            source_code="def test_func(): pass",
-            start_line=1,
-            end_line=5,
-            highlights=["important line"],
-        )
-
-        assert len(result.highlights) == 1
+        assert len(result.highlights) == expected_count
 
 
 class TestEdgeCases:
@@ -385,8 +366,13 @@ class TestEdgeCases:
 
         assert results == []
 
-    def test_average_embeddings(self, tmp_path):
-        """测试平均嵌入计算"""
+    @pytest.mark.parametrize("embeddings,expected", [
+        ([], []),
+        ([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [2.5, 3.5, 4.5]),
+        ([[1.0, 0.0], [0.0, 1.0]], [0.5, 0.5]),
+    ])
+    def test_average_embeddings(self, tmp_path, embeddings, expected):
+        """测试平均嵌入计算（含空输入）"""
         project = tmp_path / "test"
         project.mkdir()
         (project / "test.py").write_text("def test(): pass")
@@ -396,31 +382,14 @@ class TestEdgeCases:
         indexer.index_directory()
 
         search = SemanticSearch(indexer)
-
-        embeddings = [
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-        ]
-
         avg = search._average_embeddings(embeddings)
-        assert len(avg) == 3
-        assert abs(avg[0] - 2.5) < 0.001
-        assert abs(avg[1] - 3.5) < 0.001
-        assert abs(avg[2] - 4.5) < 0.001
 
-    def test_average_embeddings_empty(self, tmp_path):
-        """测试空嵌入平均"""
-        project = tmp_path / "test"
-        project.mkdir()
-        (project / "test.py").write_text("def test(): pass")
-
-        config = IndexConfig(root_path=project)
-        indexer = CodebaseIndexer(config)
-        indexer.index_directory()
-
-        search = SemanticSearch(indexer)
-        avg = search._average_embeddings([])
-        assert avg == []
+        if expected == []:
+            assert avg == []
+        else:
+            assert len(avg) == len(expected)
+            for a, e in zip(avg, expected):
+                assert abs(a - e) < 0.001
 
     def test_search_with_special_characters(self, tmp_path):
         """测试特殊字符查询"""

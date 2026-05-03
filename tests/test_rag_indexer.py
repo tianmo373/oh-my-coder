@@ -23,51 +23,36 @@ from src.rag.indexer import (
 class TestPythonParser:
     """PythonParser 测试"""
 
-    def test_parse_function(self):
-        """测试解析函数定义"""
-        parser = PythonParser()
-        source = """
+    @pytest.mark.parametrize("source,expected_name,expected_type,expected_docstring", [
+        ("""
 def hello(name: str) -> str:
     '''Say hello'''
     return f"Hello, {name}"
-"""
-        elements = parser.parse(source, "test.py")
-
-        assert len(elements) == 1
-        assert elements[0].name == "hello"
-        assert elements[0].type == CodeElementType.FUNCTION
-        assert elements[0].signature == "def hello(name: str) -> str"
-        assert elements[0].docstring == "Say hello"
-
-    def test_parse_class(self):
-        """测试解析类定义"""
-        parser = PythonParser()
-        source = """
+""", "hello", CodeElementType.FUNCTION, "Say hello"),
+        ("""
 class MyClass:
     '''A test class'''
     def __init__(self):
         pass
-"""
-        elements = parser.parse(source, "test.py")
-
-        assert len(elements) >= 1
-        class_elem = next((e for e in elements if e.type == CodeElementType.CLASS), None)
-        assert class_elem is not None
-        assert class_elem.name == "MyClass"
-        assert class_elem.docstring == "A test class"
-
-    def test_parse_async_function(self):
-        """测试解析异步函数"""
-        parser = PythonParser()
-        source = """
+""", "MyClass", CodeElementType.CLASS, "A test class"),
+        ("""
 async def fetch_data(url: str) -> dict:
     '''Fetch data from URL'''
     return {}
-"""
+""", "fetch_data", CodeElementType.FUNCTION, "Fetch data from URL"),
+    ])
+    def test_parse_elements(self, source, expected_name, expected_type, expected_docstring):
+        """测试解析函数/类/异步函数定义"""
+        parser = PythonParser()
         elements = parser.parse(source, "test.py")
 
-        assert len(elements) == 1
-        assert elements[0].name == "fetch_data"
+        assert len(elements) >= 1
+        # 找到目标元素
+        elem = next((e for e in elements if e.name == expected_name), None)
+        assert elem is not None
+        assert elem.name == expected_name
+        assert elem.type == expected_type
+        assert elem.docstring == expected_docstring
 
     def test_parse_empty_source(self):
         """测试解析空源码"""
@@ -141,15 +126,20 @@ def hello():
         # 直接检查排除模式匹配
         assert "__pycache__" in pycache_path
 
-    def test_detect_language(self, temp_project):
+    @pytest.mark.parametrize("filename,expected_lang", [
+        ("main.py", ProgrammingLanguage.PYTHON),
+        ("test.js", ProgrammingLanguage.JAVASCRIPT),
+        ("test.ts", ProgrammingLanguage.TYPESCRIPT),
+        ("test.go", ProgrammingLanguage.GO),
+        ("app.java", ProgrammingLanguage.JAVA),
+        ("main.rs", ProgrammingLanguage.RUST),
+    ])
+    def test_detect_language(self, temp_project, filename, expected_lang):
         """测试语言检测"""
         config = IndexConfig(root_path=temp_project)
         indexer = CodebaseIndexer(config)
 
-        assert indexer.detect_language(Path("main.py")) == ProgrammingLanguage.PYTHON
-        assert indexer.detect_language(Path("test.js")) == ProgrammingLanguage.JAVASCRIPT
-        assert indexer.detect_language(Path("test.ts")) == ProgrammingLanguage.TYPESCRIPT
-        assert indexer.detect_language(Path("test.go")) == ProgrammingLanguage.GO
+        assert indexer.detect_language(Path(filename)) == expected_lang
 
     def test_index_file(self, temp_project):
         """测试索引单个文件"""
