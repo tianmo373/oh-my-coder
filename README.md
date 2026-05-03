@@ -205,7 +205,7 @@ omc config set -k MIMOX_API_KEY -v "your_key"
 
 ## ⚡ 快速开始
 
-> 📖 [完整安装与配置指南](docs/guide/quickstart-detailed.md)（安装依赖、API Key 配置、模型特定配置、运行方式）
+> 📖 [完整安装与配置指南](docs/guide/quick-start.md)（安装依赖、API Key 配置、模型特定配置、运行方式）
 
 ### 三步上手
 
