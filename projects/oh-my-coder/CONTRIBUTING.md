@@ -391,7 +391,7 @@ class TestModelConfig:
 
 ## 📞 联系方式
 
-- GitHub Issues: [链接](https://github.com/your-repo/issues)
+- GitHub Issues: [链接](https://github.com/VOBC/oh-my-coder/issues)
 - 邮箱: your-email@example.com
 
 ---
