@@ -17,6 +17,8 @@ from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
+from src.tools.sourcegraph import check_status, install_src_cli, setup_api_key
+
 console = Console()
 
 app = typer.Typer(
@@ -247,7 +249,7 @@ def init_wizard(
             )
             if sg_choice == "1":
                 # API Key 配置
-                console.print(f"  环境变量: [cyan]SOURCEGRAPH_API_KEY[/cyan]")
+                console.print("  环境变量: [cyan]SOURCEGRAPH_API_KEY[/cyan]")
                 sg_api_key = Prompt.ask(
                     "输入 Sourcegraph API Key",
                     password=True,
@@ -261,7 +263,6 @@ def init_wizard(
             else:
                 # src CLI 安装
                 console.print("[dim]正在安装 src CLI...[/dim]")
-                from src.tools.sourcegraph import install_src_cli
                 ok, msg = install_src_cli()
                 if ok:
                     console.print(f"  [green]✓[/green] {msg}")
@@ -283,7 +284,7 @@ def init_wizard(
         "API Key:", "[dim]已配置 ✓[/dim]" if api_key else "[yellow]未配置[/yellow]"
     )
     summary_table.add_row("工作目录:", work_dir)
-    summary_table.add_row("Sourcegraph:", f"[dim]已配置 ✓[/dim]" if (has_api or has_cli) else "[dim]未配置[/dim]")
+    summary_table.add_row("Sourcegraph:", "[dim]已配置 ✓[/dim]" if (has_api or has_cli) else "[dim]未配置[/dim]")
     summary_table.add_row("配置文件:", str(CONFIG_FILE))
 
     console.print(Panel(summary_table, title="配置摘要", border_style="cyan"))

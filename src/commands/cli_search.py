@@ -16,8 +16,10 @@ from rich.console import Console
 from rich.panel import Panel
 
 from src.tools.sourcegraph import (
+    SearchResult,
     check_status,
     install_src_cli,
+    search,
     setup_api_key,
 )
 
