@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/VOBC/oh-my-coder/discussions
+    about: Ask questions, share ideas, or get help from the community
+  - name: 📖 Documentation
+    url: https://github.com/VOBC/oh-my-coder#readme
+    about: Check the README for usage instructions and examples
+  - name: 🐛 Bug Report
+    url: https://github.com/VOBC/oh-my-coder/issues/new?template=bug_report.yml
+    about: Report a bug or unexpected behavior (use Bug Report template)

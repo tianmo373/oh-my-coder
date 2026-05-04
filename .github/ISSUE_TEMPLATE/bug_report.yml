@@ -1,88 +1,94 @@
----
-name: 🐛 Bug 报告
-description: 报告一个 Bug 或错误
-labels: ["bug"]
-assignees: []
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug] "
+labels: ["bug", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        ## 🐛 Bug 描述
-        请简洁清晰地描述这个 Bug。
+        Thanks for reporting a bug! Please provide as much detail as possible to help us reproduce and fix the issue.
 
   - type: textarea
     id: description
     attributes:
-      label: Bug 详细描述
-      placeholder: |
-        描述你遇到的问题...
-        预期行为是...
-        实际行为是...
+      label: Bug Description
+      description: A clear description of what went wrong
+      placeholder: When I run `omc chat`, the process hangs indefinitely without any output...
     validations:
       required: true
 
   - type: textarea
     id: reproduce
     attributes:
-      label: "复现步骤"
-      description: "请提供能复现此 Bug 的具体步骤"
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the bug
       placeholder: |
-        1. 运行 '...'
-        2. 执行 '...'
-        3. 出现错误...
+        1. Run `omc config set model=gpt-4`
+        2. Run `omc chat "hello"`
+        3. Process hangs at "Loading..."
     validations:
       required: true
 
-  - type: input
-    id: version
+  - type: textarea
+    id: expected
     attributes:
-      label: Oh My Coder 版本
-      placeholder: "例如: v0.2.0"
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: The chat should complete and return a response within 10 seconds
     validations:
-      required: false
-
-  - type: dropdown
-    id: os
-    attributes:
-      label: 操作系统
-      options:
-        - macOS
-        - Linux
-        - Windows
-        - 其他
-    validations:
-      required: false
+      required: true
 
   - type: textarea
-    id: logs
+    id: actual
     attributes:
-      label: 错误日志 / 终端输出
-      description: 如有错误日志，请粘贴在此
+      label: Actual Behavior
+      description: What actually happened (include error messages if any)
       placeholder: |
-        [Paste your error log here]
+        Process hangs with no output. After Ctrl+C, shows:
+        ```
+        ^CTraceback (most recent call last):
+          File "...", line 45, in chat
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Your system information
+      placeholder: |
+        - OS: macOS 14.4
+        - Python: 3.11.7
+        - omc version: 0.5.2
+        - Installation: pip install oh-my-coder
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: Your omc configuration (redact sensitive info like API keys)
+      placeholder: |
+        ```toml
+        [llm]
+        model = "gpt-4"
+        base_url = "https://api.openai.com/v1"
+        
+        [agent]
+        timeout = 30
+        ```
     validations:
       required: false
 
   - type: checkboxes
-    id: terms
+    id: checks
     attributes:
-      label: 
+      label: Pre-submission Checks
       options:
-        - label: 我已检查此问题不是重复的
-          required: true
-        - label: 我愿意参与修复此问题的讨论
-          required: false
-
----
-
-## 🎉 功能请求
-
-如果你是想提交功能请求，请关闭此 Issue 并打开新的 **Feature Request**。
-
----
-
-## 📝 提示
-
-- 运行 `python -m src.cli status` 可以查看当前配置状态
-- 运行 `python -m src.cli --version` 可以查看版本号
-- 提交前请先搜索 [已有 Issues](https://github.com/VOBC/oh-my-coder/issues)，避免重复
+        - label: I have searched existing issues and this bug has not been reported
+        - label: I can reproduce this bug consistently
+        - label: I have tested with the latest version of omc
+    validations:
+      required: true

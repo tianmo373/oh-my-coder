@@ -1,45 +1,94 @@
-name: 功能请求
-description: 提出新功能建议
+name: ✨ Feature Request
+description: Suggest a new feature or improvement for Oh My Coder
 title: "[Feature] "
-labels: ["enhancement"]
+labels: ["enhancement", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        感谢提出功能建议！请填写以下信息。
+        Thanks for taking the time to suggest a feature! Please fill out the sections below to help us understand your idea.
 
   - type: textarea
-    id: description
+    id: problem
     attributes:
-      label: 功能描述
-      description: 请详细描述你希望添加的功能
-      placeholder: "例如：我希望能够支持..."
+      label: Problem / Motivation
+      description: What problem are you trying to solve? Is your feature request related to a specific pain point?
+      placeholder: |
+        Example: I often need to switch between multiple AI models when working on different tasks, 
+        but currently I have to manually change the configuration each time.
     validations:
       required: true
 
   - type: textarea
-    id: usecase
+    id: solution
     attributes:
-      label: 使用场景
-      description: 这个功能可以解决什么问题？
-      placeholder: "例如：在开发微信小程序时..."
+      label: Proposed Solution
+      description: Describe the solution you'd like to see. Be specific about how it should work.
+      placeholder: |
+        Example: Add a model profile system that allows saving and quickly switching between 
+        different model configurations (API key, base URL, model name) with a simple command 
+        like `omc model switch <profile-name>`.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: |
+        Example: I tried using shell aliases to switch configs, but it's error-prone and 
+        doesn't integrate well with the existing configuration system.
+    validations:
+      required: false
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case / Scenario
+      description: Describe a specific scenario where this feature would be useful. Include example commands or interactions if applicable.
+      placeholder: |
+        Example:
+        1. I'm working on a Python project using GPT-4 for code review
+        2. I need to switch to Claude for creative writing tasks
+        3. I want to quickly switch back to GPT-4 without re-entering API keys
+        
+        ```bash
+        omc model switch coding      # Uses GPT-4 profile
+        omc model switch writing     # Uses Claude profile
+        ```
     validations:
       required: true
 
   - type: dropdown
     id: priority
     attributes:
-      label: 优先级
-      description: 你认为这个功能的优先级是？
+      label: Priority
+      description: How important is this feature to you?
       options:
-        - 低 - 有了更好
-        - 中 - 比较实用
-        - 高 - 非常需要
+        - "Nice to have"
+        - "Would improve my workflow"
+        - "Blocking my usage"
     validations:
       required: true
 
-  - type: textarea
-    id: additional
+  - type: checkboxes
+    id: willing
     attributes:
-      label: 补充信息
-      description: 其他相关信息（如参考实现、截图等）
+      label: Contribution
+      description: Are you interested in contributing this feature?
+      options:
+        - label: I would be willing to implement this feature
+        - label: I can help test this feature
+        - label: I can provide feedback during development
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or examples that might help us understand your request.
+      placeholder: Add any other details, mockups, or references here.
+    validations:
+      required: false
