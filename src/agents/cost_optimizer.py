@@ -342,6 +342,112 @@ class CostOptimizer:
 
 
 # ------------------------------------------------------------------
+# Token 费用计算
+# ------------------------------------------------------------------
+
+
+# 模型定价表（美元 / 1M tokens）
+# 数据来源：各模型官方定价页（2025-01）
+MODEL_PRICING = {
+    # OpenAI
+    "gpt-4o": {"input": 2.50, "output": 10.00},
+    "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+    "gpt-4-turbo": {"input": 10.00, "output": 30.00},
+    # Anthropic
+    "claude-3-opus": {"input": 15.00, "output": 75.00},
+    "claude-3-sonnet": {"input": 3.00, "output": 15.00},
+    "claude-3-haiku": {"input": 0.25, "output": 1.25},
+    "claude-3.5-sonnet": {"input": 3.00, "output": 15.00},
+    "claude-3.5-opus": {"input": 18.00, "output": 90.00},
+    # DeepSeek
+    "deepseek-chat": {"input": 0.14, "output": 0.28},
+    "deepseek-reasoner": {"input": 0.55, "output": 2.19},
+    # Qwen
+    "qwen-turbo": {"input": 0.30, "output": 0.60},
+    "qwen-plus": {"input": 0.80, "output": 2.00},
+    # GLM
+    "glm-4": {"input": 0.50, "output": 0.50},
+    # Moonshot
+    "moonshot-v1-8k": {"input": 0.50, "output": 0.50},
+    "moonshot-v1-32k": {"input": 0.50, "output": 0.50},
+    # Ollama (本地免费)
+    "ollama/qwen2.5:7b": {"input": 0.0, "output": 0.0},
+    "ollama/qwen2.5:14b": {"input": 0.0, "output": 0.0},
+    "ollama/llama3:8b": {"input": 0.0, "output": 0.0},
+}
+
+
+@dataclass
+class CostEstimate:
+    """费用估算结果"""
+
+    model: str
+    input_tokens: int
+    output_tokens: int
+    input_cost: float  # 美元
+    output_cost: float  # 美元
+    total_cost: float  # 美元
+
+
+def calculate_cost(
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+) -> CostEstimate:
+    """计算指定模型的 token 费用
+
+    Args:
+        model: 模型名称（如 "gpt-4o-mini", "claude-3.5-opus"）
+        input_tokens: 输入 token 数
+        output_tokens: 输出 token 数
+
+    Returns:
+        CostEstimate: 费用估算结果
+
+    Raises:
+        ValueError: 模型不在定价表中
+    """
+    if model not in MODEL_PRICING:
+        raise ValueError(f"模型 {model} 不在定价表中，可用模型: {list(MODEL_PRICING.keys())}")
+
+    pricing = MODEL_PRICING[model]
+    input_cost = (input_tokens / 1_000_000) * pricing["input"]
+    output_cost = (output_tokens / 1_000_000) * pricing["output"]
+    total_cost = input_cost + output_cost
+
+    return CostEstimate(
+        model=model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        input_cost=input_cost,
+        output_cost=output_cost,
+        total_cost=total_cost,
+    )
+
+
+def calculate_multi_model_cost(
+    model_usages: list[dict[str, int]],
+) -> list[CostEstimate]:
+    """计算多模型组合费用
+
+    Args:
+        model_usages: 模型使用列表，每项包含 {"model": str, "input_tokens": int, "output_tokens": int}
+
+    Returns:
+        各模型的费用估算列表
+    """
+    results = []
+    for usage in model_usages:
+        estimate = calculate_cost(
+            model=usage["model"],
+            input_tokens=usage["input_tokens"],
+            output_tokens=usage["output_tokens"],
+        )
+        results.append(estimate)
+    return results
+
+
+# ------------------------------------------------------------------
 # CLI 入口
 # ------------------------------------------------------------------
 
