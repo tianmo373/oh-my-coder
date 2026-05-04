@@ -17,7 +17,7 @@ from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
-from src.tools.sourcegraph import check_status, install_src_cli, setup_api_key
+from src.tools.sourcegraph import check_status
 
 console = Console()
 
@@ -223,6 +223,10 @@ def init_wizard(
     has_api = sg_status["api"]["available"]
     has_cli = sg_status["cli"]["available"]
 
+    # 检查环境变量中是否已有配置
+    existing_sg_key = os.getenv("SOURCEGRAPH_API_KEY", "")
+    existing_sg_endpoint = os.getenv("SOURCEGRAPH_ENDPOINT", "https://sourcegraph.com")
+
     if has_api:
         console.print("  [green]✓[/green] Sourcegraph API 已配置")
         use_sg = Confirm.ask("是否启用 Sourcegraph 搜索增强？", default=True)
@@ -239,36 +243,69 @@ def init_wizard(
             "是否配置 Sourcegraph？",
             default=False,
         )
-        if use_sg:
-            console.print()
-            console.print("  选择配置方式:")
-            sg_choice = Prompt.ask(
-                "配置方式",
-                choices=["1", "2"],
-                default="1",
+
+    if use_sg and not has_api:
+        console.print()
+        # 询问 API Endpoint
+        sg_endpoint = Prompt.ask(
+            "Sourcegraph API Endpoint",
+            default=existing_sg_endpoint,
+        )
+        console.print(f"  使用 Endpoint: [cyan]{sg_endpoint}[/cyan]")
+
+        # 询问 API Key
+        if existing_sg_key:
+            console.print("  检测到已有 [cyan]SOURCEGRAPH_API_KEY[/cyan]，按 Enter 保留")
+            sg_api_key = Prompt.ask(
+                "输入 Sourcegraph API Key",
+                password=True,
+                default="",
             )
-            if sg_choice == "1":
-                # API Key 配置
-                console.print("  环境变量: [cyan]SOURCEGRAPH_API_KEY[/cyan]")
-                sg_api_key = Prompt.ask(
-                    "输入 Sourcegraph API Key",
-                    password=True,
-                )
-                if sg_api_key:
-                    ok, msg = setup_api_key(sg_api_key)
-                    if ok:
-                        console.print(f"  [green]✓[/green] {msg}")
-                    else:
-                        console.print(f"  [red]✗[/red] {msg}")
-            else:
-                # src CLI 安装
-                console.print("[dim]正在安装 src CLI...[/dim]")
-                ok, msg = install_src_cli()
-                if ok:
-                    console.print(f"  [green]✓[/green] {msg}")
-                else:
-                    console.print(f"  [red]✗[/red] {msg}")
-                    console.print("  [dim]手动安装: brew install sourcegraph/tap/src[/dim]")
+            if sg_api_key == "":
+                sg_api_key = existing_sg_key
+                console.print("  ✅ 保留已有 Key")
+        else:
+            console.print("  环境变量: [cyan]SOURCEGRAPH_API_KEY[/cyan]")
+            sg_api_key = Prompt.ask(
+                "输入 Sourcegraph API Key",
+                password=True,
+            )
+
+        if sg_api_key:
+            # 保存 API Key 和 Endpoint
+            env_file = _get_env_file()
+            env_file.parent.mkdir(parents=True, exist_ok=True)
+
+            lines: list[str] = []
+            if env_file.exists():
+                with open(env_file, encoding="utf-8") as f:
+                    lines = f.readlines()
+
+            # 更新或追加 SOURCEGRAPH_API_KEY
+            found_key = False
+            for i, line in enumerate(lines):
+                if line.strip().startswith("SOURCEGRAPH_API_KEY="):
+                    lines[i] = f"SOURCEGRAPH_API_KEY={sg_api_key}\n"
+                    found_key = True
+                    break
+            if not found_key:
+                lines.append(f"SOURCEGRAPH_API_KEY={sg_api_key}\n")
+
+            # 更新或追加 SOURCEGRAPH_ENDPOINT（如果不是默认值）
+            if sg_endpoint != "https://sourcegraph.com":
+                found_endpoint = False
+                for i, line in enumerate(lines):
+                    if line.strip().startswith("SOURCEGRAPH_ENDPOINT="):
+                        lines[i] = f"SOURCEGRAPH_ENDPOINT={sg_endpoint}\n"
+                        found_endpoint = True
+                        break
+                if not found_endpoint:
+                    lines.append(f"SOURCEGRAPH_ENDPOINT={sg_endpoint}\n")
+
+            with open(env_file, "w", encoding="utf-8") as f:
+                f.writelines(lines)
+
+            console.print("  ✅ Sourcegraph 配置已保存")
 
     console.print()
 
@@ -284,7 +321,8 @@ def init_wizard(
         "API Key:", "[dim]已配置 ✓[/dim]" if api_key else "[yellow]未配置[/yellow]"
     )
     summary_table.add_row("工作目录:", work_dir)
-    summary_table.add_row("Sourcegraph:", "[dim]已配置 ✓[/dim]" if (has_api or has_cli) else "[dim]未配置[/dim]")
+    sg_configured = has_api or has_cli or (use_sg if 'use_sg' in locals() else False)
+    summary_table.add_row("Sourcegraph:", "[dim]已配置 ✓[/dim]" if sg_configured else "[dim]未配置[/dim]")
     summary_table.add_row("配置文件:", str(CONFIG_FILE))
 
     console.print(Panel(summary_table, title="配置摘要", border_style="cyan"))
