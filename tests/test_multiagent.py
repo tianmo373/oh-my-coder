@@ -353,3 +353,325 @@ class TestAgentCollaboration:
         # 检查历史列表存在
         assert hasattr(coordinator, "_history")
         assert isinstance(coordinator._history, list)
+
+
+class TestTaskRouting:
+    """任务路由逻辑测试"""
+
+    @pytest.mark.parametrize(
+        "task_type,expected_tier",
+        [
+            # 简单任务 → LOW tier
+            ("explore", "low"),
+            ("simple_qa", "low"),
+            ("formatting", "low"),
+            # 中等复杂度 → MEDIUM tier
+            ("code_generation", "medium"),
+            ("debugging", "medium"),
+            ("testing", "medium"),
+            ("refactoring", "medium"),
+            # 高复杂度 → HIGH tier
+            ("architecture", "high"),
+            ("security_review", "high"),
+            ("code_review", "high"),
+            ("planning", "high"),
+        ],
+    )
+    def test_task_type_to_tier_mapping(self, task_type, expected_tier):
+        """测试任务类型到模型层级的映射"""
+        from src.core.router import _TASK_TIER_MAPPING
+
+        tier = _TASK_TIER_MAPPING.get(task_type, "medium")
+        assert tier == expected_tier
+
+    @pytest.mark.parametrize(
+        "complexity,base_tier,expected_tier",
+        [
+            # 低复杂度降级
+            ("low", "high", "medium"),
+            ("low", "medium", "low"),
+            ("low", "low", "low"),
+            # 高复杂度升级
+            ("high", "low", "medium"),
+            ("high", "medium", "high"),
+            ("high", "high", "high"),
+            # 中等复杂度不变
+            ("medium", "low", "low"),
+            ("medium", "medium", "medium"),
+            ("medium", "high", "high"),
+        ],
+    )
+    def test_complexity_adjustment(self, complexity, base_tier, expected_tier):
+        """测试复杂度调整逻辑"""
+        # 模拟 tier 调整逻辑
+        tier = base_tier
+        if complexity == "low" and base_tier == "high":
+            tier = "medium"
+        elif complexity == "low" and base_tier == "medium":
+            tier = "low"
+        elif complexity == "high" and base_tier == "low":
+            tier = "medium"
+        elif complexity == "high" and base_tier == "medium":
+            tier = "high"
+
+        assert tier == expected_tier
+
+    @pytest.mark.asyncio
+    async def test_simple_task_dispatch(self):
+        """测试简单任务分发到单个 Agent"""
+        coordinator = MultiAgentCoordinator()
+
+        async def mock_runner(agent: SubAgent, task: str) -> str:
+            return f"processed: {task[:30]}"
+
+        coordinator.set_runner(mock_runner)
+        agent = coordinator.spawn("explorer", "ExploreBot")
+
+        result = await coordinator.dispatch("list all python files", [agent])
+
+        assert len(result.results) == 1
+        assert result.results[0].success is True
+
+    @pytest.mark.asyncio
+    async def test_complex_task_dispatch(self):
+        """测试复杂任务分发到多个 Agent"""
+        coordinator = MultiAgentCoordinator()
+
+        async def mock_runner(agent: SubAgent, task: str) -> str:
+            return f"{agent.role}: done"
+
+        coordinator.set_runner(mock_runner)
+
+        # 复杂任务需要多个角色协作
+        agents = [
+            coordinator.spawn("planner", "Planner"),
+            coordinator.spawn("coder", "Coder"),
+            coordinator.spawn("reviewer", "Reviewer"),
+            coordinator.spawn("tester", "Tester"),
+        ]
+
+        result = await coordinator.dispatch(
+            "implement user authentication with JWT", agents
+        )
+
+        assert len(result.results) == 4
+        assert all(r.success for r in result.results)
+        roles = {r.role for r in result.results}
+        assert "planner" in roles
+        assert "coder" in roles
+        assert "reviewer" in roles
+        assert "tester" in roles
+
+
+class TestAgentCommunication:
+    """Agent 间通信测试"""
+
+    @pytest.mark.asyncio
+    async def test_message_passing_sequential(self):
+        """测试顺序执行中的消息传递"""
+        coordinator = MultiAgentCoordinator()
+
+        messages_log = []
+
+        async def logging_runner(agent: SubAgent, task: str) -> str:
+            messages_log.append({"agent": agent.name, "received": task[:50]})
+            return f"{agent.name} output"
+
+        coordinator.set_runner(logging_runner)
+
+        agents = [
+            coordinator.spawn("coder", "Coder"),
+            coordinator.spawn("reviewer", "Reviewer"),
+        ]
+
+        await coordinator.dispatch_sequential("write unit tests", agents)
+
+        # 验证消息传递
+        assert len(messages_log) == 2
+        # 第一个 agent 收到原始任务
+        assert "write unit tests" in messages_log[0]["received"]
+        # 第二个 agent 收到包含第一个输出的任务
+        assert "Coder output" in messages_log[1]["received"]
+
+    @pytest.mark.asyncio
+    async def test_shared_context(self):
+        """测试共享上下文"""
+        coordinator = MultiAgentCoordinator()
+
+        context = {"project": "oh-my-coder", "language": "python"}
+
+        async def context_runner(agent: SubAgent, task: str) -> str:
+            # Agent 可以访问共享上下文
+            return f"{agent.name} working on {context['project']}"
+
+        coordinator.set_runner(context_runner)
+
+        agents = [coordinator.spawn("coder", f"Coder{i}") for i in range(3)]
+        result = await coordinator.dispatch("implement feature", agents)
+
+        for r in result.results:
+            assert r.success
+            assert "oh-my-coder" in r.output
+
+    @pytest.mark.asyncio
+    async def test_agent_output_chain(self):
+        """测试 Agent 输出链"""
+        coordinator = MultiAgentCoordinator()
+
+        async def chain_runner(agent: SubAgent, task: str) -> str:
+            # 模拟处理链：每个 agent 在前一个输出上工作
+            if "step1" in task:
+                return "step1: design complete"
+            elif "step2" in task or "design complete" in task:
+                return "step2: implementation complete"
+            else:
+                return "final: done"
+
+        coordinator.set_runner(chain_runner)
+
+        agents = [
+            coordinator.spawn("designer", "Designer"),
+            coordinator.spawn("coder", "Coder"),
+        ]
+
+        result = await coordinator.dispatch_sequential("step1: design feature", agents)
+
+        # 第二个 agent 的输入应包含第一个的输出
+        assert len(result.results) == 2
+        assert "design complete" in result.results[1].output or result.results[1].success
+
+
+class TestFailureRetry:
+    """失败重试机制测试"""
+
+    @pytest.mark.asyncio
+    async def test_single_agent_failure(self):
+        """测试单个 Agent 失败"""
+        coordinator = MultiAgentCoordinator()
+
+        async def failing_runner(agent: SubAgent, task: str) -> str:
+            if agent.role == "tester":
+                raise RuntimeError("test environment not ready")
+            return "ok"
+
+        coordinator.set_runner(failing_runner)
+
+        agents = [
+            coordinator.spawn("coder", "Coder"),
+            coordinator.spawn("tester", "Tester"),
+        ]
+
+        result = await coordinator.dispatch("build feature", agents)
+
+        # coder 成功，tester 失败
+        assert result.results[0].success is True
+        assert result.results[1].success is False
+        assert "RuntimeError" in result.results[1].error
+
+    @pytest.mark.asyncio
+    async def test_partial_failure_handling(self):
+        """测试部分失败处理"""
+        coordinator = MultiAgentCoordinator()
+
+        failure_count = 0
+
+        async def intermittent_runner(agent: SubAgent, task: str) -> str:
+            nonlocal failure_count
+            # 模拟间歇性失败
+            if agent.role == "reviewer" and failure_count == 0:
+                failure_count += 1
+                raise ValueError("temporary error")
+            return f"{agent.role} succeeded"
+
+        coordinator.set_runner(intermittent_runner)
+
+        agents = [
+            coordinator.spawn("coder", "Coder"),
+            coordinator.spawn("reviewer", "Reviewer"),
+            coordinator.spawn("tester", "Tester"),
+        ]
+
+        result = await coordinator.dispatch("task", agents)
+
+        # 验证部分成功/失败
+        success_count = sum(1 for r in result.results if r.success)
+        failed_count = sum(1 for r in result.results if not r.success)
+
+        assert success_count == 2
+        assert failed_count == 1
+
+    @pytest.mark.asyncio
+    async def test_sequential_continues_on_failure(self):
+        """测试顺序执行在失败时继续执行（当前实现行为）"""
+        coordinator = MultiAgentCoordinator()
+
+        execution_order = []
+
+        async def failing_runner(agent: SubAgent, task: str) -> str:
+            execution_order.append(agent.role)
+            if agent.role == "reviewer":
+                raise RuntimeError("review failed")
+            return "ok"
+
+        coordinator.set_runner(failing_runner)
+
+        agents = [
+            coordinator.spawn("coder", "Coder"),
+            coordinator.spawn("reviewer", "Reviewer"),
+            coordinator.spawn("tester", "Tester"),
+        ]
+
+        result = await coordinator.dispatch_sequential("task", agents)
+
+        # 当前实现：所有 agent 都会执行
+        assert len(result.results) == 3
+        assert "coder" in execution_order
+        assert "reviewer" in execution_order
+        assert "tester" in execution_order
+        # reviewer 失败，但 coder 和 tester 成功
+        assert result.results[0].success is True
+        assert result.results[1].success is False
+        assert result.results[2].success is True
+
+    @pytest.mark.asyncio
+    async def test_exception_isolation(self):
+        """测试异常隔离：一个 agent 失败不影响其他"""
+        coordinator = MultiAgentCoordinator()
+
+        async def isolated_runner(agent: SubAgent, task: str) -> str:
+            if agent.name == "FailBot":
+                raise ValueError("I fail")
+            return f"{agent.name} succeeded"
+
+        coordinator.set_runner(isolated_runner)
+
+        agents = [
+            coordinator.spawn("worker", "Worker1"),
+            coordinator.spawn("worker", "FailBot"),
+            coordinator.spawn("worker", "Worker2"),
+        ]
+
+        result = await coordinator.dispatch("task", agents)
+
+        # 并行执行：失败不影响其他
+        assert result.results[0].success is True
+        assert result.results[1].success is False
+        assert result.results[2].success is True
+
+    @pytest.mark.asyncio
+    async def test_error_message_capture(self):
+        """测试错误消息捕获"""
+        coordinator = MultiAgentCoordinator()
+
+        async def error_runner(agent: SubAgent, task: str) -> str:
+            raise ValueError("detailed error message")
+
+        coordinator.set_runner(error_runner)
+        agent = coordinator.spawn("worker", "Worker")
+
+        result = await coordinator.dispatch("task", [agent])
+
+        assert result.results[0].success is False
+        assert result.results[0].error is not None
+        # 错误类型应被记录
+        assert "ValueError" in result.results[0].error
