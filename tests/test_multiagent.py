@@ -276,12 +276,12 @@ class TestMultiAgentCollaboration:
         """测试并行执行性能"""
         coordinator = MultiAgentCoordinator()
 
-        import time
         import asyncio
+        import time
 
         async def delayed_runner(agent: SubAgent, task: str) -> str:
             await asyncio.sleep(0.05)
-            return f"done"
+            return "done"
 
         coordinator.set_runner(delayed_runner)
 
