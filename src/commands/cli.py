@@ -40,9 +40,9 @@ from src.wiki import WikiGenerator
 
 from .cli_checkpoint import app as checkpoint_app
 from .cli_commands import app as commands_app
-from .cli_doctor import app as doctor_app
 from .cli_config_ext import app as config_ext_app
 from .cli_context import context_app
+from .cli_doctor import app as doctor_app
 from .cli_lsp import app as lsp_app
 from .cli_mcp import app as mcp_app
 from .cli_memory import app as memory_app
