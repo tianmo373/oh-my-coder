@@ -19,9 +19,9 @@ Agent 编排器 - 智能体调度和编排引擎
 
 import asyncio
 import json
+import os
 from collections.abc import Callable
 from dataclasses import dataclass, field
-import os
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -217,7 +217,7 @@ class Orchestrator:
         from ..memory.skill_manager import SkillManager
 
         self.skills_dir = skills_dir or self.state_dir.parent / "skills"
-        self._skill_manager: SkillManager | None = None
+        self._skill_manager: Optional[SkillManager] = None
 
         # Checkpoint 管理器（懒加载）
         self._checkpoint_manager = None  # type: ignore
