@@ -211,7 +211,7 @@ def run(
 
     # ---- 5. API Key 检查 ----
     any_key = False
-    for env_key, display_name, url in API_KEYS:
+    for env_key, display_name, _url in API_KEYS:
         val = os.getenv(env_key, "")
         if val:
             if not any_key:
