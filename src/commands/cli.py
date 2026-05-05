@@ -1407,6 +1407,9 @@ def _display_result(result):
 
     if result.error:
         console.print(f"\n[red]错误: {result.error}[/red]")
+        console.print(
+            f"\n[cyan]💡 详细日志:[/cyan] .omc/state/workflow_{result.workflow_id}.json"
+        )
 
 
 def _display_cross_validation_result(result):
@@ -1471,167 +1474,164 @@ def _display_cross_validation_result(result):
 def config(
     action: str = typer.Argument(
         "show",
-        help="操作: show（查看）/ set（设置）/ list（列出可用配置项）",
+        help="操作: show（查看）/ set（设置）/ list（列出）/ models（模型列表）",
     ),
-    model: str = typer.Option(None, "--model", "-m", help="模型标识（可选，用于模型级配置，如 deepseek/kimi/glm）"),
+    model: str = typer.Option(None, "--model", "-m", help="指定模型名称（如 kimi/deepseek/chatgpt）"),
     key: str = typer.Option(None, "--key", "-k", help="配置项名称"),
-    value: str = typer.Option(None, "--value", "-v", help="配置值"),
+    value: str = typer.Option(None, "--value", "-v", help="配置值（留空则删除该 key）"),
 ):
     """
-    ⚙️ 管理配置
+    ⚙️ 管理配置（支持全局配置 + 按模型独立配置）
 
     用法:
-      omc config show          # 查看当前配置
-      omc config list         # 列出所有配置项
-      omc config set -k DEEPSEEK_API_KEY -v xxx   # 设置全局配置项
-      omc config set -m deepseek -k API_BASE_URL -v xxx  # 设置模型级配置
+      omc config show                    # 查看当前全局配置
+      omc config list                    # 列出所有配置项
+      omc config set -k KEY -v VALUE     # 设置全局配置项
+      omc config models                  # 列出已配置的模型
+      omc config show -m kimi            # 查看 kimi 模型的独立配置
+      omc config set -m kimi -k temperature -v 0.7   # 设置 kimi 的 temperature
     """
+    import json
     import os
     from pathlib import Path
 
-    from dotenv import load_dotenv
+    CONFIG_DIR = Path.home() / ".config" / "oh-my-coder"
+    CONFIG_FILE = CONFIG_DIR / "config.json"
+    CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-    # 模型级配置项映射（模型标识 -> 可配置项）
-    MODEL_KEYS = {
-        "deepseek": ["API_KEY", "BASE_URL", "MODEL_NAME", "TEMPERATURE", "MAX_TOKENS"],
-        "kimi": ["API_KEY", "BASE_URL", "MODEL_NAME", "TEMPERATURE", "MAX_TOKENS"],
-        "glm": ["API_KEY", "BASE_URL", "MODEL_NAME", "TEMPERATURE", "MAX_TOKENS"],
-        "doubao": ["API_KEY", "BASE_URL", "MODEL_NAME", "TEMPERATURE", "MAX_TOKENS"],
-        "ollama": ["BASE_URL", "MODEL_NAME", "TEMPERATURE", "MAX_TOKENS"],
-    }
+    def _load() -> dict:
+        if CONFIG_FILE.exists():
+            try:
+                return json.loads(CONFIG_FILE.read_text())
+            except Exception:
+                return {}
+        return {}
 
-    # 全局配置项
-    GLOBAL_KEYS = {
-        "DEEPSEEK_API_KEY": "DeepSeek API Key（推荐，性价比高）",
-        "DEEPSEEK_BASE_URL": "DeepSeek API 地址（默认官方）",
-        "KIMI_API_KEY": "KIMI API Key",
-        "DOUBAO_API_KEY": "豆包 API Key",
-        "DINGTALK_WEBHOOK_URL": "钉钉 Webhook URL（Quest 通知）",
-        "DINGTALK_SECRET": "钉钉加签密钥",
-        "DEFAULT_MODEL": "默认模型（默认 deepseek）",
-        "DEFAULT_WORKFLOW": "默认工作流（默认 build）",
-    }
+    def _save(cfg: dict) -> None:
+        CONFIG_FILE.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n")
 
-    config_path = Path(".env")
-    if config_path.exists():
-        load_dotenv(config_path)
+    def _mask_secret(val: str) -> str:
+        if not val:
+            return ""
+        if len(val) <= 8:
+            return "****"
+        return val[:4] + "****" + val[-4:]
 
-    def _get_model_config_key(model: str, key: str) -> str:
-        """生成模型级配置的环境变量键名"""
-        return f"{model.upper()}_{key.upper()}"
-
-    def _get_model_config_value(model: str, key: str) -> str | None:
-        """读取模型级配置值"""
-        env_key = _get_model_config_key(model, key)
-        return os.getenv(env_key)
-
-    if action == "list":
-        # 列出配置项
-        if model:
-            # 模型级配置
-            keys = MODEL_KEYS.get(model.lower())
-            if not keys:
-                console.print(f"[red]❗ 未知模型: {model}[/red]")
-                console.print(f"[dim]可用模型: {', '.join(MODEL_KEYS.keys())}[/dim]")
-                raise typer.Exit(1)
-            console.print(f"[bold]{model} 模型配置项:[/bold]\n")
-            for k in keys:
-                val = _get_model_config_value(model, k)
-                masked = _mask_secret(val) if val else ""
-                status = "[green]✓[/green]" if val else "[dim]—[/dim]"
-                console.print(f"  {status} [cyan]{k}[/cyan] = {masked}")
-            console.print()
-            console.print(f"[dim]用法: omc config set -m {model} -k <key> -v <value>[/dim]")
+    # ----- models -----
+    if action == "models":
+        cfg = _load()
+        models = cfg.get("models", {})
+        if not models:
+            console.print("[dim]尚未配置任何模型[/dim]")
+            console.print("\n[bold]快速开始：[/bold] omc config set -m kimi -k api_key -v <your-key>")
         else:
-            # 全局配置
-            console.print("[bold]可用配置项:[/bold]\n")
-            for k, desc in GLOBAL_KEYS.items():
-                val = os.getenv(k, "")
-                masked = _mask_secret(val)
-                status = "[green]✓[/green]" if val else "[red]✗[/red]"
-                console.print(f"  {status} [cyan]{k}[/cyan]")
-                console.print(f"       [dim]{desc}[/dim]")
-                if val:
-                    console.print(f"       当前值: {masked}")
+            console.print(f"[bold]已配置 {len(models)} 个模型：[/bold]\n")
+            for name, opts in models.items():
+                api_key = opts.get("api_key", "")
+                base = opts.get("base_url", "")
+                temp = opts.get("temperature", None)
+                console.print(f"  [cyan]{name}[/cyan]")
+                if api_key:
+                    console.print(f"    api_key: {_mask_secret(api_key)}")
+                if base:
+                    console.print(f"    base_url: {base}")
+                if temp is not None:
+                    console.print(f"    temperature: {temp}")
                 console.print()
         return
 
-    if action == "show":
-        # 显示配置
-        if model:
-            # 模型级配置
-            keys = MODEL_KEYS.get(model.lower())
-            if not keys:
-                console.print(f"[red]❗ 未知模型: {model}[/red]")
-                console.print(f"[dim]可用模型: {', '.join(MODEL_KEYS.keys())}[/dim]")
-                raise typer.Exit(1)
-            console.print(f"[bold]{model} 模型配置:[/bold]\n")
-            for k in keys:
-                val = _get_model_config_value(model, k)
-                masked = _mask_secret(val) if val else "[dim]—[/dim]"
-                console.print(f"  [cyan]{k}[/cyan] = {masked}")
-        else:
-            # 全局配置
-            console.print("[bold]当前配置:[/bold]\n")
-            for key_name in ["DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "KIMI_API_KEY", "DOUBAO_API_KEY", "DINGTALK_WEBHOOK_URL", "DINGTALK_SECRET", "DEFAULT_MODEL", "DEFAULT_WORKFLOW"]:
-                val = os.getenv(key_name, "")
-                masked = _mask_secret(val)
-                status = "[green]✓[/green]" if val else "[dim]—[/dim]"
-                console.print(f"  {status} [cyan]{key_name}[/cyan] = {masked}")
+    # ----- list -----
+    if action == "list":
+        console.print("[bold]可用全局配置项：[/bold]\n")
+        items = [
+            ("DEFAULT_MODEL", "默认模型（默认 deepseek）"),
+            ("DEFAULT_WORKFLOW", "默认工作流（默认 build）"),
+            ("DEEPSEEK_API_KEY", "DeepSeek API Key（推荐，性价比高）"),
+            ("DEEPSEEK_BASE_URL", "DeepSeek API 地址（默认官方）"),
+            ("KIMI_API_KEY", "KIMI API Key"),
+            ("DOUBAO_API_KEY", "豆包 API Key"),
+        ]
+        for k, desc in items:
+            val = os.getenv(k, "")
+            masked = _mask_secret(val)
+            status = "[green]✓[/green]" if val else "[red]✗[/red]"
+            console.print(f"  {status} [cyan]{k}[/cyan]  {desc}")
+            if val:
+                console.print(f"       当前: {masked}")
+        console.print()
+        console.print("[bold]按模型配置：[/bold] omc config set -m <model> -k <key> -v <value>")
+        console.print("[dim]模型可用 key: api_key / base_url / temperature / max_tokens / system_prompt[/dim]")
         return
 
+    # ----- set -----
     if action == "set":
-        if not key or not value:
-            console.print(
-                "[red]❗ 需要同时提供 --key 和 --value[/red]\n"
-                "示例: [green]omc config set -k DEFAULT_MODEL -v kimi[/green]\n"
-                "模型级: [green]omc config set -m deepseek -k BASE_URL -v https://api.deepseek.com[/green]"
-            )
+        if not key:
+            console.print("[red]❗ 需要 --key 参数[/red]")
             raise typer.Exit(1)
 
-        # 写到 .env 文件
-        env_path = Path(".env")
-        env_vars: dict[str, str] = {}
-        if env_path.exists():
-            for line in env_path.read_text().splitlines():
-                if "=" in line:
-                    k, v = line.split("=", 1)
-                    env_vars[k.strip()] = v.strip()
-
         if model:
-            # 模型级配置
-            model_lower = model.lower()
-            if model_lower not in MODEL_KEYS:
-                console.print(f"[red]❗ 未知模型: {model}[/red]")
-                console.print(f"[dim]可用模型: {', '.join(MODEL_KEYS.keys())}[/dim]")
-                raise typer.Exit(1)
+            # 按模型配置
+            cfg = _load()
+            if "models" not in cfg:
+                cfg["models"] = {}
+            if model not in cfg["models"]:
+                cfg["models"][model] = {}
 
-            allowed_keys = MODEL_KEYS[model_lower]
-            if key.upper() not in allowed_keys:
-                console.print(f"[red]❗ {model} 不支持的配置项: {key}[/red]")
-                console.print(f"[dim]可用: {', '.join(allowed_keys)}[/dim]")
-                raise typer.Exit(1)
-
-            # 构建设置的键名并写入
-            env_key = _get_model_config_key(model, key)
-            env_vars[env_key] = value
-            console.print(
-                f"[green]✓ 已设置[/green] [cyan]{model}.{key}[/cyan] = {_mask_secret(value)}"
-            )
+            if value is None or value == "":
+                # 删除该 key
+                cfg["models"][model].pop(key, None)
+                console.print(f"[yellow]✓ 已移除[/yellow] [cyan]{model}[/cyan].{key}")
+            else:
+                cfg["models"][model][key] = value
+                console.print(f"[green]✓ 已设置[/green] [cyan]{model}[/cyan].{key} = {value}")
+            _save(cfg)
+            console.print(f"[dim]已保存到 {CONFIG_FILE}[/dim]")
         else:
-            # 全局配置
+            # 全局配置，写入 .env
+            env_path = Path(".env")
+            env_vars: dict[str, str] = {}
+            if env_path.exists():
+                for line in env_path.read_text().splitlines():
+                    if "=" in line:
+                        k2, v2 = line.split("=", 1)
+                        env_vars[k2.strip()] = v2.strip()
             env_vars[key] = value
-            console.print(
-                f"[green]✓ 已设置[/green] [cyan]{key}[/cyan] = {_mask_secret(value)}"
-            )
-
-        lines = [f"{k}={v}" for k, v in env_vars.items()]
-        env_path.write_text("\n".join(lines) + "\n")
-        console.print("[dim]已写入 .env 文件[/dim]")
+            env_path.write_text("\n".join(f"{k}={v}" for k, v in env_vars.items()) + "\n")
+            console.print(f"[green]✓ 已设置（全局）[/green] [cyan]{key}[/cyan] = {_mask_secret(value)}")
+            console.print("[dim]已写入 .env 文件[/dim]")
         return
 
-    console.print("[red]未知操作[/red]，可用: show / list / set")
-    raise typer.Exit(1)
+    # ----- show（默认）-----
+    cfg = _load()
+    console.print("[bold]⚙️ 当前配置[/bold]\n")
+
+    # 全局配置（从 .env）
+    console.print("[bold]全局配置：[/bold]")
+    global_keys = ["DEFAULT_MODEL", "DEFAULT_WORKFLOW", "DEEPSEEK_API_KEY",
+                   "DEEPSEEK_BASE_URL", "KIMI_API_KEY", "DOUBAO_API_KEY"]
+    for k in global_keys:
+        val = os.getenv(k, "")
+        masked = _mask_secret(val)
+        status = "[green]✓[/green]" if val else "[dim]—[/dim]"
+        console.print(f"  {status} [cyan]{k}[/cyan] = {masked}")
+
+    console.print()
+
+    # 按模型配置
+    models = cfg.get("models", {})
+    if models:
+        console.print(f"[bold]按模型配置（{len(models)} 个模型）：[/bold]")
+        for name, opts in models.items():
+            console.print(f"\n  [cyan]{name}[/cyan]")
+            for k2, v2 in opts.items():
+                if k2 == "api_key":
+                    v2 = _mask_secret(str(v2))
+                console.print(f"    {k2}: {v2}")
+    else:
+        console.print("[dim]无按模型配置，使用全局默认值[/dim]")
+
+    console.print()
+    console.print("[dim]帮助: omc config --help   设置模型: omc config set -m <model> -k <key> -v <value>[/dim]")
 
 
 def _mask_secret(value: str) -> str:
