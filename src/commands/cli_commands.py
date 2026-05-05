@@ -22,6 +22,7 @@ import re
 import shlex
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 import typer
 from rich.console import Console
@@ -208,7 +209,7 @@ echo "清理完成!"
 @app.command()
 def run(
     name: str = typer.Argument(..., help="命令名称"),
-    args: list[str] | None = typer.Argument(None, help="命令参数"),
+    args: Optional[list[str]] = typer.Argument(None, help="命令参数"),
     dry_run: bool = typer.Option(False, "--dry-run", help="仅显示将要执行的命令"),
 ):
     if args is None:

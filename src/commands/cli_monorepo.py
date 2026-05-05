@@ -9,6 +9,7 @@ Monorepo 工作区感知 CLI
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 import typer
 from rich.console import Console
@@ -38,7 +39,7 @@ class MonorepoInfo:
     config_file: Path
 
 
-def detect_monorepo(root: Path) -> MonorepoInfo | None:
+def detect_monorepo(root: Path) -> Optional[MonorepoInfo]:
     """检测目录是否为 monorepo 根目录"""
     for repo_type, config_files in MONOREPO_CONFIGS.items():
         for config in config_files:
