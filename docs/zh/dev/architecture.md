@@ -79,7 +79,7 @@ flowchart LR
     ROUTER -->|CODE_GEN| MED
     ROUTER -->|REVIEW| LOW
     
-    LOW --> DS1[DeepSeek-V3<br/>¥0.001/1K]
+    LOW --> DS1[DeepSeek-V4<br/>¥0.001/1K]
     MED --> DS2[DeepSeek-R1<br/>¥0.002/1K]
     HIGH --> DS3[DeepSeek-R1-Reasoner<br/>¥0.003/1K]
 

@@ -105,7 +105,7 @@ const CHINESE_PROVIDERS = [
 // Production-ready models (7 core providers)
 // Only these models are shown in Settings and Models list
 const PRODUCTION_PROVIDERS = [
-  'deepseek',   // DeepSeek V3
+  'deepseek',   // DeepSeek V4
   'glm',        // GLM-4-Flash
   'mimo',       // MiMo V2 Flash
   'kimi',       // Kimi 128K

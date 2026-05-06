@@ -52,7 +52,7 @@
 | `CriticAgent` | 审查计划和设计，提供改进建议 |
 
 **模型层级说明：**
-- **LOW** - 快速便宜（DeepSeek-V3 / GLM-4-Flash / Qwen-Turbo）
+- **LOW** - 快速便宜（DeepSeek-V4 / GLM-4-Flash / Qwen-Turbo）
 - **MEDIUM** - 平衡性能和成本（DeepSeek-R1 / Qwen-Max）
 - **HIGH** - 最高质量推理（DeepSeek-R1-Reasoner / Qwen-Plus）
 

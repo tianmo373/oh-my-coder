@@ -21,7 +21,7 @@
 
 | 层级 | 模型 | 用途 |
 |------|------|------|
-| **LOW** | DeepSeek-V3 / GLM-4-Flash / Qwen-Turbo | 快速任务、探索 |
+| **LOW** | DeepSeek-V4 / GLM-4-Flash / Qwen-Turbo | 快速任务、探索 |
 | **MEDIUM** | DeepSeek-R1 / Qwen-Max | 平衡性能和成本 |
 | **HIGH** | DeepSeek-R1-Reasoner / Qwen-Plus | 复杂推理、高质量输出 |
 

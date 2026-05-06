@@ -68,6 +68,6 @@ body:
     attributes:
       label: 测试环境
       description: 描述你本地测试的环境
-      placeholder: "macOS 14, Python 3.11, DeepSeek v3"
+      placeholder: "macOS 14, Python 3.11, DeepSeek v4"
     validations:
       required: false
