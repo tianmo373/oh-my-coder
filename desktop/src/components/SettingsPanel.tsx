@@ -130,27 +130,39 @@ function groupModels(models: ModelInfo[]): ProviderGroup[] {
 const TIER_ICON: Record<string, string> = { free: '◈', low: '◇', medium: '◆', high: '★' };
 
 // ── Test Connection ────────────────────────────────────────────────────────────
-function TestConnection({ config, onResult }: { modelId: string; config: ModelConfigEntry; onResult: (ok: boolean, msg: string) => void }) {
+function TestConnection({
+  config,
+  testResult,
+  onResult,
+  onClearResult,
+}: {
+  config: ModelConfigEntry;
+  testResult: { ok: boolean; msg: string } | null;
+  onResult: (ok: boolean, msg: string) => void;
+  onClearResult: () => void;
+}) {
   const [testing, setTesting] = useState(false);
-  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  // Clear result when config changes (API key or base URL modified)
+  useEffect(() => {
+    if (testResult) {
+      onClearResult();
+    }
+  }, [config.api_key, config.base_url]);
 
   const handleTest = async () => {
     if (!config.api_key) {
-      setResult({ ok: false, msg: 'API Key is required' });
       onResult(false, 'API Key is required');
       return;
     }
     setTesting(true);
-    setResult(null);
     try {
       const resp = await (window.omc as any).modelConfigTest?.(null, config);
       const ok = resp?.ok ?? config.api_key.length > 10;
       const msg = resp?.msg ?? (ok ? 'Key format looks valid' : 'Key too short');
-      setResult({ ok, msg });
       onResult(ok, msg);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Connection failed';
-      setResult({ ok: false, msg });
       onResult(false, msg);
     } finally {
       setTesting(false);
@@ -160,14 +172,14 @@ function TestConnection({ config, onResult }: { modelId: string; config: ModelCo
   return (
     <div className="settings-test">
       <button
-        className={`settings-test__btn ${result ? (result.ok ? 'ok' : 'err') : ''}`}
+        className={`settings-test__btn ${testResult ? (testResult.ok ? 'ok' : 'err') : ''}`}
         onClick={handleTest}
         disabled={testing}
       >
-        {testing ? '⏳ Testing...' : result ? (result.ok ? '✓ Connected' : '✗ Failed') : '🔗 Test Connection'}
+        {testing ? '⏳ Testing...' : testResult ? (testResult.ok ? '✓ Connected' : '✗ Failed') : '🔗 Test Connection'}
       </button>
-      {result && (
-        <span className={`settings-test__msg ${result.ok ? 'ok' : 'err'}`}>{result.msg}</span>
+      {testResult && (
+        <span className={`settings-test__msg ${testResult.ok ? 'ok' : 'err'}`}>{testResult.msg}</span>
       )}
     </div>
   );
@@ -177,13 +189,19 @@ function TestConnection({ config, onResult }: { modelId: string; config: ModelCo
 function ModelDetailPanel({
   model,
   config,
+  testResult,
   onUpdate,
   onConfigSave,
+  onTestResult,
+  onClearTestResult,
 }: {
   model: ModelInfo;
   config: ModelConfigEntry;
+  testResult: { ok: boolean; msg: string } | null;
   onUpdate: (cfg: ModelConfigEntry) => void;
   onConfigSave: (modelId: string, cfg: ModelConfigEntry) => Promise<void>;
+  onTestResult: (ok: boolean, msg: string) => void;
+  onClearTestResult: () => void;
 }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -272,7 +290,12 @@ function ModelDetailPanel({
         </button>
       </div>
 
-      <TestConnection modelId={model.id} config={config} onResult={() => {}} />
+      <TestConnection
+        config={config}
+        testResult={testResult}
+        onResult={onTestResult}
+        onClearResult={onClearTestResult}
+      />
 
       <div className="settings-detail__actions">
         <button className="settings-detail__reset" onClick={handleReset} title="Clear API Key and Base URL">
@@ -327,6 +350,12 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
   const [importError, setImportError] = useState<string | null>(null);
   const [migrationNotice, setMigrationNotice] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  // Clear test result when switching models
+  useEffect(() => {
+    setTestResult(null);
+  }, [selectedModel?.id]);
 
   useEffect(() => {
     const load = async () => {
@@ -552,8 +581,11 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
               <ModelDetailPanel
                 model={selectedModel}
                 config={currentConfig}
+                testResult={testResult}
                 onUpdate={cfg => handleConfigUpdate(selectedModel.id, cfg)}
                 onConfigSave={handleConfigSave}
+                onTestResult={(ok, msg) => setTestResult({ ok, msg })}
+                onClearTestResult={() => setTestResult(null)}
               />
             ) : (
               <div className="settings-detail-empty">Select a model to configure</div>
