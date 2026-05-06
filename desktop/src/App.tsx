@@ -589,10 +589,28 @@ export default function App() {
       }
 
       const result = await omcApi.chatDirect({ endpoint, model: currentModel, apiKey, message: text.trim() });
+
+      // Parse SSE stream output to extract plain text content
+      let parsedContent = '';
+      if (result.stdout) {
+        const lines = result.stdout.split('\n');
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith(':') || trimmed === '[DONE]') continue;
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const json = JSON.parse(trimmed.slice(6));
+              const delta = json.choices?.[0]?.delta?.content;
+              if (delta) parsedContent += delta;
+            } catch { /* skip malformed JSON */ }
+          }
+        }
+      }
+
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: result.stdout || result.stderr || (result.code === 0 ? 'Done.' : `Exit code: ${result.code}`),
+        content: parsedContent || result.stderr || (result.code === 0 ? '(empty response)' : `Error: exit code ${result.code}`),
         timestamp: Date.now(),
       };
       addMessage(assistantMsg);
