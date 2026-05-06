@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 class AgentStatus(Enum):
@@ -51,7 +51,7 @@ class AgentContext:
 
     project_path: Path  # 项目路径
     task_description: str  # 任务描述
-    working_directory: Path | None = None  # 工作目录
+    working_directory: Optional[Path] = None  # 工作目录
     relevant_files: list[Path] = field(default_factory=list)  # 相关文件
     previous_outputs: dict[str, Any] = field(default_factory=dict)  # 前序 Agent 输出
     metadata: dict[str, Any] = field(default_factory=dict)  # 其他元数据
@@ -64,13 +64,13 @@ class AgentOutput:
 
     agent_name: str  # Agent 名称
     status: AgentStatus  # 执行状态
-    result: str | None = None  # 主要结果
+    result: Optional[str] = None  # 主要结果
     artifacts: dict[str, Any] = field(default_factory=dict)  # 产物（文件、数据等）
     recommendations: list[str] = field(default_factory=list)  # 推荐后续步骤
-    next_agent: str | None = None  # 推荐下一个 Agent
+    next_agent: Optional[str] = None  # 推荐下一个 Agent
     usage: dict[str, int] = field(default_factory=dict)  # Token 使用
     execution_time: float = 0.0  # 执行时间（秒）
-    error: str | None = None  # 错误信息
+    error: Optional[str] = None  # 错误信息
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
 
 
@@ -102,7 +102,7 @@ class BaseAgent(ABC):
     def __init__(
         self,
         model_router,
-        config: dict[str, Any] | None = None,
+        config: Optional[dict[str, Any]] = None,
     ):
         """
         Args:
@@ -299,7 +299,7 @@ class BaseAgent(ABC):
             result=result,
         )
 
-    def get_last_output(self) -> AgentOutput | None:
+    def get_last_output(self) -> Optional[AgentOutput]:
         """获取最后一次输出"""
         return self._output_history[-1] if self._output_history else None
 
@@ -344,7 +344,7 @@ def register_agent(agent_class: type[BaseAgent]):
     return agent_class
 
 
-def get_agent(name: str) -> type[BaseAgent] | None:
+def get_agent(name: str) -> Optional[type[BaseAgent]]:
     """获取已注册的 Agent"""
     return AGENT_REGISTRY.get(name)
 

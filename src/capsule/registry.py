@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 GEPRegistry - 能力注册表
 
@@ -61,11 +63,11 @@ class GEPRegistry:
 
         return results
 
-    def resolve(self, gene_id: str) -> Capsule | None:
+    def resolve(self, gene_id: str) -> Optional[Capsule]:
         """根据 Gene ID 获取 Capsule，不存在返回 None"""
         return self._store.get(gene_id)
 
-    def export_event(self, gene_id: str) -> dict | None:
+    def export_event(self, gene_id: str) -> Optional[dict]:
         """
         导出 GEP Event 格式。
 

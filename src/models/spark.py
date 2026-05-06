@@ -15,7 +15,7 @@ API 地址：https://spark-api.xf-yun.com
 
 import time
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -58,8 +58,8 @@ class SparkModel(BaseModel):
         self,
         config: ModelConfig,
         tier: ModelTier = ModelTier.MEDIUM,
-        app_id: str | None = None,
-        secret_key: str | None = None,
+        app_id: Optional[str] = None,
+        secret_key: Optional[str] = None,
     ):
         if config.base_url is None:
             config.base_url = f"{SPARK_API_BASE}/v3.1/chat"
@@ -69,7 +69,7 @@ class SparkModel(BaseModel):
         super().__init__(config, tier)
         self.app_id = app_id
         self.secret_key = secret_key
-        self._client: httpx.AsyncClient | None = None
+        self._client: Optional[httpx.AsyncClient] = None
 
     @property
     def provider(self) -> ModelProvider:

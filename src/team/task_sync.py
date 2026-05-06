@@ -11,7 +11,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 try:
     import redis.asyncio as redis
@@ -49,15 +49,15 @@ class TeamTask:
     title: str
     description: str = ""
     status: TaskStatus = TaskStatus.PENDING
-    assignee_id: str | None = None
+    assignee_id: Optional[str] = None
     workflow: str = "build"
     model: str = "deepseek"
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
-    started_at: datetime | None = None
-    completed_at: datetime | None = None
-    result: dict[str, Any] | None = None
-    error: str | None = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    result: Optional[dict[str, Any]] = None
+    error: Optional[str] = None
     tokens_used: int = 0
     cost: float = 0.0
     subscribers: list[str] = field(default_factory=list)
@@ -138,8 +138,8 @@ class TaskSync:
             redis_url: Redis 连接地址
         """
         self.redis_url = redis_url
-        self._redis: redis.Redis | None = None
-        self._pubsub: redis.client.PubSub | None = None
+        self._redis: Optional[redis.Redis] = None
+        self._pubsub: Optional[redis.client.PubSub] = None
         self._subscribers: dict[str, list[Callable]] = {}
         self._tasks_cache: dict[str, TeamTask] = {}
         self._use_memory = not REDIS_AVAILABLE
@@ -229,11 +229,11 @@ class TaskSync:
         self,
         task_id: str,
         status: TaskStatus,
-        result: dict[str, Any] | None = None,
-        error: str | None = None,
+        result: Optional[dict[str, Any]] = None,
+        error: Optional[str] = None,
         tokens_used: int = 0,
         cost: float = 0.0,
-    ) -> TeamTask | None:
+    ) -> Optional[TeamTask]:
         """
         更新任务状态
 
@@ -277,7 +277,7 @@ class TaskSync:
 
         return task
 
-    async def get_task(self, task_id: str) -> TeamTask | None:
+    async def get_task(self, task_id: str) -> Optional[TeamTask]:
         """
         获取任务
 

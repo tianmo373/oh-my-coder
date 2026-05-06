@@ -18,7 +18,7 @@ import json
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Optional, Any
 
 from .auto_compact import AutoCompact, CompactResult
 from .learnings import LearningEntry, LearningsMemory
@@ -105,7 +105,7 @@ class MemoryManager:
         }
 
     @staticmethod
-    def _get_encoder() -> str | None:
+    def _get_encoder() -> Optional[str]:
         """获取 tokenizer，失败返回 None"""
         if not _HAS_TIKTOKEN:
             return None
@@ -170,12 +170,12 @@ class MemoryManager:
     # ========== Short Term ==========
 
     def create_session(
-        self, project_path: Path | None = None, task: str | None = None
+        self, project_path: Optional[Path] = None, task: Optional[str] = None
     ) -> SessionContext:
         """创建新会话"""
         return self.short_term.create_session(project_path, task)
 
-    def get_current_session(self) -> SessionContext | None:
+    def get_current_session(self) -> Optional[SessionContext]:
         """获取当前会话"""
         return self.short_term.get_current_session()
 
@@ -218,14 +218,14 @@ class MemoryManager:
         title: str,
         content: str,
         category: str = "note",
-        tags: list[str] | None = None,
+        tags: Optional[list[str]] = None,
         context: str = "",
     ) -> LearningEntry:
         """添加学习条目"""
         return self.learnings.add(title, content, category, tags, context)
 
     def search_learnings(
-        self, query: str, category: str | None = None
+        self, query: str, category: Optional[str] = None
     ) -> list[LearningEntry]:
         """搜索学习记录"""
         return self.learnings.search(query, category)

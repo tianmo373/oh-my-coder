@@ -13,7 +13,7 @@ import math
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 @dataclass
@@ -28,8 +28,8 @@ class SearchResult:
     source_code: str
     start_line: int
     end_line: int
-    docstring: str | None = None
-    signature: str | None = None
+    docstring: Optional[str] = None
+    signature: Optional[str] = None
     highlights: list[str] = field(default_factory=list)
     context: str = ""
 
@@ -54,7 +54,7 @@ class SemanticSearch:
     3. 混合搜索（语义 + 关键词）
     """
 
-    def __init__(self, indexer, config: SearchConfig | None = None):
+    def __init__(self, indexer, config: Optional[SearchConfig] = None):
         """
         Args:
             indexer: CodebaseIndexer 实例
@@ -67,7 +67,7 @@ class SemanticSearch:
         self,
         query: str,
         search_type: str = "hybrid",
-        filters: dict[str, Any] | None = None,
+        filters: Optional[dict[str, Any]] = None,
     ) -> list[SearchResult]:
         """
         执行搜索
@@ -89,7 +89,7 @@ class SemanticSearch:
     def _semantic_search(
         self,
         query: str,
-        filters: dict[str, Any] | None = None,
+        filters: Optional[dict[str, Any]] = None,
     ) -> list[SearchResult]:
         """语义搜索（向量相似度）"""
         results = []
@@ -128,7 +128,7 @@ class SemanticSearch:
     def _keyword_search(
         self,
         query: str,
-        filters: dict[str, Any] | None = None,
+        filters: Optional[dict[str, Any]] = None,
     ) -> list[SearchResult]:
         """关键词搜索（BM25 风格）"""
         results = []
@@ -157,7 +157,7 @@ class SemanticSearch:
     def _hybrid_search(
         self,
         query: str,
-        filters: dict[str, Any] | None = None,
+        filters: Optional[dict[str, Any]] = None,
     ) -> list[SearchResult]:
         """混合搜索（语义 + 关键词）"""
         semantic_results = self._semantic_search(query, filters)
@@ -255,7 +255,7 @@ class SemanticSearch:
 
         return [self._element_to_result(e, s) for e, s in results[:max_results]]
 
-    def _get_embedding(self, text: str) -> list[float] | None:
+    def _get_embedding(self, text: str) -> Optional[list[float]]:
         """获取文本嵌入"""
         # TODO: 调用嵌入 API
         return None
@@ -398,7 +398,7 @@ class ContextBuilder:
     def build_context(
         self,
         task: str,
-        relevant_files: list[str] | None = None,
+        relevant_files: Optional[list[str]] = None,
         max_tokens: int = 4000,
     ) -> str:
         """

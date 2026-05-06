@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 代码清理 Agent - 自动清理冗余代码，提升可维护性
 
@@ -68,8 +70,8 @@ class CleaningIssue:
 
     file_path: str
     issue_type: str  # unused_import, duplicate, dead_code, empty, outdated
-    line_start: int | None = None
-    line_end: int | None = None
+    line_start: Optional[int] = None
+    line_end: Optional[int] = None
     content: str = ""  # 问题内容摘要
     severity: str = "warning"  # info/warning/error
     auto_fixable: bool = False
@@ -115,7 +117,7 @@ class CodeCleaner:
     def __init__(
         self,
         project_path: Path,
-        strategy: CleanerStrategy | None = None,
+        strategy: Optional[CleanerStrategy] = None,
     ):
         self.project_path = Path(project_path)
         self.strategy = strategy or CleanerStrategy()

@@ -10,7 +10,7 @@ import json
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel
 
@@ -35,7 +35,7 @@ class WorkflowStep:
     agent_name: str
     description: str = ""
     dependencies: list[str] = field(default_factory=list)
-    condition: str | None = None
+    condition: Optional[str] = None
     timeout: int = 300
     retry: int = 0
     config: dict[str, Any] = field(default_factory=dict)
@@ -362,7 +362,7 @@ class TemplateMarket:
         >>> template = market.get_template("build")
     """
 
-    def __init__(self, template_dir: Path | None = None):
+    def __init__(self, template_dir: Optional[Path] = None):
         """
         初始化模板市场
 
@@ -380,7 +380,7 @@ class TemplateMarket:
         for template in BUILTIN_TEMPLATES:
             self._templates[template.metadata.name] = template
 
-    def get_template(self, name: str) -> WorkflowTemplate | None:
+    def get_template(self, name: str) -> Optional[WorkflowTemplate]:
         """
         获取模板
 
@@ -394,9 +394,9 @@ class TemplateMarket:
 
     def list_templates(
         self,
-        category: str | None = None,
-        tags: list[str] | None = None,
-        difficulty: str | None = None,
+        category: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        difficulty: Optional[str] = None,
     ) -> list[WorkflowTemplate]:
         """
         列出模板
@@ -450,7 +450,7 @@ class TemplateMarket:
 
         return file_path
 
-    def load_template(self, name: str) -> WorkflowTemplate | None:
+    def load_template(self, name: str) -> Optional[WorkflowTemplate]:
         """
         从文件加载模板
 
@@ -527,7 +527,7 @@ class TemplateMarket:
 
 
 # 全局实例
-_template_market: TemplateMarket | None = None
+_template_market: Optional[TemplateMarket] = None
 
 
 def get_template_market() -> TemplateMarket:

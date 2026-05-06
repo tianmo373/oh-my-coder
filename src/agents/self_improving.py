@@ -18,7 +18,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from .base import (
     AgentLane,
@@ -40,16 +40,16 @@ from .evolution import (
 class ExecutionFeedback:
     """执行反馈记录"""
 
-    id: int | None = None
+    id: Optional[int] = None
     timestamp: str = ""
     agent_type: str = ""  # executor, planner, debugger, etc.
     task_description: str = ""
     context_hash: str = ""  # 任务上下文的简单哈希
     success: bool = False
     execution_time: float = 0.0
-    error_type: str | None = None  # syntax_error, logic_error, timeout, etc.
-    error_message: str | None = None
-    user_correction: str | None = None  # 用户提供的修正
+    error_type: Optional[str] = None  # syntax_error, logic_error, timeout, etc.
+    error_message: Optional[str] = None
+    user_correction: Optional[str] = None  # 用户提供的修正
     retry_count: int = 0
     final_success: bool = False  # 重试后是否成功
 
@@ -58,7 +58,7 @@ class ExecutionFeedback:
 class StrategyAdjustment:
     """策略调整记录"""
 
-    id: int | None = None
+    id: Optional[int] = None
     timestamp: str = ""
     agent_type: str = ""
     pattern_detected: str = ""  # 检测到的模式
@@ -272,10 +272,10 @@ class SelfImprovingAgent(BaseAgent):
     def __init__(
         self,
         model_router=None,
-        config: dict[str, Any] | None = None,
-        store: LearningStore | None = None,
-        skill_manager: Any | None = None,
-        evolution_config: EvolutionConfig | None = None,
+        config: Optional[dict[str, Any]] = None,
+        store: Optional[LearningStore] = None,
+        skill_manager: Optional[Any] = None,
+        evolution_config: Optional[EvolutionConfig] = None,
     ):
         super().__init__(model_router, config)
         db_path = Path.home() / ".omc" / "learning.db"
@@ -285,7 +285,7 @@ class SelfImprovingAgent(BaseAgent):
 
         self._memory = LearningsMemory(Path.home() / ".omc")
         # SkillManager 可选注入（测试时注入临时目录）
-        self._skill_manager: Any | None = skill_manager
+        self._skill_manager: Optional[Any] = skill_manager
         # 进化系统
         state_dir = Path.home() / ".omc" / "state"
         self._evolution_store = EvolutionStore(state_dir)
@@ -304,8 +304,8 @@ class SelfImprovingAgent(BaseAgent):
         task_description: str,
         success: bool,
         execution_time: float = 0.0,
-        error: Exception | None = None,
-        user_correction: str | None = None,
+        error: Optional[Exception] = None,
+        user_correction: Optional[str] = None,
         retry_count: int = 0,
     ) -> int:
         """记录执行结果"""
@@ -394,7 +394,7 @@ class SelfImprovingAgent(BaseAgent):
 
     def _generate_adjustment(
         self, agent_type: str, pattern: dict
-    ) -> StrategyAdjustment | None:
+    ) -> Optional[StrategyAdjustment]:
         """根据错误模式生成调整建议"""
         error_type = pattern["error_type"]
 
@@ -435,7 +435,7 @@ class SelfImprovingAgent(BaseAgent):
             effectiveness_score=0.5,  # 初始分数，后续根据效果调整
         )
 
-    def report(self, agent_type: str | None = None) -> dict:
+    def report(self, agent_type: Optional[str] = None) -> dict:
         """生成学习报告"""
         report = {
             "generated_at": datetime.now().isoformat(),
@@ -509,7 +509,7 @@ class SelfImprovingAgent(BaseAgent):
     def auto_create_skill(
         self,
         task_context: dict[str, Any],
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """
         自动生成 Skill 文件。
 
@@ -966,7 +966,7 @@ class SelfImprovingAgent(BaseAgent):
         self,
         agent_type: str,
         base_prompt: str,
-        analysis: dict[str, Any] | None = None,
+        analysis: Optional[dict[str, Any]] = None,
     ) -> str:
         """
         根据进化分析更新 system prompt
@@ -1044,7 +1044,7 @@ class SelfImprovingAgent(BaseAgent):
         self,
         agent_type: str,
         trigger: str = "manual",
-    ) -> EvolutionRecord | None:
+    ) -> Optional[EvolutionRecord]:
         """
         执行一次自进化
 
@@ -1183,11 +1183,11 @@ class SelfImprovingAgent(BaseAgent):
         chosen_solution: str,
         agent_type: str = "",
         category: str = "solution_choice",
-        rejected_alternatives: list[str] | None = None,
+        rejected_alternatives: Optional[list[str]] = None,
         result: str = "",
         outcome: str = "",
         reusable_for: str = "",
-        related_files: list[str] | None = None,
+        related_files: Optional[list[str]] = None,
     ) -> str:
         """
         记录重要决策
@@ -1226,7 +1226,7 @@ class SelfImprovingAgent(BaseAgent):
 
     def list_decisions(
         self,
-        category: str | None = None,
+        category: Optional[str] = None,
         limit: int = 10,
     ) -> list[dict[str, Any]]:
         """列出决策记录"""

@@ -1,10 +1,13 @@
+from __future__ import annotations
+
+from typing import Optional
+
 """
 omc plan - Plan Mode 命令
 
 只输出改动计划，用户确认后才执行。
 """
 
-from __future__ import annotations
 
 from pathlib import Path
 
@@ -55,7 +58,7 @@ def plan(
     project_path: Path = typer.Option(".", "--project", "-p", help="项目路径"),
     model: str = typer.Option("deepseek", "--model", "-m", help="模型选择"),
     yes: bool = typer.Option(False, "--yes", "-y", help="跳过确认直接执行"),
-    output: Path | None = typer.Option(
+    output: Optional[Path] = typer.Option(
         None, "--output", "-o", help="保存计划到文件"
     ),
 ):

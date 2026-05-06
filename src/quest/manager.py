@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 Quest 管理器
 
@@ -31,8 +33,8 @@ class QuestManager:
     def __init__(
         self,
         project_path: Path,
-        notify_callback: Callable[[QuestNotification], None] | None = None,
-        review_callback: Callable[[str, str, str], Awaitable[str]] | None = None,
+        notify_callback: Optional[Callable[[QuestNotification], None]] = None,
+        review_callback: Optional[Callable[[str, str, str], Awaitable[str]]] = None,
     ):
         self.project_path = Path(project_path)
         self.store = QuestStore(self.project_path)
@@ -40,8 +42,8 @@ class QuestManager:
         self.review_callback = review_callback
 
         # 延迟初始化 ModelRouter
-        self._router: ModelRouter | None = None
-        self._executor: QuestExecutor | None = None
+        self._router: Optional[ModelRouter] = None
+        self._executor: Optional[QuestExecutor] = None
 
     @property
     def router(self) -> ModelRouter:
@@ -67,7 +69,7 @@ class QuestManager:
     async def create_quest(
         self,
         description: str,
-        title: str | None = None,
+        title: Optional[str] = None,
         priority: str = "medium",
     ) -> Quest:
         """创建新 Quest"""
@@ -134,13 +136,13 @@ class QuestManager:
     # 查询操作
     # ============================================================
 
-    def get_quest(self, quest_id: str) -> Quest | None:
+    def get_quest(self, quest_id: str) -> Optional[Quest]:
         """获取单个 Quest"""
         return self.store.get(quest_id)
 
     def list_quests(
         self,
-        status_filter: QuestStatus | None = None,
+        status_filter: Optional[QuestStatus] = None,
     ) -> list[Quest]:
         """列出 Quest"""
         return self.store.list(status_filter=status_filter)
@@ -173,7 +175,7 @@ class QuestManager:
         """暂停"""
         return self.executor.pause(quest_id)
 
-    def resume(self, quest_id: str) -> Quest | None:
+    def resume(self, quest_id: str) -> Optional[Quest]:
         """恢复"""
         return self.executor.resume(quest_id)
 

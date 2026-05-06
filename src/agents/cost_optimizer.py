@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 
 class Complexity(Enum):
@@ -176,8 +176,8 @@ class CostOptimizer:
     def analyze_task(
         self,
         task_description: str,
-        file_count: int | None = None,
-        new_files: list[str] | None = None,
+        file_count: Optional[int] = None,
+        new_files: Optional[list[str]] = None,
     ) -> dict[str, Any]:
         """
         分析任务特征
@@ -235,8 +235,8 @@ class CostOptimizer:
     def recommend(
         self,
         task_description: str,
-        file_count: int | None = None,
-        new_files: list[str] | None = None,
+        file_count: Optional[int] = None,
+        new_files: Optional[list[str]] = None,
     ) -> ModelRecommendation:
         """
         推荐最优模型

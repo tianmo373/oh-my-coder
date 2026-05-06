@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 
 class ModelTier(Enum):
@@ -51,7 +51,7 @@ class Message:
 
     role: str  # system, user, assistant
     content: str
-    name: str | None = None  # 用于多轮对话中的角色标识
+    name: Optional[str] = None  # 用于多轮对话中的角色标识
 
 
 @dataclass
@@ -88,9 +88,9 @@ class ModelResponse:
 class ModelConfig:
     """模型配置"""
 
-    api_key: str | None = None
-    base_url: str | None = None
-    model_name: str | None = None
+    api_key: Optional[str] = None
+    base_url: Optional[str] = None
+    model_name: Optional[str] = None
     max_tokens: int = 4096
     temperature: float = 0.7
     timeout: float = 60.0
@@ -191,7 +191,7 @@ class BaseModel(ABC):
         """重置使用统计"""
         self._total_usage = Usage()
 
-    def _build_system_prompt(self, system: str | None = None) -> Message | None:
+    def _build_system_prompt(self, system: Optional[str] = None) -> Optional[Message]:
         """构建系统提示词"""
         if system:
             return Message(role="system", content=system)

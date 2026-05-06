@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 DeepSeek 模型适配器
 
@@ -96,7 +98,7 @@ class DeepSeekModel(BaseModel):
         super().__init__(config, tier)
 
         # HTTP 客户端（延迟初始化）
-        self._client: httpx.AsyncClient | None = None
+        self._client: Optional[httpx.AsyncClient] = None
 
     @property
     def provider(self) -> ModelProvider:

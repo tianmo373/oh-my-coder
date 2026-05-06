@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 小米 MiMo 模型适配器
 
@@ -81,7 +83,7 @@ class MimoModel(BaseModel):
         super().__init__(config, tier)
 
         # HTTP 客户端（延迟初始化）
-        self._client: httpx.AsyncClient | None = None
+        self._client: Optional[httpx.AsyncClient] = None
 
     @property
     def provider(self) -> ModelProvider:

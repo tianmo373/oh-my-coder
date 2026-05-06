@@ -14,7 +14,7 @@ import asyncio
 import contextlib
 import logging
 import time
-from typing import Any
+from typing import Any, Optional
 
 from ..base import IncomingMessage, OutgoingMessage, Platform, PlatformHandler
 
@@ -49,8 +49,8 @@ class FeishuHandler(PlatformHandler):
         self,
         app_id: str,
         app_secret: str,
-        encrypt_key: str | None = None,
-        verify_token: str | None = None,
+        encrypt_key: Optional[str] = None,
+        verify_token: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -65,10 +65,10 @@ class FeishuHandler(PlatformHandler):
         self.app_secret = app_secret
         self.encrypt_key = encrypt_key
         self.verify_token = verify_token
-        self._tenant_access_token: str | None = None
+        self._tenant_access_token: Optional[str] = None
         self._token_expires_at: float = 0
         self._stop_event = asyncio.Event()
-        self._poll_task: asyncio.Task[None] | None = None
+        self._poll_task: Optional[asyncio.Task[None]] = None
 
     # ---- PlatformHandler 实现 ----
 
@@ -161,7 +161,7 @@ class FeishuHandler(PlatformHandler):
             else:
                 logger.error(f"[feishu] Token refresh failed: {data}")
 
-    async def _get_token(self) -> str | None:
+    async def _get_token(self) -> Optional[str]:
         """获取有效 token（自动刷新）"""
         if self._tenant_access_token is None or time.time() >= self._token_expires_at:
             await self._refresh_token()

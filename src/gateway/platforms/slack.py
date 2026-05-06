@@ -13,7 +13,7 @@ Slack 平台处理器
 import asyncio
 import contextlib
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from ..base import IncomingMessage, OutgoingMessage, Platform, PlatformHandler
 
@@ -56,7 +56,7 @@ class SlackHandler(PlatformHandler):
         self,
         bot_token: str,
         signing_secret: str,
-        app_token: str | None = None,
+        app_token: Optional[str] = None,
         webhook_port: int = 8080,
         **kwargs,
     ):
@@ -72,7 +72,7 @@ class SlackHandler(PlatformHandler):
         self.signing_secret = signing_secret
         self.app_token = app_token
         self.webhook_port = webhook_port
-        self._server_task: asyncio.Task[None] | None = None
+        self._server_task: Optional[asyncio.Task[None]] = None
 
     # ---- PlatformHandler 实现 ----
 

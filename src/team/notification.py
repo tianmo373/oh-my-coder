@@ -11,7 +11,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 try:
     from fastapi import WebSocket
@@ -51,9 +51,9 @@ class Notification:
     type: NotificationType
     title: str
     message: str
-    team_id: str | None = None
-    user_id: str | None = None
-    task_id: str | None = None
+    team_id: Optional[str] = None
+    user_id: Optional[str] = None
+    task_id: Optional[str] = None
     priority: NotificationPriority = NotificationPriority.NORMAL
     data: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)

@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 class ReplayStatus(str, Enum):
@@ -48,10 +48,10 @@ class StepExecution:
     description: str
     status: StepStatus
     input_context: dict[str, Any]
-    output: dict[str, Any] | None = None
-    error: str | None = None
-    start_time: str | None = None
-    end_time: str | None = None
+    output: Optional[dict[str, Any]] = None
+    error: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
     duration_seconds: float = 0.0
     tokens_used: int = 0
     cost: float = 0.0
@@ -159,7 +159,7 @@ class TaskHistory:
             metadata=data.get("metadata", {}),
         )
 
-    def get_step(self, step_id: str) -> StepExecution | None:
+    def get_step(self, step_id: str) -> Optional[StepExecution]:
         """获取步骤"""
         for step in self.steps:
             if step.step_id == step_id:
@@ -333,7 +333,7 @@ class TaskReplay:
 class HistoryManager:
     """历史记录管理器"""
 
-    def __init__(self, storage_dir: Path | None = None):
+    def __init__(self, storage_dir: Optional[Path] = None):
         """
         Args:
             storage_dir: 存储目录
@@ -349,7 +349,7 @@ class HistoryManager:
         self,
         task_description: str,
         workflow_name: str,
-        tags: list[str] | None = None,
+        tags: Optional[list[str]] = None,
     ) -> TaskHistory:
         """创建新的历史记录"""
         history_id = str(uuid.uuid4())[:8]
@@ -373,7 +373,7 @@ class HistoryManager:
 
         return history_file
 
-    def load_history(self, history_id: str) -> TaskHistory | None:
+    def load_history(self, history_id: str) -> Optional[TaskHistory]:
         """加载历史记录"""
         if history_id in self._histories:
             return self._histories[history_id]
@@ -393,7 +393,7 @@ class HistoryManager:
     def list_histories(
         self,
         limit: int = 50,
-        tags: list[str] | None = None,
+        tags: Optional[list[str]] = None,
     ) -> list[TaskHistory]:
         """列出历史记录"""
         histories = []
@@ -430,7 +430,7 @@ class HistoryManager:
 
         return checkpoint
 
-    def load_checkpoint(self, checkpoint_id: str) -> TaskCheckpoint | None:
+    def load_checkpoint(self, checkpoint_id: str) -> Optional[TaskCheckpoint]:
         """加载检查点"""
         if checkpoint_id in self._checkpoints:
             return self._checkpoints[checkpoint_id]

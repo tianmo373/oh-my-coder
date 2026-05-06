@@ -25,7 +25,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from ..core.orchestrator import Orchestrator, WorkflowStep
@@ -52,10 +52,10 @@ class AgentHealth:
     agent_name: str
     status: AgentStatus = AgentStatus.HEALTHY
     last_heartbeat: float = field(default_factory=time.time)
-    task_id: str | None = None
+    task_id: Optional[str] = None
     retry_count: int = 0
-    last_error: str | None = None
-    workflow_id: str | None = None
+    last_error: Optional[str] = None
+    workflow_id: Optional[str] = None
     step_index: int = -1  # 在工作流中的步骤索引
 
     # retry 上限（可配置）
@@ -137,12 +137,12 @@ class HealthChecker:
 
     def __init__(
         self,
-        orchestrator: Orchestrator | None = None,
+        orchestrator: Optional[Orchestrator] = None,
         check_interval: float = 60.0,
         stale_threshold: float = 300.0,
         max_retries: int = 3,
-        state_dir: Path | None = None,
-        on_notification: Callable[[str, str], None] | None = None,
+        state_dir: Optional[Path] = None,
+        on_notification: Optional[Callable[[str, str], None]] = None,
     ):
         """
         Args:
@@ -168,8 +168,8 @@ class HealthChecker:
         self._active_tasks: dict[str, asyncio.Task[Any]] = {}
 
         # 后台检查循环
-        self._check_task: asyncio.Task[None] | None = None
-        self._stop_event: asyncio.Event | None = None
+        self._check_task: Optional[asyncio.Task[None]] = None
+        self._stop_event: Optional[asyncio.Event] = None
 
         # 检查历史
         self._history: list[HealthCheckResult] = []
@@ -184,8 +184,8 @@ class HealthChecker:
     def register_agent(
         self,
         agent_name: str,
-        task_id: str | None = None,
-        workflow_id: str | None = None,
+        task_id: Optional[str] = None,
+        workflow_id: Optional[str] = None,
         step_index: int = -1,
     ) -> AgentHealth:
         """
@@ -239,8 +239,8 @@ class HealthChecker:
         self,
         agent_name: str,
         error: str,
-        workflow_id: str | None = None,
-        step: WorkflowStep | None = None,
+        workflow_id: Optional[str] = None,
+        step: Optional[WorkflowStep] = None,
     ) -> bool:
         """
         记录 Agent 执行失败。
@@ -284,7 +284,7 @@ class HealthChecker:
         agent_name: str,
         workflow_id: str,
         step: WorkflowStep,
-    ) -> str | None:
+    ) -> Optional[str]:
         """
         将任务重新分配给空闲 Agent。
 
@@ -391,7 +391,7 @@ class HealthChecker:
             except Exception:
                 pass  # 静默，不崩溃
 
-    async def _check_all(self) -> HealthCheckResult | None:
+    async def _check_all(self) -> Optional[HealthCheckResult]:
         """
         执行一次全量检查。
 

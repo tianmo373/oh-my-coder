@@ -15,7 +15,7 @@ import subprocess
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 @dataclass
@@ -64,7 +64,7 @@ class TestReport:
     project_path: str = ""
 
     # 改动范围
-    diff: GitDiff | None = None
+    diff: Optional[GitDiff] = None
 
     # 新增测试
     new_tests: list[TestCase] = field(default_factory=list)
@@ -76,8 +76,8 @@ class TestReport:
     regression_tests_failed: int = 0
 
     # 覆盖率
-    coverage_before: float | None = None
-    coverage_after: float | None = None
+    coverage_before: Optional[float] = None
+    coverage_after: Optional[float] = None
 
     # 失败信息
     failures: list[str] = field(default_factory=list)
@@ -96,7 +96,7 @@ class SmartTestEnhancer:
     def __init__(self, project_path: Path):
         self.project_path = Path(project_path)
 
-    def get_git_diff(self, count: int = 1) -> GitDiff | None:
+    def get_git_diff(self, count: int = 1) -> Optional[GitDiff]:
         """
         获取最近 N 次 commit 的 git diff
 
@@ -311,7 +311,7 @@ class SmartTestEnhancer:
 
         return test_cases
 
-    def _extract_target_class(self, changes: list[dict]) -> str | None:
+    def _extract_target_class(self, changes: list[dict]) -> Optional[str]:
         """从改动中提取目标类/函数"""
         for change in changes:
             line = change.get("line", "")

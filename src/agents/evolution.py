@@ -23,7 +23,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 @dataclass
@@ -38,7 +38,7 @@ class EvolutionRecord:
     before_state: dict[str, Any] = field(default_factory=dict)  # 进化前状态
     after_state: dict[str, Any] = field(default_factory=dict)  # 进化后状态
     changes: list[str] = field(default_factory=list)  # 变更列表
-    effectiveness: float | None = None  # 效果评分（后续验证）
+    effectiveness: Optional[float] = None  # 效果评分（后续验证）
 
 
 @dataclass
@@ -258,7 +258,7 @@ class EvolutionStore:
     # 优化 Prompt
     # ------------------------------------------------------------------
 
-    def load_optimized_prompt(self, agent_name: str) -> str | None:
+    def load_optimized_prompt(self, agent_name: str) -> Optional[str]:
         """加载优化后的 system prompt"""
         prompt_file = self._agent_dir(agent_name) / "optimized_prompt.md"
         if not prompt_file.exists():
@@ -393,12 +393,12 @@ class DecisionMemory:
         chosen_solution: str,
         agent_type: str = "",
         category: str = "solution_choice",
-        rejected_alternatives: list[str] | None = None,
+        rejected_alternatives: Optional[list[str]] = None,
         result: str = "",
         outcome: str = "",
         reusable_for: str = "",
-        keywords: list[str] | None = None,
-        related_files: list[str] | None = None,
+        keywords: Optional[list[str]] = None,
+        related_files: Optional[list[str]] = None,
         version_tag: str = "",
     ) -> str:
         """
@@ -674,7 +674,7 @@ class DecisionMemory:
 
     def _parse_decision_file(
         self, file_path: Path, content: str
-    ) -> DecisionRecord | None:
+    ) -> Optional[DecisionRecord]:
         """解析决策文件为 DecisionRecord"""
         # 从文件名提取 ID
         decision_id = file_path.stem
@@ -773,7 +773,7 @@ class DecisionMemory:
 
     def list_decisions(
         self,
-        category: str | None = None,
+        category: Optional[str] = None,
         limit: int = 20,
     ) -> list[DecisionRecord]:
         """

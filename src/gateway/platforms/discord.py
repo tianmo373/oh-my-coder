@@ -10,7 +10,7 @@ Discord Bot 平台处理器
 
 import contextlib
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from ..base import IncomingMessage, OutgoingMessage, Platform, PlatformHandler
 
@@ -56,7 +56,7 @@ class DiscordHandler(PlatformHandler):
     def __init__(
         self,
         bot_token: str,
-        allowed_guild_ids: list[int] | None = None,
+        allowed_guild_ids: Optional[list[int]] = None,
         **kwargs,
     ):
         """
@@ -67,7 +67,7 @@ class DiscordHandler(PlatformHandler):
         super().__init__(**kwargs)
         self.bot_token = bot_token
         self.allowed_guild_ids = set(allowed_guild_ids or [])
-        self._bot: Any | None = None
+        self._bot: Optional[Any] = None
 
     # ---- PlatformHandler 实现 ----
 

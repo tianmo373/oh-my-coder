@@ -14,7 +14,7 @@ import asyncio
 import contextlib
 import logging
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from ..base import IncomingMessage, OutgoingMessage, Platform, PlatformHandler
 
@@ -53,8 +53,8 @@ class DingTalkHandler(PlatformHandler):
         self,
         app_key: str,
         app_secret: str,
-        token: str | None = None,
-        aes_key: str | None = None,
+        token: Optional[str] = None,
+        aes_key: Optional[str] = None,
         webhook_port: int = 8080,
         **kwargs,
     ):
@@ -72,10 +72,10 @@ class DingTalkHandler(PlatformHandler):
         self.token = token or "oh-my-coder-dingtalk"
         self.aes_key = aes_key
         self.webhook_port = webhook_port
-        self._access_token: str | None = None
+        self._access_token: Optional[str] = None
         self._token_expires_at: float = 0
         self._stop_event = asyncio.Event()
-        self._server_task: asyncio.Task[None] | None = None
+        self._server_task: Optional[asyncio.Task[None]] = None
 
     # ---- PlatformHandler 实现 ----
 
@@ -151,7 +151,7 @@ class DingTalkHandler(PlatformHandler):
             else:
                 logger.error(f"[dingtalk] Token refresh failed: {data}")
 
-    async def _get_token(self) -> str | None:
+    async def _get_token(self) -> Optional[str]:
         if self._access_token is None or time.time() >= self._token_expires_at:
             await self._refresh_token()
         return self._access_token
@@ -247,7 +247,7 @@ class DingTalkHandler(PlatformHandler):
         except Exception as e:
             logger.exception(f"[dingtalk] Callback parse error: {e}")
 
-    def _decrypt_msg(self, encrypted: str) -> str | None:
+    def _decrypt_msg(self, encrypted: str) -> Optional[str]:
         """AES 解密消息"""
         import base64
 

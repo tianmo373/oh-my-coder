@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 插件加载器
 
@@ -44,8 +46,8 @@ class PluginLoader:
 
     def __init__(
         self,
-        registry: PluginRegistry | None = None,
-        plugin_dir: Path | None = None,
+        registry: Optional[PluginRegistry] = None,
+        plugin_dir: Optional[Path] = None,
     ) -> None:
         """
         Args:
@@ -196,7 +198,7 @@ class PluginLoader:
 
     # ---- 加载 ----
 
-    def load(self, name: str) -> Plugin | None:
+    def load(self, name: str) -> Optional[Plugin]:
         """
         加载单个插件。
 
@@ -324,7 +326,7 @@ class PluginLoader:
 
 # ---- 全局加载器 ----
 
-_loader: PluginLoader | None = None
+_loader: Optional[PluginLoader] = None
 
 
 def get_loader() -> PluginLoader:

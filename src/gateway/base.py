@@ -20,7 +20,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class IncomingMessage:
     text: str
     raw: dict[str, Any] = field(default_factory=dict)
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
-    reply_to: str | None = None  # 消息 ID（用于回复）
+    reply_to: Optional[str] = None  # 消息 ID（用于回复）
 
 
 @dataclass
@@ -56,7 +56,7 @@ class OutgoingMessage:
     platform: Platform
     chat_id: str
     text: str
-    reply_to: str | None = None  # 回复某条消息
+    reply_to: Optional[str] = None  # 回复某条消息
     parse_mode: str = "markdown"  # 或 "html"
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -80,7 +80,7 @@ class PlatformHandler(ABC):
     def __init__(
         self,
         on_message: Callable[[IncomingMessage], Any],
-        on_error: Callable[[Exception], None] | None = None,
+        on_error: Optional[Callable[[Exception], None]] = None,
     ):
         """
         Args:

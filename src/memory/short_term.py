@@ -18,7 +18,7 @@ import time
 import uuid
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Optional, Any
 
 
 @dataclass
@@ -36,14 +36,14 @@ class SessionContext:
     """会话上下文"""
 
     session_id: str
-    project_path: Path | None = None
-    task: str | None = None
+    project_path: Optional[Path] = None
+    task: Optional[str] = None
     messages: list[Message] = field(default_factory=list)
     variables: dict[str, Any] = field(default_factory=dict)
     created_at: float = field(default_factory=time.time)
     last_active: float = field(default_factory=time.time)
 
-    def add_message(self, role: str, content: str, metadata: dict | None = None):
+    def add_message(self, role: str, content: str, metadata: Optional[dict] = None):
         """添加消息"""
         self.messages.append(
             Message(role=role, content=content, metadata=metadata or {})
@@ -95,10 +95,10 @@ class ShortTermMemory:
         self.storage_dir = storage_dir / "short-term"
         self.storage_dir.mkdir(parents=True, exist_ok=True)
         self.max_messages = max_messages
-        self._current_session: SessionContext | None = None
+        self._current_session: Optional[SessionContext] = None
 
     def create_session(
-        self, project_path: Path | None = None, task: str | None = None
+        self, project_path: Optional[Path] = None, task: Optional[str] = None
     ) -> SessionContext:
         """创建新会话"""
         session = SessionContext(
@@ -109,7 +109,7 @@ class ShortTermMemory:
         self._current_session = session
         return session
 
-    def get_current_session(self) -> SessionContext | None:
+    def get_current_session(self) -> Optional[SessionContext]:
         """获取当前会话"""
         return self._current_session
 
@@ -117,7 +117,7 @@ class ShortTermMemory:
         """设置当前会话"""
         self._current_session = session
 
-    def load_session(self, session_id: str) -> SessionContext | None:
+    def load_session(self, session_id: str) -> Optional[SessionContext]:
         """加载已有会话"""
         session_file = self.storage_dir / f"{session_id}.json"
         if session_file.exists():
@@ -168,7 +168,7 @@ class ShortTermMemory:
         sessions.sort(key=lambda s: s.last_active, reverse=True)
         return sessions
 
-    def get_latest_session(self) -> SessionContext | None:
+    def get_latest_session(self) -> Optional[SessionContext]:
         """获取最新活跃的会话"""
         sessions = self.list_sessions()
         return sessions[0] if sessions else None

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 Wiki Parser - Python AST 解析器
 
@@ -20,9 +22,9 @@ class FunctionInfo:
     """函数信息"""
 
     name: str
-    docstring: str | None = None
+    docstring: Optional[str] = None
     args: list[str] = field(default_factory=list)
-    returns: str | None = None
+    returns: Optional[str] = None
     decorators: list[str] = field(default_factory=list)
     lineno: int = 0
 
@@ -38,7 +40,7 @@ class ClassInfo:
     """类信息"""
 
     name: str
-    docstring: str | None = None
+    docstring: Optional[str] = None
     base_classes: list[str] = field(default_factory=list)
     methods: list[FunctionInfo] = field(default_factory=list)
     attributes: list[str] = field(default_factory=list)
@@ -61,7 +63,7 @@ class ImportInfo:
 
     module: str
     names: list[str] = field(default_factory=list)
-    alias: str | None = None
+    alias: Optional[str] = None
 
 
 @dataclass
@@ -70,7 +72,7 @@ class ModuleInfo:
 
     path: Path
     relative_path: Path
-    docstring: str | None = None
+    docstring: Optional[str] = None
     imports: list[ImportInfo] = field(default_factory=list)
     classes: list[ClassInfo] = field(default_factory=list)
     functions: list[FunctionInfo] = field(default_factory=list)
@@ -88,7 +90,7 @@ class ASTVisitorWithParent(ast.NodeVisitor):
         super().visit(node)
         self.parent_stack.pop()
 
-    def get_parent(self, node: ast.AST) -> ast.AST | None:
+    def get_parent(self, node: ast.AST) -> Optional[ast.AST]:
         """获取父节点"""
         if len(self.parent_stack) > 1:
             return self.parent_stack[-2]
@@ -148,7 +150,7 @@ class PythonParser:
         visitor = ParentAdder()
         visitor.visit(tree)
 
-    def parse_file(self, file_path: Path | str) -> ModuleInfo | None:
+    def parse_file(self, file_path: Path | str) -> Optional[ModuleInfo]:
         """
         解析单个 Python 文件
 
@@ -220,7 +222,7 @@ class PythonParser:
                 )
             )
 
-    def _visit_class(self, node: ast.ClassDef) -> ClassInfo | None:
+    def _visit_class(self, node: ast.ClassDef) -> Optional[ClassInfo]:
         """访问类定义"""
         # 获取基类
         base_classes = []
@@ -253,7 +255,7 @@ class PythonParser:
             lineno=node.lineno or 0,
         )
 
-    def _visit_function(self, node: ast.FunctionDef) -> FunctionInfo | None:
+    def _visit_function(self, node: ast.FunctionDef) -> Optional[FunctionInfo]:
         """访问函数定义"""
         # 获取参数
         args = []

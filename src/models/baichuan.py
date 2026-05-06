@@ -16,7 +16,7 @@ API 地址：https://api.baichuan-ai.com
 import json
 import time
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -66,7 +66,7 @@ class BaichuanModel(BaseModel):
         config.cost_per_1k_completion = model_info["cost_per_1k_completion"]
 
         super().__init__(config, tier)
-        self._client: httpx.AsyncClient | None = None
+        self._client: Optional[httpx.AsyncClient] = None
 
     @property
     def provider(self) -> ModelProvider:

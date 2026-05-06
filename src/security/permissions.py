@@ -14,7 +14,7 @@ from __future__ import annotations
 import contextlib
 import re
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 # ─────────────────────────────────────────────────────────────
 # 数据模型
@@ -60,11 +60,11 @@ class CheckResult:
     """检查结果"""
 
     allowed: bool
-    reason: str | None = None
-    matched_pattern: str | None = None
+    reason: Optional[str] = None
+    matched_pattern: Optional[str] = None
     requires_approval: bool = False
 
-    def to_tuple(self) -> tuple[bool, str | None]:
+    def to_tuple(self) -> tuple[bool, Optional[str]]:
         """兼容旧接口"""
         return (self.allowed, self.reason)
 
@@ -88,7 +88,7 @@ class PermissionGuard:
         r":(){ :|:& };:",
     ]
 
-    def __init__(self, rules: PermissionRule | None = None) -> None:
+    def __init__(self, rules: Optional[PermissionRule] = None) -> None:
         self.rules = rules or PermissionRule()
         self._compiled = False
         self._compile()
@@ -208,13 +208,13 @@ class PermissionGuard:
 # ─────────────────────────────────────────────────────────────
 
 
-def check_command(command: str, rules: PermissionRule | None = None) -> CheckResult:
+def check_command(command: str, rules: Optional[PermissionRule] = None) -> CheckResult:
     """检查命令权限（便捷函数）"""
     guard = PermissionGuard(rules)
     return guard.check(command)
 
 
-def needs_approval(command: str, rules: PermissionRule | None = None) -> bool:
+def needs_approval(command: str, rules: Optional[PermissionRule] = None) -> bool:
     """检查命令是否需要审批（便捷函数）"""
     guard = PermissionGuard(rules)
     return guard.needs_approval(command)

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 Quest 执行引擎
 
@@ -25,9 +27,9 @@ class QuestExecutor:
         self,
         project_path: Path,
         store: QuestStore,
-        notify_callback: Callable[[QuestNotification], None] | None = None,
-        replan_callback: Callable[[str, str], None] | None = None,
-        review_callback: Callable[[str, str, str], Awaitable[str]] | None = None,
+        notify_callback: Optional[Callable[[QuestNotification], None]] = None,
+        replan_callback: Optional[Callable[[str, str], None]] = None,
+        review_callback: Optional[Callable[[str, str, str], Awaitable[str]]] = None,
     ):
         self.project_path = Path(project_path)
         self.store = store
@@ -42,7 +44,7 @@ class QuestExecutor:
         self._breakpoint: dict[str, int] = {}
 
     def _notify(
-        self, quest: Quest | None, event: str, message: str, details=None
+        self, quest: Optional[Quest], event: str, message: str, details=None
     ) -> None:
         """发送通知"""
         if self.notify_callback:
@@ -387,7 +389,7 @@ class QuestExecutor:
         self._breakpoint[quest_id] = running_idx
         return bool(self.store.update_status(quest_id, QuestStatus.PAUSED))
 
-    def resume(self, quest_id: str) -> Quest | None:
+    def resume(self, quest_id: str) -> Optional[Quest]:
         """恢复暂停的 Quest，从断点继续"""
         quest = self.store.get(quest_id)
         if quest is None or quest.status != QuestStatus.PAUSED:
@@ -405,6 +407,6 @@ class QuestExecutor:
         """检查 Quest 是否在运行"""
         return quest_id in self._running_quests
 
-    def get_breakpoint(self, quest_id: str) -> int | None:
+    def get_breakpoint(self, quest_id: str) -> Optional[int]:
         """获取暂停时的断点位置"""
         return self._breakpoint.get(quest_id)

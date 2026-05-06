@@ -19,7 +19,7 @@ import re
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Optional, Any
 
 
 @dataclass
@@ -83,7 +83,7 @@ class LearningsMemory:
                     index[entry.id] = entry.to_dict()
         return index
 
-    def _parse_learning_file(self, path: Path) -> LearningEntry | None:
+    def _parse_learning_file(self, path: Path) -> Optional[LearningEntry]:
         """解析单个 Markdown 文件"""
         try:
             content = path.read_text()
@@ -127,7 +127,7 @@ class LearningsMemory:
         title: str,
         content: str,
         category: str = "note",
-        tags: list[str] | None = None,
+        tags: Optional[list[str]] = None,
         context: str = "",
     ) -> LearningEntry:
         """添加学习条目"""
@@ -158,7 +158,7 @@ class LearningsMemory:
 
         self.index_file.write_text(json.dumps(data, ensure_ascii=False, indent=2))
 
-    def search(self, query: str, category: str | None = None) -> list[LearningEntry]:
+    def search(self, query: str, category: Optional[str] = None) -> list[LearningEntry]:
         """搜索学习条目"""
         results = []
         query_lower = query.lower()

@@ -19,7 +19,7 @@ import json
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Optional, Any
 
 
 @dataclass
@@ -82,7 +82,7 @@ class LongTermMemory:
         self.storage_dir.mkdir(parents=True, exist_ok=True)
         self.user_prefs_file = self.storage_dir / "user_preferences.json"
         self.projects_file = self.storage_dir / "projects.json"
-        self._user_prefs: UserPreference | None = None
+        self._user_prefs: Optional[UserPreference] = None
         self._projects: dict[str, ProjectPreference] = {}
 
     def _load_projects(self) -> dict[str, ProjectPreference]:

@@ -6,7 +6,7 @@ from __future__ import annotations
 提供 Ollama 本地模型的管理和查询功能。
 """
 
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -18,10 +18,10 @@ class LocalModelInfo(BaseModel):
     """本地模型信息"""
 
     name: str
-    size: str | None = None
-    modified_at: str | None = None
-    tier: str | None = None
-    description: str | None = None
+    size: Optional[str] = None
+    modified_at: Optional[str] = None
+    tier: Optional[str] = None
+    description: Optional[str] = None
     available: bool = True
 
 
@@ -31,7 +31,7 @@ class OllamaStatus(BaseModel):
     available: bool
     base_url: str
     models: list[LocalModelInfo] = []
-    error: str | None = None
+    error: Optional[str] = None
 
 
 @router.get("/status", response_model=OllamaStatus)

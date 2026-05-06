@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 腾讯混元 (Hunyuan) 模型适配器
 
@@ -61,8 +63,8 @@ class HunyuanModel(BaseModel):
         self,
         config: ModelConfig,
         tier: ModelTier = ModelTier.MEDIUM,
-        secret_id: str | None = None,
-        secret_key: str | None = None,
+        secret_id: Optional[str] = None,
+        secret_key: Optional[str] = None,
     ):
         if config.base_url is None:
             config.base_url = "https://api.hunyuan.cn"
@@ -73,7 +75,7 @@ class HunyuanModel(BaseModel):
         config.cost_per_1k_completion = model_info["cost_per_1k_completion"]
 
         super().__init__(config, tier)
-        self._client: httpx.AsyncClient | None = None
+        self._client: Optional[httpx.AsyncClient] = None
         self._secret_id = secret_id
         self._secret_key = secret_key
 

@@ -28,7 +28,7 @@ import shutil
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     import builtins
@@ -125,7 +125,7 @@ class CheckpointManager:
         "*.whl",
     }
 
-    def __init__(self, project_path: Path | None = None):
+    def __init__(self, project_path: Optional[Path] = None):
         self.project_path = project_path or Path.cwd()
         self.checkpoint_root = self.project_path / ".omc" / "checkpoints"
         self.index_file = self.checkpoint_root / "index.json"
@@ -387,7 +387,7 @@ class CheckpointManager:
 
     def list(
         self,
-        task_id: str | None = None,
+        task_id: Optional[str] = None,
         limit: int = 50,
     ) -> builtins.list[dict[str, Any]]:
         """
@@ -410,7 +410,7 @@ class CheckpointManager:
         results.sort(key=lambda x: x.get("created_at", ""), reverse=True)
         return results[:limit]
 
-    def get_checkpoint(self, checkpoint_id: str) -> Checkpoint | None:
+    def get_checkpoint(self, checkpoint_id: str) -> Optional[Checkpoint]:
         """获取单个 checkpoint 完整信息"""
         if checkpoint_id not in self._index:
             return None

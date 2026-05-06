@@ -12,7 +12,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import requests
 
@@ -212,7 +212,7 @@ class ModelDiscovery:
 
         return results
 
-    def get_cached(self) -> dict | None:
+    def get_cached(self) -> Optional[dict]:
         """
         读取本地缓存
 
@@ -398,7 +398,7 @@ class ModelDiscovery:
 
 def get_discovery_summary(
     builtin_models: list[dict],
-    discovery: ModelDiscovery | None = None,
+    discovery: Optional[ModelDiscovery] = None,
 ) -> dict[str, Any]:
     """
     获取发现摘要（用于 omc model list 末尾提示）

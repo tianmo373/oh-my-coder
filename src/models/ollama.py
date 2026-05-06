@@ -24,7 +24,7 @@ import json
 import subprocess
 import time
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -108,7 +108,7 @@ class OllamaModel(BaseModel):
 
         self.model_name = model_name
         self.base_url = config.base_url.rstrip("/")
-        self._client: httpx.AsyncClient | None = None
+        self._client: Optional[httpx.AsyncClient] = None
 
         # 推断 tier
         if model_name in _MODEL_TIER_MAP:
@@ -344,7 +344,7 @@ OLLAMA_PROVIDER = "ollama"
 def create_ollama_model(
     model_name: str = "qwen2:7b",
     base_url: str = OLLAMA_DEFAULT_URL,
-    tier: ModelTier | None = None,
+    tier: Optional[ModelTier] = None,
 ) -> OllamaModel:
     """
     创建 Ollama 模型实例的便捷函数

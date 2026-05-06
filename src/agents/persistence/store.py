@@ -15,7 +15,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     import builtins
@@ -132,7 +132,7 @@ class AgentStateStore:
         store.import_agent("planner-backup.json")
     """
 
-    def __init__(self, store_root: Path | None = None):
+    def __init__(self, store_root: Optional[Path] = None):
         self.store_root = store_root or DEFAULT_STORE_ROOT
         self.store_root.mkdir(parents=True, exist_ok=True)
 
@@ -144,8 +144,8 @@ class AgentStateStore:
         self,
         agent_name: str,
         config: AgentConfig,
-        history: list[HistoryEntry] | None = None,
-        state: AgentState | None = None,
+        history: Optional[list[HistoryEntry]] = None,
+        state: Optional[AgentState] = None,
         append_history: bool = True,
     ) -> Path:
         """
@@ -204,7 +204,7 @@ class AgentStateStore:
 
     def restore(
         self, agent_name: str, include_history: bool = True
-    ) -> tuple[AgentConfig | None, list[HistoryEntry], AgentState | None]:
+    ) -> tuple[Optional[AgentConfig], list[HistoryEntry], Optional[AgentState]]:
         """
         从磁盘恢复 Agent 状态
 
@@ -221,7 +221,7 @@ class AgentStateStore:
 
         # 1. 读 config.json
         config_file = agent_dir / "config.json"
-        config: AgentConfig | None = None
+        config: Optional[AgentConfig] = None
         if config_file.exists():
             data = json.loads(config_file.read_text(encoding="utf-8"))
             config = AgentConfig(
@@ -253,7 +253,7 @@ class AgentStateStore:
 
         # 3. 读 state.json
         state_file = agent_dir / "state.json"
-        state: AgentState | None = None
+        state: Optional[AgentState] = None
         if state_file.exists():
             data = json.loads(state_file.read_text(encoding="utf-8"))
             state = AgentState.from_dict(data)
@@ -336,7 +336,7 @@ class AgentStateStore:
     def import_agent(
         self,
         source_path: Path,
-        new_name: str | None = None,
+        new_name: Optional[str] = None,
         merge_history: bool = False,
     ) -> str:
         """
@@ -368,7 +368,7 @@ class AgentStateStore:
         )
 
         # 解析状态
-        state: AgentState | None = None
+        state: Optional[AgentState] = None
         if "state" in data:
             state = AgentState.from_dict(data["state"])
             state.agent_name = config.name
@@ -395,8 +395,8 @@ class AgentStateStore:
     def save_from_agent_instance(
         self,
         agent_instance: Any,
-        history: list[HistoryEntry] | None = None,
-        custom_state: dict[str, Any] | None = None,
+        history: Optional[list[HistoryEntry]] = None,
+        custom_state: Optional[dict[str, Any]] = None,
     ) -> Path:
         """
         从 Agent 实例保存状态（便捷方法）

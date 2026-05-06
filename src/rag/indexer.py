@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 class CodeElementType(str, Enum):
@@ -60,11 +60,11 @@ class CodeElement:
     start_line: int
     end_line: int
     source_code: str
-    docstring: str | None = None
-    signature: str | None = None
-    parent: str | None = None  # 父元素 ID
+    docstring: Optional[str] = None
+    signature: Optional[str] = None
+    parent: Optional[str] = None  # 父元素 ID
     children: list[str] = field(default_factory=list)
-    embedding: list[float] | None = None
+    embedding: Optional[list[float]] = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -164,7 +164,7 @@ class PythonParser:
 
     def _parse_function(
         self, node: ast.FunctionDef, source_lines: list[str], file_path: str
-    ) -> CodeElement | None:
+    ) -> Optional[CodeElement]:
         """解析函数定义"""
         start_line = node.lineno
         end_line = node.end_lineno or start_line
@@ -201,7 +201,7 @@ class PythonParser:
 
     def _parse_class(
         self, node: ast.ClassDef, source_lines: list[str], file_path: str
-    ) -> CodeElement | None:
+    ) -> Optional[CodeElement]:
         """解析类定义"""
         start_line = node.lineno
         end_line = node.end_lineno or start_line
@@ -293,7 +293,7 @@ class CodebaseIndexer:
         ext = file_path.suffix.lower()
         return self.LANGUAGE_EXTENSIONS.get(ext, ProgrammingLanguage.UNKNOWN)
 
-    def index_file(self, file_path: Path) -> FileIndex | None:
+    def index_file(self, file_path: Path) -> Optional[FileIndex]:
         """索引单个文件"""
         try:
             source = file_path.read_text(encoding="utf-8")

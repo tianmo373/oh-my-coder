@@ -18,7 +18,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from rich.console import Console
 from rich.table import Table
@@ -38,7 +38,7 @@ class Skill:
     description: str
     func: Callable[[str, dict[str, Any]], SkillResult]
     source: str = "builtin"  # builtin | custom
-    file_path: Path | None = None
+    file_path: Optional[Path] = None
 
     def __post_init__(self) -> None:
         # 自动从函数 docstring 填充 description
@@ -251,7 +251,7 @@ class SkillRegistry:
 
     def __init__(self) -> None:
         self._skills: dict[str, Skill] = {}
-        self._custom_skills_dir: Path | None = None
+        self._custom_skills_dir: Optional[Path] = None
         self._loaded_custom: bool = False
         self._init_builtins()
 
@@ -291,7 +291,7 @@ class SkillRegistry:
             return True
         return False
 
-    def get(self, name: str) -> Skill | None:
+    def get(self, name: str) -> Optional[Skill]:
         """获取 Skill"""
         return self._skills.get(name)
 
@@ -374,7 +374,7 @@ class SkillRegistry:
     # ─── 执行 ────────────────────────────────────────────────────────────────
 
     def run(
-        self, name: str, code: str = "", context: dict[str, Any] | None = None
+        self, name: str, code: str = "", context: Optional[dict[str, Any]] = None
     ) -> SkillResult:
         """执行指定 Skill"""
         # 确保自定义 Skill 已加载
@@ -399,7 +399,7 @@ class SkillRegistry:
             )
 
     def run_interactive(
-        self, skill_name: str, code: str = "", context: dict[str, Any] | None = None
+        self, skill_name: str, code: str = "", context: Optional[dict[str, Any]] = None
     ) -> SkillResult:
         """交互模式执行 Skill（支持 /name 语法）"""
         # 去掉开头的 /
@@ -426,7 +426,7 @@ class SkillRegistry:
 
 
 # ─── 全局单例 ────────────────────────────────────────────────────────────────
-_default_registry: SkillRegistry | None = None
+_default_registry: Optional[SkillRegistry] = None
 
 
 def get_registry() -> SkillRegistry:

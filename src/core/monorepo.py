@@ -1,14 +1,15 @@
+from __future__ import annotations
+
 """Monorepo detection and workspace management.
 
 Supports pnpm workspace, lerna, nx, turborepo, bazel, rush.
 """
 
-from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # Monorepo configuration file mappings
 MONOREPO_CONFIGS: dict[str, list[str]] = {
@@ -31,7 +32,7 @@ class MonorepoInfo:
     root: Path
     type: str  # pnpm, lerna, nx, etc.
     packages: list[Path] = field(default_factory=list)
-    config_file: Path | None = None
+    config_file: Optional[Path] = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -66,7 +67,7 @@ class SubProject:
         }
 
 
-def detect_monorepo(root: Path | str | None = None) -> MonorepoInfo | None:
+def detect_monorepo(root: Path | Optional[str] = None) -> Optional[MonorepoInfo]:
     """Detect if directory is a monorepo root.
 
     Args:
@@ -92,7 +93,7 @@ def detect_monorepo(root: Path | str | None = None) -> MonorepoInfo | None:
     return None
 
 
-def find_monorepo_root(start: Path | str | None = None) -> Path | None:
+def find_monorepo_root(start: Path | Optional[str] = None) -> Optional[Path]:
     """Find monorepo root by walking up from start directory.
 
     Args:
@@ -329,7 +330,7 @@ def detect_framework(project_path: Path) -> str:
     return ""
 
 
-def list_subprojects(monorepo_info: MonorepoInfo | None = None) -> list[SubProject]:
+def list_subprojects(monorepo_info: Optional[MonorepoInfo] = None) -> list[SubProject]:
     """List all sub-projects in a monorepo.
 
     Args:
@@ -375,7 +376,7 @@ def _has_agent_config(project_path: Path) -> bool:
     return False
 
 
-def get_monorepo_context(project_path: Path | str | None = None) -> dict[str, Any]:
+def get_monorepo_context(project_path: Path | Optional[str] = None) -> dict[str, Any]:
     """Get monorepo context for agent initialization.
 
     Args:

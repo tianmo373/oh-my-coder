@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 任务总结模块 - 自动化任务完成后生成结构化总结
 
@@ -120,8 +122,8 @@ def generate_summary(
     workflow: str,
     completed_steps: list[dict],
     project_path: str = "",
-    start_time: datetime | None = None,
-    end_time: datetime | None = None,
+    start_time: Optional[datetime] = None,
+    end_time: Optional[datetime] = None,
 ) -> TaskSummary:
     """
     根据已完成步骤生成任务总结
@@ -310,9 +312,9 @@ def print_summary_compact(summary: TaskSummary) -> None:
 # ============================================================
 def save_summary(
     summary: TaskSummary,
-    output_dir: Path | None = None,
+    output_dir: Optional[Path] = None,
     format: str = "json",
-    filename: str | None = None,
+    filename: Optional[str] = None,
 ) -> Path:
     """
     保存总结到文件

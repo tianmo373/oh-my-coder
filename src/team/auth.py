@@ -10,7 +10,7 @@ import hashlib
 import secrets
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from .task_sync import MemberRole
 
@@ -24,7 +24,7 @@ class TeamMember:
     role: MemberRole = MemberRole.MEMBER
     display_name: str = ""
     email: str = ""
-    avatar_url: str | None = None
+    avatar_url: Optional[str] = None
     joined_at: datetime = field(default_factory=datetime.now)
     last_active: datetime = field(default_factory=datetime.now)
     settings: dict[str, Any] = field(default_factory=dict)
@@ -177,7 +177,7 @@ class TeamAuth:
         user_id: str,
         display_name: str = "",
         email: str = "",
-    ) -> Team | None:
+    ) -> Optional[Team]:
         """
         加入团队
 
@@ -270,11 +270,11 @@ class TeamAuth:
 
         return True
 
-    async def get_team(self, team_id: str) -> Team | None:
+    async def get_team(self, team_id: str) -> Optional[Team]:
         """获取团队"""
         return self._teams.get(team_id)
 
-    async def get_user_team(self, user_id: str) -> Team | None:
+    async def get_user_team(self, user_id: str) -> Optional[Team]:
         """获取用户所在团队"""
         team_id = self._user_teams.get(user_id)
         if team_id:
@@ -378,7 +378,7 @@ class TeamAuth:
         self._sessions[session_id] = session
         return session
 
-    async def validate_session(self, session_id: str) -> UserSession | None:
+    async def validate_session(self, session_id: str) -> Optional[UserSession]:
         """验证会话"""
         session = self._sessions.get(session_id)
         if session and session.is_valid():
@@ -394,7 +394,7 @@ class TeamAuth:
 
     async def regenerate_invite_code(
         self, team_id: str, requester_id: str
-    ) -> str | None:
+    ) -> Optional[str]:
         """
         重新生成邀请码
 

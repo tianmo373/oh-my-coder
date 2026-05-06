@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 Planner Agent - 任务规划智能体（增强版）
 
@@ -171,9 +173,9 @@ class ReasoningStep:
 
     step: int
     thought: str
-    action: str | None = None
-    observation: str | None = None
-    conclusion: str | None = None
+    action: Optional[str] = None
+    observation: Optional[str] = None
+    conclusion: Optional[str] = None
 
 
 class ChainOfThought:
@@ -186,9 +188,9 @@ class ChainOfThought:
     def add_step(
         self,
         thought: str,
-        action: str | None = None,
-        observation: str | None = None,
-        conclusion: str | None = None,
+        action: Optional[str] = None,
+        observation: Optional[str] = None,
+        conclusion: Optional[str] = None,
     ) -> ReasoningStep:
         """添加推理步骤"""
         self.current_step += 1
@@ -581,7 +583,7 @@ class PlannerAgent(BaseAgent):
         plan: ExecutionPlan,
         completed_tasks: set[str],
         failed_tasks: set[str],
-        new_requirements: list[str] | None = None,
+        new_requirements: Optional[list[str]] = None,
     ) -> ExecutionPlan:
         """
         自适应调整计划

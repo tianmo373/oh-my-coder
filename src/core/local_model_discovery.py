@@ -26,7 +26,7 @@ from __future__ import annotations
 
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -56,12 +56,12 @@ class OllamaModelInfo:
 
     model_name: str
     size: int = 0
-    quantization: str | None = None
-    modified_at: str | None = None
-    parameter_size: str | None = field(default=None, repr=False)
-    template: str | None = field(default=None, repr=False)
-    license: str | None = field(default=None, repr=False)
-    system: str | None = field(default=None, repr=False)
+    quantization: Optional[str] = None
+    modified_at: Optional[str] = None
+    parameter_size: Optional[str] = field(default=None, repr=False)
+    template: Optional[str] = field(default=None, repr=False)
+    license: Optional[str] = field(default=None, repr=False)
+    system: Optional[str] = field(default=None, repr=False)
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
 
     @property
@@ -191,7 +191,7 @@ def discover_ollama_models(
 def get_model_info(
     model_name: str,
     base_url: str = OLLAMA_DEFAULT_URL,
-) -> OllamaModelInfo | None:
+) -> Optional[OllamaModelInfo]:
     """
     获取单个模型的详细信息
 
@@ -232,7 +232,7 @@ def get_model_info(
         # /api/tags 部分（模型文件信息）
         tags_data: dict[str, Any] = data.get("model_info", {})
         # /api/show 专用字段
-        parameter_size: str | None = tags_data.get("parameter_size")
+        parameter_size: Optional[str] = tags_data.get("parameter_size")
         # license / template / system 可能在 model_info 也可能在顶层
         license_val = data.get("license") or tags_data.get("license")
         template_val = data.get("template") or tags_data.get("template")
@@ -264,7 +264,7 @@ def get_model_info(
 # Async variants (for consistency with rest of codebase)
 # ---------------------------------------------------------------------------
 
-_async_client: httpx.AsyncClient | None = None
+_async_client: Optional[httpx.AsyncClient] = None
 
 
 async def _get_async_client() -> httpx.AsyncClient:
@@ -323,7 +323,7 @@ async def discover_ollama_models_async(
 async def get_model_info_async(
     model_name: str,
     base_url: str = OLLAMA_DEFAULT_URL,
-) -> OllamaModelInfo | None:
+) -> Optional[OllamaModelInfo]:
     """异步版本：获取单个模型详情"""
     if not model_name or not model_name.strip():
         return None
@@ -340,7 +340,7 @@ async def get_model_info_async(
         data: dict[str, Any] = response.json()
 
         model_info: dict[str, Any] = data.get("model_info", {})
-        parameter_size: str | None = model_info.get("parameter_size")
+        parameter_size: Optional[str] = model_info.get("parameter_size")
         license_val = data.get("license") or model_info.get("license")
         template_val = data.get("template") or model_info.get("template")
         system_val = data.get("system") or model_info.get("system")

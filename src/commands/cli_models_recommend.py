@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Optional
+
 """
 Models Recommend CLI - 模型精选推荐
 
@@ -6,7 +10,6 @@ Models Recommend CLI - 模型精选推荐
 - omc models --recommend --task coding # 按任务类型筛选推荐
 """
 
-from __future__ import annotations
 
 import typer
 from rich.console import Console
@@ -218,7 +221,7 @@ def _show_task_recommendation(task: str) -> None:
 
 
 def show_recommend(
-    task: str | None = typer.Option(
+    task: Optional[str] = typer.Option(
         None, "--task", "-t", help="任务类型: coding/reasoning/creative/fast/chat"
     ),
 ) -> None:

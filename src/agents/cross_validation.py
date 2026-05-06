@@ -30,7 +30,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from ..core.router import ModelRouter
@@ -202,7 +202,7 @@ PASS / FAIL / NEED_FIX
     def __init__(
         self,
         model_router: ModelRouter,
-        state_dir: Path | None = None,
+        state_dir: Optional[Path] = None,
     ):
         self.model_router = model_router
         self.state_dir = (state_dir or Path(".omc/state")).resolve()
@@ -341,7 +341,7 @@ PASS / FAIL / NEED_FIX
             return issues
 
         lines = text.split("\n")
-        current_issue: ValidationIssue | None = None
+        current_issue: Optional[ValidationIssue] = None
 
         for line in lines:
             stripped = line.strip()

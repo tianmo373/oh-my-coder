@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 SPEC 生成器
 
@@ -68,7 +70,7 @@ class SpecGenerator:
     def __init__(
         self,
         model_router,  # ModelRouter instance
-        project_path: Path | None = None,
+        project_path: Optional[Path] = None,
     ):
         self.model_router = model_router
         self.project_path = project_path or Path(".")

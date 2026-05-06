@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
@@ -42,7 +42,7 @@ class AgentStatus(BaseModel):
 
     name: str
     status: str  # idle, running, error
-    current_task: str | None = None
+    current_task: Optional[str] = None
     total_executions: int
 
 
@@ -55,8 +55,8 @@ class RecentTask(BaseModel):
     model: str
     status: str
     started_at: str
-    completed_at: str | None = None
-    execution_time: float | None = None
+    completed_at: Optional[str] = None
+    execution_time: Optional[float] = None
 
 
 # 模拟数据存储

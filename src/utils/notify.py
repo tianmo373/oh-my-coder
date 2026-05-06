@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 系统通知工具 - 零依赖，使用 macOS 原生 osascript + 钉钉 webhook
 """
@@ -14,7 +16,7 @@ import urllib.request
 def send_notification(
     title: str,
     message: str,
-    subtitle: str | None = None,
+    subtitle: Optional[str] = None,
     sound: bool = True,
 ) -> bool:
     """
@@ -144,7 +146,7 @@ def send_dingtalk_notification(
 
 
 def notify_workflow_complete_dingtalk(
-    webhook_url: str | None,
+    webhook_url: Optional[str],
     workflow: str,
     status: str,
     steps_completed: int,
@@ -177,7 +179,7 @@ def notify_workflow_complete_dingtalk(
 
 
 def notify_quest_update_dingtalk(
-    webhook_url: str | None,
+    webhook_url: Optional[str],
     quest_name: str,
     message: str,
     status: str = "running",

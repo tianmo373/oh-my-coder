@@ -13,7 +13,7 @@ MCP Server — JSON-RPC 2.0 stdio 协议实现
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from .resources import get_mcp_resources
 from .tools import get_mcp_tools, get_tool_handler
@@ -35,7 +35,7 @@ class McpServer:
     VERSION = "0.2.0"
     PROTOCOL_VERSION = "2024-11-05"
 
-    def __init__(self, workspace: Path | None = None):
+    def __init__(self, workspace: Optional[Path] = None):
         self.workspace = workspace or Path.cwd()
         self._initialized = False
         self._tools = get_mcp_tools()

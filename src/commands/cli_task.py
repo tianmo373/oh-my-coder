@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 任务状态 CLI 命令
 
@@ -74,7 +76,7 @@ def task_list(
         omc task list --status running
         omc task list --status failed -n 50
     """
-    status_enum: TaskStatus | None = None
+    status_enum: Optional[TaskStatus] = None
     if status_filter:
         try:
             status_enum = TaskStatus(status_filter.lower())

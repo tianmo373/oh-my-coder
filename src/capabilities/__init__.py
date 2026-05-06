@@ -7,7 +7,7 @@ from __future__ import annotations
 """
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import typer
 from rich.console import Console
@@ -356,7 +356,7 @@ def delete_capability(
 
 
 def _load_current_config(
-    config_path: Path | None = None,
+    config_path: Optional[Path] = None,
 ) -> tuple[dict[str, Any], dict[str, Any], list[str], dict[str, Any]]:
     """
     加载当前项目配置
@@ -428,7 +428,7 @@ def _load_current_config(
     return agents, model_config, tools, prompts
 
 
-def _load_config_file() -> dict[str, Any] | None:
+def _load_config_file() -> Optional[dict[str, Any]]:
     """加载项目配置文件"""
     config_paths = [
         Path(".omc/config.json"),

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 Ollama 健康检查模块
 
@@ -55,11 +57,11 @@ class OllamaHealthStatus:
     """
 
     running: bool = False
-    version: str | None = None
+    version: Optional[str] = None
     model_count: int = 0
     available_models: list[str] = field(default_factory=list)
     latency_ms: float = 0.0
-    last_check_time: datetime | None = field(default_factory=None)
+    last_check_time: Optional[datetime] = field(default_factory=None)
 
     def to_dict(self) -> dict:
         """导出为字典，便于序列化或日志记录"""
@@ -137,11 +139,11 @@ class OllamaHealthChecker:
         self.read_timeout = read_timeout
 
         # 缓存
-        self._cached_status: OllamaHealthStatus | None = None
+        self._cached_status: Optional[OllamaHealthStatus] = None
         self._cache_timestamp: float = 0.0
 
         # httpx client 复用
-        self._client: httpx.Client | None = None
+        self._client: Optional[httpx.Client] = None
 
     # -----------------------------------------------------------------------
     # Public API
@@ -197,7 +199,7 @@ class OllamaHealthChecker:
         获取 Ollama 状态字典
 
         Returns:
-            dict: 包含 running(bool)、version(str|None)、model_count(int)、models(List[str])
+            dict: 包含 running(bool)、version(Optional[str])、model_count(int)、models(List[str])
         """
         status = self.check_ollama()
         return {
@@ -241,7 +243,7 @@ class OllamaHealthChecker:
             last_check_time=datetime.now(),
         )
 
-    def _fetch_version(self) -> str | None:
+    def _fetch_version(self) -> Optional[str]:
         """
         获取 Ollama 版本号
 

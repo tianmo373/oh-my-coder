@@ -11,7 +11,7 @@ import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 @dataclass
@@ -100,7 +100,7 @@ class CapabilityPackageManager:
     负责能力包的存储、加载、列表和应用。
     """
 
-    def __init__(self, packages_dir: Path | None = None):
+    def __init__(self, packages_dir: Optional[Path] = None):
         """
         初始化管理器
 
@@ -136,7 +136,7 @@ class CapabilityPackageManager:
         packages.sort(key=lambda p: p.created_at, reverse=True)
         return packages
 
-    def get_package(self, name: str) -> CapabilityPackage | None:
+    def get_package(self, name: str) -> Optional[CapabilityPackage]:
         """获取指定名称的能力包"""
         path = self._get_package_path(name)
         if not path.exists():
@@ -172,7 +172,7 @@ class CapabilityPackageManager:
         tools: list[str],
         prompts: dict,
         readme: str = "",
-        examples: list[dict] | None = None,
+        examples: Optional[list[dict]] = None,
     ) -> CapabilityPackage:
         """
         从当前配置导出能力包
@@ -247,7 +247,7 @@ class CapabilityPackageManager:
     def apply_package(
         self,
         name: str,
-        target_config: dict | None = None,
+        target_config: Optional[dict] = None,
     ) -> dict:
         """
         应用能力包配置
@@ -285,7 +285,7 @@ class CapabilityPackageManager:
 
 
 # 全局管理器实例
-_default_manager: CapabilityPackageManager | None = None
+_default_manager: Optional[CapabilityPackageManager] = None
 
 
 def get_manager() -> CapabilityPackageManager:

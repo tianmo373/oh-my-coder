@@ -9,7 +9,7 @@ Telegram Bot 平台处理器
 
 
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from ..base import IncomingMessage, OutgoingMessage, Platform, PlatformHandler
 
@@ -43,7 +43,7 @@ class TelegramHandler(PlatformHandler):
     def __init__(
         self,
         bot_token: str,
-        allowed_user_ids: list[str] | None = None,
+        allowed_user_ids: Optional[list[str]] = None,
         **kwargs,
     ):
         """

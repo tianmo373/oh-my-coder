@@ -23,7 +23,7 @@ Executor Agent - 代码实现智能体
 import re
 import subprocess
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from ..core.router import TaskType
 from .base import (
@@ -425,7 +425,7 @@ def test_add():
                 continue
 
             ext = full_path.suffix
-            formatter: list[str] | None = None
+            formatter: Optional[list[str]] = None
 
             if ext == ".py":
                 formatter = ["black", "--quiet", str(full_path)]

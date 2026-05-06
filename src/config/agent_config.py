@@ -15,7 +15,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # ─────────────────────────────────────────────────────────────
 # 数据模型
@@ -247,9 +247,9 @@ def _load_yaml(raw: str) -> dict[str, Any]:
 
     # 标准库 fallback：手动解析简单 YAML
     result: dict[str, Any] = {}
-    current_key: str | None = None
-    current_list: list[str] | None = None
-    current_dict: dict[str, Any] | None = None
+    current_key: Optional[str] = None
+    current_list: Optional[list[str]] = None
+    current_dict: Optional[dict[str, Any]] = None
     in_dict = False
 
     for line in raw.splitlines():

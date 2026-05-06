@@ -19,7 +19,7 @@ Skill 自进化 Agent
 """
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from ..memory.skill_manager import SkillManager
 from .base import (
@@ -50,7 +50,7 @@ class SkillManageAgent(BaseAgent):
     icon = "🧩"
     tools: list[str] = []  # 不需要外部工具，自身就是工具
 
-    def __init__(self, model_router, config: dict[str, Any] | None = None):
+    def __init__(self, model_router, config: Optional[dict[str, Any]] = None):
         super().__init__(model_router, config)
         # SkillManager 实例，可共享
         skills_dir = None
@@ -132,8 +132,8 @@ updated_at: 2026-04-12
 
     def tool_list(
         self,
-        category: str | None = None,
-        tag: str | None = None,
+        category: Optional[str] = None,
+        tag: Optional[str] = None,
         limit: int = 20,
     ) -> str:
         """工具：列出 Skills"""
@@ -178,9 +178,9 @@ updated_at: 2026-04-12
         name: str,
         body: str,
         category: str = "workflow",
-        description: str | None = None,
-        tags: list[str] | None = None,
-        triggers: list[str] | None = None,
+        description: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        triggers: Optional[list[str]] = None,
     ) -> str:
         """
         工具：创建新 Skill（自动 patch 优先）
@@ -232,11 +232,11 @@ updated_at: 2026-04-12
     def tool_patch(
         self,
         skill_id: str,
-        body: str | None = None,
-        description: str | None = None,
-        tags: list[str] | None = None,
-        triggers: list[str] | None = None,
-        name: str | None = None,
+        body: Optional[str] = None,
+        description: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        triggers: Optional[list[str]] = None,
+        name: Optional[str] = None,
         category: str = "workflow",
     ) -> str:
         """工具：增量更新 Skill（优先于 create）"""
@@ -269,8 +269,8 @@ updated_at: 2026-04-12
     def tool_search(
         self,
         query: str,
-        category: str | None = None,
-        tags: list[str] | None = None,
+        category: Optional[str] = None,
+        tags: Optional[list[str]] = None,
         limit: int = 10,
     ) -> str:
         """工具：全文搜索 Skills"""

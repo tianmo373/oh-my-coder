@@ -10,7 +10,7 @@ Quest = 异步自主编程任务
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -127,10 +127,10 @@ class QuestStep(BaseModel):
     description: str = Field(..., description="步骤描述")
     agent: str = Field(..., description="执行的 Agent")
     status: QuestStatus = Field(default=QuestStatus.PENDING)
-    result: str | None = Field(None, description="步骤结果")
-    error: str | None = Field(None, description="错误信息")
-    started_at: datetime | None = None
-    completed_at: datetime | None = None
+    result: Optional[str] = Field(None, description="步骤结果")
+    error: Optional[str] = Field(None, description="错误信息")
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
 
 
 class Quest(BaseModel):
@@ -142,18 +142,18 @@ class Quest(BaseModel):
     project_path: str = Field(..., description="项目路径")
     status: QuestStatus = Field(default=QuestStatus.PENDING)
     priority: QuestPriority = Field(default=QuestPriority.MEDIUM)
-    spec: QuestSpec | None = Field(None, description="生成的 SPEC")
-    spec_path: str | None = Field(None, description="SPEC 文件路径")
+    spec: Optional[QuestSpec] = Field(None, description="生成的 SPEC")
+    spec_path: Optional[str] = Field(None, description="SPEC 文件路径")
     steps: list[QuestStep] = Field(default_factory=list, description="执行步骤")
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
-    started_at: datetime | None = None
-    completed_at: datetime | None = None
-    error_message: str | None = None
-    result_summary: str | None = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    error_message: Optional[str] = None
+    result_summary: Optional[str] = None
     output_dir: str = Field(default=".omc/quests", description="输出目录")
 
-    def duration(self) -> float | None:
+    def duration(self) -> Optional[float]:
         """返回执行时长（秒）"""
         if self.started_at and self.completed_at:
             return (self.completed_at - self.started_at).total_seconds()
@@ -234,5 +234,5 @@ class QuestNotification:
     title: str
     event: str  # "started" | "spec_ready" | "step_completed" | "completed" | "failed"
     message: str
-    details: dict[str, Any] | None = None
+    details: Optional[dict[str, Any]] = None
     timestamp: datetime = field(default_factory=datetime.now)

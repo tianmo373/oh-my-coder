@@ -15,7 +15,7 @@ from __future__ import annotations
 import asyncio
 import functools
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 from tenacity import (
@@ -47,7 +47,7 @@ def _default_retry_if(exc: Exception) -> bool:
 
 def safe_execute(
     max_attempts: int = 3,
-    timeout: float | None = 30.0,
+    timeout: Optional[float] = 30.0,
     base_wait: float = 1.0,
     max_wait: float = 10.0,
 ) -> Callable:
@@ -96,7 +96,7 @@ def safe_execute(
 
 def safe_execute_sync(
     max_attempts: int = 3,
-    timeout: float | None = 30.0,
+    timeout: Optional[float] = 30.0,
     base_wait: float = 1.0,
     max_wait: float = 10.0,
 ) -> Callable:
@@ -114,7 +114,7 @@ def safe_execute_sync(
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            last_exc: Exception | None = None
+            last_exc: Optional[Exception] = None
 
             for attempt in range(1, max_attempts + 1):
                 try:

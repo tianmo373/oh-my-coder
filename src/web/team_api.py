@@ -6,7 +6,7 @@ from __future__ import annotations
 提供团队创建、加入、任务同步和统计等 API。
 """
 
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -59,8 +59,8 @@ class UpdateTaskRequest(BaseModel):
     """更新任务请求"""
 
     status: str
-    result: dict[str, Any] | None = None
-    error: str | None = None
+    result: Optional[dict[str, Any]] = None
+    error: Optional[str] = None
     tokens_used: int = 0
     cost: float = 0.0
 

@@ -11,7 +11,7 @@ import sys
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import uvicorn
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
@@ -95,11 +95,11 @@ class TaskManager:
         self._queues[task_id] = queue
         return task_id
 
-    def get_queue(self, task_id: str) -> asyncio.Queue | None:
+    def get_queue(self, task_id: str) -> Optional[asyncio.Queue]:
         return self._queues.get(task_id)
 
     def update_step(
-        self, task_id: str, step: str, status: str, content: str | None = None
+        self, task_id: str, step: str, status: str, content: Optional[str] = None
     ):
         if task_id not in self._tasks:
             return
@@ -116,7 +116,7 @@ class TaskManager:
             except Exception:
                 pass  # Queue full, skip
 
-    def complete_task(self, task_id: str, result: Any = None, error: str | None = None):
+    def complete_task(self, task_id: str, result: Any = None, error: Optional[str] = None):
         if task_id not in self._tasks:
             return
         task = self._tasks[task_id]
@@ -139,7 +139,7 @@ class TaskManager:
             except Exception:
                 pass  # Queue full, skip
 
-    def get_task(self, task_id: str) -> dict | None:
+    def get_task(self, task_id: str) -> Optional[dict]:
         return self._tasks.get(task_id)
 
     def list_tasks(self) -> list[dict]:
@@ -324,7 +324,7 @@ async def get_task(task_id: str):
 
 
 @app.post("/api/execute")
-async def execute_task(background: BackgroundTasks, payload: dict | None = None):
+async def execute_task(background: BackgroundTasks, payload: Optional[dict] = None):
     """
     执行任务 API（异步，事件驱动）
 

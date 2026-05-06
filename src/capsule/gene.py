@@ -7,7 +7,7 @@ GEP 协议中的基本单元，描述一个能力的身份和属性。
 """
 
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import Any, Optional
 from uuid import uuid4
 
 
@@ -27,7 +27,7 @@ class Gene:
     version: str = "0.2.0"  # 版本号
     author: str = "anonymous"  # 作者
     created_at: str = ""  # ISO 格式时间
-    signature: str | None = None  # 未来对接 zCloak
+    signature: Optional[str] = None  # 未来对接 zCloak
     id: str = ""  # UUID
 
     def __post_init__(self) -> None:

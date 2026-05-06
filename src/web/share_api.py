@@ -14,7 +14,7 @@ Share API - 会话分享 Web 端点
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -63,7 +63,7 @@ def _sanitize_config(config: dict[str, Any]) -> dict[str, Any]:
 class ShareCreateRequest(BaseModel):
     """创建分享请求"""
 
-    task_id: str | None = Field(None, description="任务 ID，空则最近一次")
+    task_id: Optional[str] = Field(None, description="任务 ID，空则最近一次")
     include_config: bool = Field(True, description="是否包含配置")
     tags: list[str] = Field(default_factory=list, description="标签")
     expires_hours: int = Field(0, description="过期时间（小时），0=永不过期")
@@ -72,7 +72,7 @@ class ShareCreateRequest(BaseModel):
 class ShareImportRequest(BaseModel):
     """导入分享请求"""
 
-    target_dir: str | None = Field(None, description="导入目标目录")
+    target_dir: Optional[str] = Field(None, description="导入目标目录")
 
 
 class ShareResponse(BaseModel):
@@ -80,7 +80,7 @@ class ShareResponse(BaseModel):
 
     share_id: str
     created_at: str
-    expires_at: str | None = None
+    expires_at: Optional[str] = None
     tags: list[str] = []
     task: str = ""
     steps: int = 0
@@ -92,7 +92,7 @@ class ShareDetailResponse(BaseModel):
     share_id: str
     version: int = 1
     created_at: str
-    expires_at: str | None = None
+    expires_at: Optional[str] = None
     tags: list[str] = []
     session: dict[str, Any] = {}
 

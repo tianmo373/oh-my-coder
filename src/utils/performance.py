@@ -13,7 +13,7 @@ import time
 from collections import OrderedDict
 from collections.abc import Callable
 from threading import Lock
-from typing import Any
+from typing import Any, Optional
 
 
 class LRUCache:
@@ -40,7 +40,7 @@ class LRUCache:
         self._hits = 0
         self._misses = 0
 
-    def get(self, key: str) -> Any | None:
+    def get(self, key: str) -> Optional[Any]:
         """
         获取缓存值
 
@@ -135,7 +135,7 @@ class AsyncExecutor:
             max_concurrent: 最大并发数
         """
         self.max_concurrent = max_concurrent
-        self._semaphore: asyncio.Semaphore | None = None
+        self._semaphore: Optional[asyncio.Semaphore] = None
 
     async def run(self, coro: Any) -> Any:
         """

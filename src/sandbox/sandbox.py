@@ -15,7 +15,7 @@ import os
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from .dangerous_command_blocker import (
     BlockedCommandError,
@@ -74,7 +74,7 @@ class Sandbox:
         "/tmp",  # nosec B108 - sandbox 设计
     ]
 
-    def __init__(self, config: SandboxConfig | None = None) -> None:
+    def __init__(self, config: Optional[SandboxConfig] = None) -> None:
         self.config = config or SandboxConfig()
         self._resolve_allowed_dirs()
 
@@ -165,7 +165,7 @@ class Sandbox:
     def run_command(
         self,
         cmd: str,
-        timeout: int | None = None,
+        timeout: Optional[int] = None,
         check_permission: bool = True,
         check_dangerous: bool = True,
     ) -> subprocess.CompletedProcess:
@@ -218,7 +218,7 @@ class Sandbox:
     def run_command_with_output_limit(
         self,
         cmd: str,
-        timeout: int | None = None,
+        timeout: Optional[int] = None,
     ) -> dict[str, Any]:
         """
         运行命令并限制输出大小
@@ -306,7 +306,7 @@ class Sandbox:
 
 
 def create_sandbox(
-    allowed_dirs: list[str] | None = None,
+    allowed_dirs: Optional[list[str]] = None,
     timeout: int = 60,
 ) -> Sandbox:
     """创建沙箱实例"""
@@ -319,7 +319,7 @@ def create_sandbox(
 
 def run_sandboxed(
     cmd: str,
-    allowed_dirs: list[str] | None = None,
+    allowed_dirs: Optional[list[str]] = None,
     timeout: int = 60,
 ) -> dict[str, Any]:
     """便捷函数：在沙箱中运行命令"""

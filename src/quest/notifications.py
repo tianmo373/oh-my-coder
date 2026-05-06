@@ -5,6 +5,7 @@ import hmac
 import time
 import urllib.parse
 import urllib.request
+from typing import Optional
 
 """
 Quest 通知系统
@@ -92,7 +93,7 @@ class DingTalkNotificationChannel(NotificationChannel):
 
     name = "dingtalk"
 
-    def __init__(self, webhook_url: str | None = None, secret: str | None = None):
+    def __init__(self, webhook_url: Optional[str] = None, secret: Optional[str] = None):
         self.webhook_url = webhook_url or os.environ.get("DINGTALK_WEBHOOK_URL", "")
         self.secret = secret or os.environ.get("DINGTALK_SECRET", "")
 
@@ -150,8 +151,8 @@ class TelegramNotificationChannel(NotificationChannel):
 
     def __init__(
         self,
-        bot_token: str | None = None,
-        chat_id: str | None = None,
+        bot_token: Optional[str] = None,
+        chat_id: Optional[str] = None,
     ):
         self.bot_token = bot_token or os.environ.get("TELEGRAM_BOT_TOKEN", "")
         self.chat_id = chat_id or os.environ.get("TELEGRAM_CHAT_ID", "")
@@ -188,7 +189,7 @@ class DiscordNotificationChannel(NotificationChannel):
 
     name = "discord"
 
-    def __init__(self, webhook_url: str | None = None):
+    def __init__(self, webhook_url: Optional[str] = None):
         self.webhook_url = webhook_url or os.environ.get("DISCORD_WEBHOOK", "")
 
     def send(self, title: str, body: str, level: str = "info") -> bool:
@@ -233,7 +234,7 @@ class SlackNotificationChannel(NotificationChannel):
 
     name = "slack"
 
-    def __init__(self, webhook_url: str | None = None):
+    def __init__(self, webhook_url: Optional[str] = None):
         self.webhook_url = webhook_url or os.environ.get("SLACK_WEBHOOK", "")
 
     def send(self, title: str, body: str, level: str = "info") -> bool:
@@ -290,7 +291,7 @@ class TeamsNotificationChannel(NotificationChannel):
 
     name = "teams"
 
-    def __init__(self, webhook_url: str | None = None):
+    def __init__(self, webhook_url: Optional[str] = None):
         self.webhook_url = webhook_url or os.environ.get("TEAMS_WEBHOOK", "")
 
     def send(self, title: str, body: str, level: str = "info") -> bool:
@@ -361,7 +362,7 @@ class FeishuNotificationChannel(NotificationChannel):
 
     name = "feishu"
 
-    def __init__(self, webhook_url: str | None = None):
+    def __init__(self, webhook_url: Optional[str] = None):
         self.webhook_url = webhook_url or os.environ.get("FEISHU_WEBHOOK", "")
 
     def send(self, title: str, body: str, level: str = "info") -> bool:
@@ -412,7 +413,7 @@ class WeComNotificationChannel(NotificationChannel):
 
     name = "wecom"
 
-    def __init__(self, webhook_url: str | None = None):
+    def __init__(self, webhook_url: Optional[str] = None):
         self.webhook_url = webhook_url or os.environ.get("WECOM_WEBHOOK", "")
 
     def send(self, title: str, body: str, level: str = "info") -> bool:
@@ -448,7 +449,7 @@ class PushPlusNotificationChannel(NotificationChannel):
 
     name = "pushplus"
 
-    def __init__(self, token: str | None = None):
+    def __init__(self, token: Optional[str] = None):
         self.token = token or os.environ.get("PUSHPLUS_TOKEN", "")
 
     def send(self, title: str, body: str, level: str = "info") -> bool:
@@ -477,7 +478,7 @@ class ConsoleNotificationChannel(NotificationChannel):
 
     name = "console"
 
-    def __init__(self, callback: Callable[[str, str, str], None] | None = None):
+    def __init__(self, callback: Optional[Callable[[str, str, str], None]] = None):
         self.callback = callback
 
     def send(self, title: str, body: str, level: str = "info") -> bool:
@@ -496,17 +497,17 @@ class NotificationConfig:
     """通知配置"""
 
     desktop: bool = True  # 桌面通知
-    dingtalk_webhook: str | None = None
-    dingtalk_secret: str | None = None
-    telegram_bot_token: str | None = None
-    telegram_chat_id: str | None = None
-    discord_webhook: str | None = None
-    slack_webhook: str | None = None
-    teams_webhook: str | None = None
-    feishu_webhook: str | None = None
-    wecom_webhook: str | None = None
-    pushplus_token: str | None = None
-    console_callback: Callable[[str, str, str], None] | None = None
+    dingtalk_webhook: Optional[str] = None
+    dingtalk_secret: Optional[str] = None
+    telegram_bot_token: Optional[str] = None
+    telegram_chat_id: Optional[str] = None
+    discord_webhook: Optional[str] = None
+    slack_webhook: Optional[str] = None
+    teams_webhook: Optional[str] = None
+    feishu_webhook: Optional[str] = None
+    wecom_webhook: Optional[str] = None
+    pushplus_token: Optional[str] = None
+    console_callback: Optional[Callable[[str, str, str], None]] = None
 
 
 class NotificationManager:
@@ -516,7 +517,7 @@ class NotificationManager:
     支持多渠道通知：桌面、钉钉、控制台回调。
     """
 
-    def __init__(self, config: NotificationConfig | None = None):
+    def __init__(self, config: Optional[NotificationConfig] = None):
         self.config = config or NotificationConfig()
         self._channels: list[NotificationChannel] = []
 
@@ -615,8 +616,8 @@ class NotificationManager:
         self,
         title: str,
         body: str,
-        event: str | None = None,
-        quest_id: str | None = None,
+        event: Optional[str] = None,
+        quest_id: Optional[str] = None,
     ) -> None:
         """发送通知到所有已配置的渠道"""
         level = self._level_from_event(event) if event else "info"
@@ -678,8 +679,8 @@ def _escape_shell(text: str) -> str:
 
 def create_notification_manager(
     desktop: bool = True,
-    dingtalk_webhook: str | None = None,
-    dingtalk_secret: str | None = None,
+    dingtalk_webhook: Optional[str] = None,
+    dingtalk_secret: Optional[str] = None,
 ) -> NotificationManager:
     """创建通知管理器（兼容旧 API）"""
     config = NotificationConfig(

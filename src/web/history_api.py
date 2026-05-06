@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 Web UI 增强模块
 - 任务历史界面
@@ -27,7 +29,7 @@ agent_router = APIRouter(prefix="/api/agents", tags=["agents"])
 class HistoryStore:
     """历史记录存储"""
 
-    def __init__(self, storage_dir: Path | None = None):
+    def __init__(self, storage_dir: Optional[Path] = None):
         self.storage_dir = storage_dir or Path(".omc/history")
         self.storage_dir.mkdir(parents=True, exist_ok=True)
         self._cache: dict[str, dict] = {}
@@ -42,7 +44,7 @@ class HistoryStore:
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(record, f, ensure_ascii=False, indent=2)
 
-    def load(self, task_id: str) -> dict | None:
+    def load(self, task_id: str) -> Optional[dict]:
         """加载历史记录"""
         if task_id in self._cache:
             return self._cache[task_id]
@@ -60,8 +62,8 @@ class HistoryStore:
         self,
         limit: int = 50,
         offset: int = 0,
-        status: str | None = None,
-        workflow: str | None = None,
+        status: Optional[str] = None,
+        workflow: Optional[str] = None,
     ) -> list[dict]:
         """列出所有历史记录"""
         records = []
@@ -127,8 +129,8 @@ history_store = HistoryStore()
 # 历史记录 API
 # ========================================
 class HistoryFilter(BaseModel):
-    status: str | None = None
-    workflow: str | None = None
+    status: Optional[str] = None
+    workflow: Optional[str] = None
     limit: int = Query(default=50, ge=1, le=200)
     offset: int = Query(default=0, ge=0)
 
@@ -137,8 +139,8 @@ class HistoryFilter(BaseModel):
 async def list_history(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
-    status: str | None = Query(default=None),
-    workflow: str | None = Query(default=None),
+    status: Optional[str] = Query(default=None),
+    workflow: Optional[str] = Query(default=None),
 ):
     """获取历史记录列表"""
     records = history_store.list_all(
@@ -224,8 +226,8 @@ class AgentStatusManager:
         self,
         name: str,
         status: str,
-        task: str | None = None,
-        progress: float | None = None,
+        task: Optional[str] = None,
+        progress: Optional[float] = None,
     ) -> None:
         """更新 Agent 状态"""
         if name in self._agents:
@@ -238,7 +240,7 @@ class AgentStatusManager:
             # 通知订阅者
             self._notify_subscribers(name)
 
-    def get_agent(self, name: str) -> dict | None:
+    def get_agent(self, name: str) -> Optional[dict]:
         """获取 Agent 状态"""
         return self._agents.get(name)
 

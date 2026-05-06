@@ -44,7 +44,7 @@ import re
 import shutil
 import time
 from pathlib import Path
-from typing import Any
+from typing import Optional, Any
 
 import yaml
 
@@ -63,7 +63,7 @@ class SkillManager:
     # 合法 categories
     CATEGORIES = ["debugging", "workflow", "corrections", "best-practices"]
 
-    def __init__(self, skills_dir: Path | None = None):
+    def __init__(self, skills_dir: Optional[Path] = None):
         """
         Args:
             skills_dir: Skills 根目录，默认为 .omc/skills
@@ -140,7 +140,7 @@ class SkillManager:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _parse_frontmatter(skill_md: Path) -> dict[str, Any] | None:
+    def _parse_frontmatter(skill_md: Path) -> Optional[dict[str, Any]]:
         """从 SKILL.md 解析 YAML frontmatter"""
         try:
             content = skill_md.read_text(encoding="utf-8")
@@ -183,9 +183,9 @@ class SkillManager:
         name: str,
         body: str,
         category: str = "workflow",
-        tags: list[str] | None = None,
-        triggers: list[str] | None = None,
-        description: str | None = None,
+        tags: Optional[list[str]] = None,
+        triggers: Optional[list[str]] = None,
+        description: Optional[str] = None,
     ) -> dict[str, Any]:
         """
         创建新的 Skill
@@ -264,11 +264,11 @@ class SkillManager:
     def patch(
         self,
         skill_id: str,
-        body: str | None = None,
-        description: str | None = None,
-        tags: list[str] | None = None,
-        triggers: list[str] | None = None,
-        name: str | None = None,
+        body: Optional[str] = None,
+        description: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        triggers: Optional[list[str]] = None,
+        name: Optional[str] = None,
         category: str = "workflow",
     ) -> dict[str, Any]:
         """
@@ -383,8 +383,8 @@ class SkillManager:
 
     def list_skills(
         self,
-        category: str | None = None,
-        tag: str | None = None,
+        category: Optional[str] = None,
+        tag: Optional[str] = None,
         limit: int = 50,
     ) -> list[dict[str, Any]]:
         """
@@ -414,7 +414,7 @@ class SkillManager:
         self,
         skill_id: str,
         include_body: bool = False,
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """
         获取单个 Skill
 
@@ -446,8 +446,8 @@ class SkillManager:
     def search(
         self,
         query: str,
-        category: str | None = None,
-        tags: list[str] | None = None,
+        category: Optional[str] = None,
+        tags: Optional[list[str]] = None,
         limit: int = 20,
     ) -> list[dict[str, Any]]:
         """
@@ -518,7 +518,7 @@ class SkillManager:
             s = s[:48].rstrip("-")
         return s
 
-    def _find_skill_path(self, skill_id: str) -> Path | None:
+    def _find_skill_path(self, skill_id: str) -> Optional[Path]:
         """在所有 category 中查找 skill_id 对应的 SKILL.md 路径"""
         for cat in self.CATEGORIES:
             path = self.skills_dir / cat / skill_id / "SKILL.md"
@@ -654,8 +654,8 @@ class SkillManager:
         task_description: str,
         workflow_name: str,
         final_result: str,
-        key_steps: list[str] | None = None,
-        error_context: str | None = None,
+        key_steps: Optional[list[str]] = None,
+        error_context: Optional[str] = None,
     ) -> dict[str, Any]:
         """
         从一次执行构建 Skill 草稿

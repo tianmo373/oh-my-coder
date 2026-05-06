@@ -13,10 +13,10 @@ resource URI 格式：
 
 import contextlib
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # 工作区根目录
-_WORKSPACE: Path | None = None
+_WORKSPACE: Optional[Path] = None
 
 
 def set_workspace(workspace: Path) -> None:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 Vision Agent - 视觉分析与 UI 生成智能体
 
@@ -26,7 +28,7 @@ from .base import (
 )
 
 
-def _load_image_meta(image_path: Path) -> dict | None:
+def _load_image_meta(image_path: Path) -> Optional[dict]:
     """提取图片元信息（宽高、尺寸），无需 Pillow 也可工作。"""
     try:
         import struct
@@ -345,7 +347,7 @@ export const PageLayout: React.FC = () => {
         self, context: AgentContext, prompt: list[dict[str, str]], **kwargs
     ) -> str:
         """执行视觉分析或 UI 代码生成"""
-        image_path: Path | None = context.metadata.get("image_path")
+        image_path: Optional[Path] = context.metadata.get("image_path")
         output_format: str = context.metadata.get("output_format", self.MODE_ANALYSIS)
 
         extra_context = ""

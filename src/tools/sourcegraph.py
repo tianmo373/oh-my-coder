@@ -17,7 +17,7 @@ import os
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -142,7 +142,7 @@ class SearchResult:
 # =============================================================================
 
 
-def _sg_api_search(query: str, **kwargs: Any) -> SearchResult | None:
+def _sg_api_search(query: str, **kwargs: Any) -> Optional[SearchResult]:
     """通过 Sourcegraph API 搜索"""
     if not SG_API_KEY:
         return None
@@ -305,7 +305,7 @@ def _check_src_cli() -> bool:
         return False
 
 
-def _src_cli_search(query: str, **kwargs: Any) -> SearchResult | None:
+def _src_cli_search(query: str, **kwargs: Any) -> Optional[SearchResult]:
     """通过 src CLI 搜索"""
     if not _check_src_cli():
         return None
@@ -398,11 +398,11 @@ def _src_cli_search(query: str, **kwargs: Any) -> SearchResult | None:
 
 def search(
     query: str,
-    language: str | None = None,
-    repo: str | None = None,
+    language: Optional[str] = None,
+    repo: Optional[str] = None,
     limit: int = 20,
-    after: str | None = None,
-    before: str | None = None,
+    after: Optional[str] = None,
+    before: Optional[str] = None,
     prefer_api: bool = True,
 ) -> SearchResult:
     """

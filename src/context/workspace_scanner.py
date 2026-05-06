@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 工作目录扫描器 - Workspace Scanner
 
@@ -90,8 +92,8 @@ class FileNode:
     is_dir: bool
     size: int = 0
     modified: str = ""
-    language: str | None = None  # 代码语言
-    summary: str | None = None  # 文件摘要
+    language: Optional[str] = None  # 代码语言
+    summary: Optional[str] = None  # 文件摘要
     children: list[FileNode] = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -316,7 +318,7 @@ class WorkspaceScanner:
 
         return node
 
-    def _detect_language(self, path: Path) -> str | None:
+    def _detect_language(self, path: Path) -> Optional[str]:
         """检测文件语言"""
         name = path.name.lower()
         ext = path.suffix.lower()

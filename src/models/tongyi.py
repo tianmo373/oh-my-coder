@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 通义千问 (Tongyi) 模型适配器
 
@@ -83,7 +85,7 @@ class TongyiModel(BaseModel):
 
         super().__init__(config, tier)
 
-        self._client: httpx.AsyncClient | None = None
+        self._client: Optional[httpx.AsyncClient] = None
 
     @property
     def provider(self) -> ModelProvider:

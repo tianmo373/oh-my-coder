@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 Wiki Generator - Markdown 文档生成器
 
@@ -18,7 +20,7 @@ class WikiGenerator:
         self,
         project_name: str,
         project_path: Path | str,
-        parser: PythonParser | None = None,
+        parser: Optional[PythonParser] = None,
     ):
         """
         初始化生成器
@@ -32,7 +34,7 @@ class WikiGenerator:
         self.project_path = Path(project_path)
         self.parser = parser or PythonParser(project_path)
 
-    def generate(self, output_path: Path | str | None = None) -> str:
+    def generate(self, output_path: Path | Optional[str] = None) -> str:
         """
         生成 Wiki 文档
 

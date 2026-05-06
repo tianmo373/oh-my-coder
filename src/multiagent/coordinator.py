@@ -17,7 +17,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 # ─────────────────────────────────────────────────────────────
 # 数据模型
@@ -79,8 +79,8 @@ class TaskResult:
     role: str
     success: bool
     output: Any = None
-    error: str | None = None
-    duration: float | None = None
+    error: Optional[str] = None
+    duration: Optional[float] = None
     timestamp: str = ""
 
     def __post_init__(self) -> None:
@@ -133,7 +133,7 @@ class MultiAgentCoordinator:
     def __init__(self) -> None:
         self.agents: dict[str, SubAgent] = {}
         self.tasks: dict[str, list[str]] = {}  # task_id -> agent_ids
-        self._runner: AgentRunner | None = None
+        self._runner: Optional[AgentRunner] = None
         self._history: list[CoordinationResult] = []
 
     def set_runner(self, runner: AgentRunner) -> None:
@@ -149,7 +149,7 @@ class MultiAgentCoordinator:
         self,
         role: str,
         name: str,
-        metadata: dict[str, Any] | None = None,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> SubAgent:
         """
         创建子 Agent
@@ -176,7 +176,7 @@ class MultiAgentCoordinator:
         self,
         task: str,
         agents: list[SubAgent],
-        task_id: str | None = None,
+        task_id: Optional[str] = None,
     ) -> CoordinationResult:
         """
         分发任务给多个 Agent（并行执行）
@@ -228,7 +228,7 @@ class MultiAgentCoordinator:
         self,
         task: str,
         agents: list[SubAgent],
-        task_id: str | None = None,
+        task_id: Optional[str] = None,
     ) -> CoordinationResult:
         """
         分发任务给多个 Agent（顺序执行）
@@ -321,7 +321,7 @@ class MultiAgentCoordinator:
             ),
         }
 
-    def get_agent(self, agent_id: str) -> SubAgent | None:
+    def get_agent(self, agent_id: str) -> Optional[SubAgent]:
         """获取指定 Agent"""
         return self.agents.get(agent_id)
 
@@ -363,7 +363,7 @@ class MultiAgentCoordinator:
 # ─────────────────────────────────────────────────────────────
 
 
-_coordinator: MultiAgentCoordinator | None = None
+_coordinator: Optional[MultiAgentCoordinator] = None
 
 
 def get_coordinator() -> MultiAgentCoordinator:

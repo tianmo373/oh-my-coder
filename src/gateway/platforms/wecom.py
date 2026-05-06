@@ -14,7 +14,7 @@ import asyncio
 import contextlib
 import logging
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from ..base import IncomingMessage, OutgoingMessage, Platform, PlatformHandler
 
@@ -55,8 +55,8 @@ class WeComHandler(PlatformHandler):
         corp_id: str,
         agent_id: str,
         corp_secret: str,
-        token: str | None = None,
-        encoding_aes_key: str | None = None,
+        token: Optional[str] = None,
+        encoding_aes_key: Optional[str] = None,
         webhook_port: int = 8080,
         **kwargs,
     ):
@@ -76,10 +76,10 @@ class WeComHandler(PlatformHandler):
         self.token = token or "oh-my-coder-wecom"
         self.encoding_aes_key = encoding_aes_key
         self.webhook_port = webhook_port
-        self._access_token: str | None = None
+        self._access_token: Optional[str] = None
         self._token_expires_at: float = 0
         self._stop_event = asyncio.Event()
-        self._poll_task: asyncio.Task[None] | None = None
+        self._poll_task: Optional[asyncio.Task[None]] = None
 
     # ---- PlatformHandler 实现 ----
 
@@ -161,7 +161,7 @@ class WeComHandler(PlatformHandler):
             else:
                 logger.error(f"[wecom] Token refresh failed: {data}")
 
-    async def _get_token(self) -> str | None:
+    async def _get_token(self) -> Optional[str]:
         if self._access_token is None or time.time() >= self._token_expires_at:
             await self._refresh_token()
         return self._access_token
@@ -251,7 +251,7 @@ class WeComHandler(PlatformHandler):
                 logger.exception(f"[wecom] Poll error: {e}")
                 await asyncio.sleep(10)
 
-    def _decrypt(self, encrypted: str) -> str | None:
+    def _decrypt(self, encrypted: str) -> Optional[str]:
         """AES 解密企业微信消息"""
         if not self.encoding_aes_key or not self.token:
             return None

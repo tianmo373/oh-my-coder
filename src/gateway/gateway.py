@@ -36,7 +36,7 @@ CLI:
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from .base import (
     IncomingMessage,
@@ -63,28 +63,28 @@ class Gateway:
     def __init__(
         self,
         orchestrator: Any = None,
-        telegram_token: str | None = None,
-        discord_token: str | None = None,
-        whatsapp_phone_number_id: str | None = None,
-        whatsapp_access_token: str | None = None,
-        whatsapp_webhook_url: str | None = None,
-        whatsapp_verify_token: str | None = None,
-        feishu_app_id: str | None = None,
-        feishu_app_secret: str | None = None,
-        feishu_encrypt_key: str | None = None,
-        wecom_corp_id: str | None = None,
-        wecom_agent_id: str | None = None,
-        wecom_corp_secret: str | None = None,
-        wecom_token: str | None = None,
-        wecom_encoding_aes_key: str | None = None,
-        dingtalk_app_key: str | None = None,
-        dingtalk_app_secret: str | None = None,
-        dingtalk_token: str | None = None,
-        dingtalk_aes_key: str | None = None,
-        slack_bot_token: str | None = None,
-        slack_signing_secret: str | None = None,
-        allowed_user_ids: dict[Platform, list[str]] | None = None,
-        plugins_dir: Path | None = None,
+        telegram_token: Optional[str] = None,
+        discord_token: Optional[str] = None,
+        whatsapp_phone_number_id: Optional[str] = None,
+        whatsapp_access_token: Optional[str] = None,
+        whatsapp_webhook_url: Optional[str] = None,
+        whatsapp_verify_token: Optional[str] = None,
+        feishu_app_id: Optional[str] = None,
+        feishu_app_secret: Optional[str] = None,
+        feishu_encrypt_key: Optional[str] = None,
+        wecom_corp_id: Optional[str] = None,
+        wecom_agent_id: Optional[str] = None,
+        wecom_corp_secret: Optional[str] = None,
+        wecom_token: Optional[str] = None,
+        wecom_encoding_aes_key: Optional[str] = None,
+        dingtalk_app_key: Optional[str] = None,
+        dingtalk_app_secret: Optional[str] = None,
+        dingtalk_token: Optional[str] = None,
+        dingtalk_aes_key: Optional[str] = None,
+        slack_bot_token: Optional[str] = None,
+        slack_signing_secret: Optional[str] = None,
+        allowed_user_ids: Optional[dict[Platform, list[str]]] = None,
+        plugins_dir: Optional[Path] = None,
     ):
         """
         Args:
@@ -215,7 +215,7 @@ class Gateway:
         phone_number_id: str,
         access_token: str,
         webhook_url: str,
-        verify_token: str | None,
+        verify_token: Optional[str],
     ) -> None:
         from .platforms.whatsapp import WhatsAppHandler, check_whatsapp_dependencies
 
@@ -234,7 +234,7 @@ class Gateway:
         logger.info("[gateway] WhatsApp handler registered")
 
     def _register_feishu(
-        self, app_id: str, app_secret: str, encrypt_key: str | None
+        self, app_id: str, app_secret: str, encrypt_key: Optional[str]
     ) -> None:
         from .platforms.feishu import FeishuHandler, check_feishu_dependencies
 
@@ -256,8 +256,8 @@ class Gateway:
         corp_id: str,
         agent_id: str,
         corp_secret: str,
-        token: str | None,
-        encoding_aes_key: str | None,
+        token: Optional[str],
+        encoding_aes_key: Optional[str],
     ) -> None:
         from .platforms.wecom import WeComHandler, check_wecom_dependencies
 
@@ -280,8 +280,8 @@ class Gateway:
         self,
         app_key: str,
         app_secret: str,
-        token: str | None,
-        aes_key: str | None,
+        token: Optional[str],
+        aes_key: Optional[str],
     ) -> None:
         from .platforms.dingtalk import DingTalkHandler, check_dingtalk_dependencies
 
@@ -472,7 +472,7 @@ class Gateway:
             "handlers": handlers_info,
         }
 
-    def get_handler(self, platform: Platform) -> PlatformHandler | None:
+    def get_handler(self, platform: Platform) -> Optional[PlatformHandler]:
         return self._handlers.get(platform)
 
     def _noop_handler(self, message: IncomingMessage) -> None:

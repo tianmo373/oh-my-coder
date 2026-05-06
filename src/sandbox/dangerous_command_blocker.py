@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 危险命令拦截器 - Dangerous Command Blocker
 
@@ -31,7 +33,7 @@ class BlockReason:
 
     risk: RiskLevel
     reason: str
-    matched_pattern: str | None = None
+    matched_pattern: Optional[str] = None
 
 
 class BlockedCommandError(Exception):
@@ -255,7 +257,7 @@ class DangerousCommandBlocker:
 # 全局单例
 # =============================================================================
 
-_default_blocker: DangerousCommandBlocker | None = None
+_default_blocker: Optional[DangerousCommandBlocker] = None
 
 
 def get_blocker() -> DangerousCommandBlocker:

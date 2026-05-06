@@ -23,7 +23,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 import yaml
@@ -113,18 +113,18 @@ class RouterConfig:
     """路由器配置"""
 
     # API Keys（从环境变量读取）
-    deepseek_api_key: str | None = None
-    wenxin_api_key: str | None = None
-    tongyi_api_key: str | None = None
-    glm_api_key: str | None = None
-    minimax_api_key: str | None = None
-    kimi_api_key: str | None = None
-    hunyuan_api_key: str | None = None
-    doubao_api_key: str | None = None
+    deepseek_api_key: Optional[str] = None
+    wenxin_api_key: Optional[str] = None
+    tongyi_api_key: Optional[str] = None
+    glm_api_key: Optional[str] = None
+    minimax_api_key: Optional[str] = None
+    kimi_api_key: Optional[str] = None
+    hunyuan_api_key: Optional[str] = None
+    doubao_api_key: Optional[str] = None
 
     # Ollama 本地模型配置
-    ollama_base_url: str | None = None
-    ollama_model: str | None = None  # 如 qwen2:7b
+    ollama_base_url: Optional[str] = None
+    ollama_model: Optional[str] = None  # 如 qwen2:7b
     prefer_local: bool = True  # 优先使用本地模型
 
     # 成本预算（元）
@@ -227,7 +227,7 @@ class ResponseCache:
         content = "".join(m.content for m in messages)
         return hashlib.sha256(content.encode()).hexdigest()[:16]
 
-    def get(self, messages: list[Message]) -> ModelResponse | None:
+    def get(self, messages: list[Message]) -> Optional[ModelResponse]:
         """获取缓存的响应"""
         key = self._make_key(messages)
         entry = self._cache.get(key)
@@ -295,7 +295,7 @@ class ModelRouter:
     - get_stats():    获取路由统计
     """
 
-    def __init__(self, config: RouterConfig | None = None):
+    def __init__(self, config: Optional[RouterConfig] = None):
         self.config = config or RouterConfig()
         self._models: dict[str, dict[str, BaseModel]] = {}
         self._decision_history: list[RoutingDecision] = []
@@ -526,7 +526,7 @@ class ModelRouter:
         self,
         task_type: str,
         complexity: str = "medium",
-        budget_remaining: float | None = None,
+        budget_remaining: Optional[float] = None,
     ) -> RoutingDecision:
         """
         选择最优模型
@@ -640,7 +640,7 @@ class ModelRouter:
         if decision.selected_provider not in fallback_order:
             fallback_order.insert(0, decision.selected_provider)
 
-        last_error: Exception | None = None
+        last_error: Optional[Exception] = None
         rate_limited_providers: list[str] = []
         attempted_providers: list[str] = []
 
@@ -711,7 +711,7 @@ class ModelRouter:
         self,
         provider: str,
         tier: str,
-    ) -> BaseModel | None:
+    ) -> Optional[BaseModel]:
         """直接获取指定模型"""
         return self._models.get(provider, {}).get(tier)
 

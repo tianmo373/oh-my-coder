@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 Quest 持久化存储
 
@@ -49,7 +51,7 @@ class QuestStore:
         self._save(quest)
         return quest
 
-    def get(self, quest_id: str) -> Quest | None:
+    def get(self, quest_id: str) -> Optional[Quest]:
         """获取 Quest"""
         if quest_id in self._quests_cache:
             return self._quests_cache[quest_id]
@@ -86,7 +88,7 @@ class QuestStore:
         self._quests_cache.pop(quest_id, None)
         return True
 
-    def list(self, status_filter: QuestStatus | None = None) -> list[Quest]:
+    def list(self, status_filter: Optional[QuestStatus] = None) -> list[Quest]:
         """列出所有 Quest"""
         self._ensure_dir()
 
@@ -116,7 +118,7 @@ class QuestStore:
     # 便捷操作
     # ============================================================
 
-    def update_status(self, quest_id: str, status: QuestStatus) -> Quest | None:
+    def update_status(self, quest_id: str, status: QuestStatus) -> Optional[Quest]:
         """更新 Quest 状态"""
         quest = self.get(quest_id)
         if quest is None:
@@ -131,7 +133,7 @@ class QuestStore:
         self.save(quest)
         return quest
 
-    def set_spec(self, quest_id: str, spec: QuestSpec) -> Quest | None:
+    def set_spec(self, quest_id: str, spec: QuestSpec) -> Optional[Quest]:
         """设置 SPEC"""
         quest = self.get(quest_id)
         if quest is None:

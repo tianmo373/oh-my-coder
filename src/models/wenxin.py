@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """
 文心一言 (Wenxin) 模型适配器
 
@@ -66,7 +68,7 @@ class WenxinModel(BaseModel):
         self,
         config: ModelConfig,
         tier: ModelTier = ModelTier.MEDIUM,
-        secret_key: str | None = None,
+        secret_key: Optional[str] = None,
     ):
         """
         Args:
@@ -82,9 +84,9 @@ class WenxinModel(BaseModel):
         super().__init__(config, tier)
 
         self.secret_key = secret_key
-        self._access_token: str | None = None
+        self._access_token: Optional[str] = None
         self._token_expire_time: float = 0
-        self._client: httpx.AsyncClient | None = None
+        self._client: Optional[httpx.AsyncClient] = None
 
     @property
     def provider(self) -> ModelProvider:

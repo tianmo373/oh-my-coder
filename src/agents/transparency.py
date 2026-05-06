@@ -17,7 +17,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # ---------------------------------------------------------------------------
 # Data structures
@@ -67,7 +67,7 @@ class AgentTrace:
     status: str = "running"  # running | completed | failed
     events: list[TraceEvent] = field(default_factory=list)
     total_duration_ms: float = 0.0
-    error: str | None = None
+    error: Optional[str] = None
     output_summary: str = ""  # 最终输出摘要
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -90,7 +90,7 @@ class AgentTrace:
         self,
         status: str = "completed",
         output_summary: str = "",
-        error: str | None = None,
+        error: Optional[str] = None,
     ) -> None:
         """结束追踪"""
         self.ended_at = self._now()
@@ -116,7 +116,7 @@ class AgentTrace:
         self,
         event_type: TraceEventType,
         description: str,
-        details: dict[str, Any] | None = None,
+        details: Optional[dict[str, Any]] = None,
         output_preview: str = "",
     ) -> None:
         """记录任意事件"""
@@ -214,10 +214,10 @@ class TraceStore:
     存储路径: .omc/traces/{session_id}/{agent_name}_{timestamp}.jsonl
     """
 
-    _instance: TraceStore | None = None
+    _instance: Optional[TraceStore] = None
     _lock = threading.Lock()
 
-    def __init__(self, base_dir: Path | None = None) -> None:
+    def __init__(self, base_dir: Optional[Path] = None) -> None:
         if base_dir is None:
             base_dir = Path.home() / ".omc" / "traces"
         self.base_dir = Path(base_dir)
@@ -273,7 +273,7 @@ class TraceStore:
                     pass
         return traces
 
-    def get_trace(self, session_id: str, agent_name: str) -> dict[str, Any] | None:
+    def get_trace(self, session_id: str, agent_name: str) -> Optional[dict[str, Any]]:
         """获取指定 agent 的最新 trace"""
         session_dir = self._session_dir(session_id)
         safe_name = agent_name.replace("/", "_").replace("\\", "_")
@@ -289,7 +289,7 @@ class TraceStore:
             pass
         return None
 
-    def get_latest_session(self) -> str | None:
+    def get_latest_session(self) -> Optional[str]:
         """获取最新 session ID"""
         sessions = self.list_sessions()
         return sessions[0] if sessions else None
@@ -317,13 +317,13 @@ class TraceContext:
     def __init__(
         self,
         agent_name: str,
-        session_id: str | None = None,
+        session_id: Optional[str] = None,
         workflow_id: str = "",
     ) -> None:
         self.agent_name = agent_name
         self.session_id = session_id or str(uuid.uuid4())[:8]
         self.workflow_id = workflow_id
-        self._trace: AgentTrace | None = None
+        self._trace: Optional[AgentTrace] = None
         self._store = TraceStore.get_instance()
 
     def start(self) -> AgentTrace:
@@ -341,7 +341,7 @@ class TraceContext:
         self,
         status: str = "completed",
         output_summary: str = "",
-        error: str | None = None,
+        error: Optional[str] = None,
     ) -> None:
         if self._trace is not None:
             self._trace.end(status=status, output_summary=output_summary, error=error)
@@ -351,7 +351,7 @@ class TraceContext:
         self,
         event_type: TraceEventType,
         description: str,
-        details: dict[str, Any] | None = None,
+        details: Optional[dict[str, Any]] = None,
     ) -> None:
         if self._trace is not None:
             self._trace.log(event_type, description, details)
@@ -381,7 +381,7 @@ class TraceContext:
 _current_trace: dict[str, TraceContext] = {}
 
 
-def get_trace_context(agent_name: str) -> TraceContext | None:
+def get_trace_context(agent_name: str) -> Optional[TraceContext]:
     return _current_trace.get(agent_name)
 
 

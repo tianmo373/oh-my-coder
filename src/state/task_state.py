@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # ─────────────────────────────────────────────────────────────
 # 状态枚举
@@ -43,9 +43,9 @@ class StepRecord:
     """步骤记录"""
 
     step: str
-    result: str | None = None
+    result: Optional[str] = None
     timestamp: str = ""
-    duration: float | None = None
+    duration: Optional[float] = None
 
     def __post_init__(self) -> None:
         if not self.timestamp:
@@ -81,7 +81,7 @@ class TaskState:
     current_step: str = ""
     steps: list[StepRecord] = field(default_factory=list)
     artifacts: dict[str, Any] = field(default_factory=dict)
-    error: str | None = None
+    error: Optional[str] = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -171,9 +171,9 @@ class TaskState:
 class TaskStore:
     """任务状态持久化存储"""
 
-    _instance: TaskStore | None = None
+    _instance: Optional[TaskStore] = None
 
-    def __init__(self, base_dir: Path | None = None) -> None:
+    def __init__(self, base_dir: Optional[Path] = None) -> None:
         if base_dir is None:
             base_dir = Path.home() / ".omc" / "tasks"
         self.base_dir = Path(base_dir).expanduser()
@@ -198,7 +198,7 @@ class TaskStore:
         tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         tmp.rename(path)
 
-    def load(self, task_id: str) -> TaskState | None:
+    def load(self, task_id: str) -> Optional[TaskState]:
         """加载任务状态"""
         path = self._task_path(task_id)
         if not path.exists():
@@ -240,7 +240,7 @@ class TaskStore:
 # ─────────────────────────────────────────────────────────────
 
 
-def create_task(task_id: str, metadata: dict[str, Any] | None = None) -> TaskState:
+def create_task(task_id: str, metadata: Optional[dict[str, Any]] = None) -> TaskState:
     """创建新任务"""
     state = TaskState(
         task_id=task_id,
@@ -251,12 +251,12 @@ def create_task(task_id: str, metadata: dict[str, Any] | None = None) -> TaskSta
     return state
 
 
-def get_task(task_id: str) -> TaskState | None:
+def get_task(task_id: str) -> Optional[TaskState]:
     """获取任务状态"""
     return TaskStore.get_instance().load(task_id)
 
 
-def list_tasks(status: TaskStatus | None = None) -> list[TaskState]:
+def list_tasks(status: Optional[TaskStatus] = None) -> list[TaskState]:
     """列出任务"""
     store = TaskStore.get_instance()
     if status is None:

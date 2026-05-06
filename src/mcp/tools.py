@@ -11,14 +11,14 @@ MCP SDK 可用时（Python 3.10+）返回 Tool 对象，
 """
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # ------------------------------------------------------------------
 # MCP Tool 注册表
 # ------------------------------------------------------------------
 
 # 工作区根目录（运行时由 MCPServer 注入）
-_WORKSPACE: Path | None = None
+_WORKSPACE: Optional[Path] = None
 
 
 def set_workspace(workspace: Path) -> None:
@@ -32,7 +32,7 @@ def get_workspace() -> Path:
     return _WORKSPACE or Path.cwd()
 
 
-def _resolve_path(path: str | None) -> str:
+def _resolve_path(path: Optional[str]) -> str:
     """解析路径：相对路径 → 工作区绝对路径"""
     if path is None:
         return str(get_workspace())

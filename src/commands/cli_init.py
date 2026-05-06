@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Init CLI - 交互式初始化引导
 
@@ -5,7 +7,6 @@ Init CLI - 交互式初始化引导
 - omc init  # 交互式引导新用户完成首次配置
 """
 
-from __future__ import annotations
 
 import json
 import os

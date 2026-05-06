@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel
 
@@ -45,9 +45,9 @@ class Plugin:
 
     metadata: PluginMetadata
     status: PluginStatus = PluginStatus.DISABLED
-    module: Any | None = None
-    instance: PluginBase | None = None
-    error: str | None = None
+    module: Optional[Any] = None
+    instance: Optional[PluginBase] = None
+    error: Optional[str] = None
     config: dict[str, Any] = field(default_factory=dict)
 
 
@@ -156,7 +156,7 @@ class PluginRegistry:
 
     # ---- 查询 ----
 
-    def get(self, name: str) -> Plugin | None:
+    def get(self, name: str) -> Optional[Plugin]:
         """获取插件"""
         return self._plugins.get(name)
 
@@ -168,11 +168,11 @@ class PluginRegistry:
         """按状态过滤插件"""
         return [p for p in self._plugins.values() if p.status == status]
 
-    def get_agent(self, name: str) -> type | None:
+    def get_agent(self, name: str) -> Optional[type]:
         """获取注册的 Agent 类"""
         return self._agents.get(name)
 
-    def get_skill(self, name: str) -> Callable | None:
+    def get_skill(self, name: str) -> Optional[Callable]:
         """获取注册的技能"""
         return self._skills.get(name)
 
@@ -234,7 +234,7 @@ class PluginRegistry:
 
 # ---- 全局注册表 ----
 
-_registry: PluginRegistry | None = None
+_registry: Optional[PluginRegistry] = None
 
 
 def get_registry() -> PluginRegistry:

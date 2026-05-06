@@ -14,7 +14,7 @@ import asyncio
 import contextlib
 import logging
 import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from ..base import IncomingMessage, OutgoingMessage, Platform, PlatformHandler
 
@@ -72,7 +72,7 @@ class WhatsAppHandler(PlatformHandler):
         phone_number_id: str,
         access_token: str,
         webhook_url: str,
-        verify_token: str | None = None,
+        verify_token: Optional[str] = None,
         webhook_port: int = 8080,
         **kwargs,
     ):
@@ -93,7 +93,7 @@ class WhatsAppHandler(PlatformHandler):
         )
         self.webhook_port = webhook_port
         self._app: Any = None
-        self._server_task: asyncio.Task[None] | None = None
+        self._server_task: Optional[asyncio.Task[None]] = None
 
     # ---- PlatformHandler 实现 ----
 

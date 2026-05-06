@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel
@@ -45,10 +45,10 @@ class TaskRecord:
     prompt: str
     status: TaskStatus
     created_at: str
-    started_at: str | None = None
-    completed_at: str | None = None
-    result: dict[str, Any] | None = None
-    error: str | None = None
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+    result: Optional[dict[str, Any]] = None
+    error: Optional[str] = None
     execution_time: float = 0.0
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -61,7 +61,7 @@ class TaskRecord:
 class TaskStore:
     """内存 + JSON 文件持久化的任务存储"""
 
-    def __init__(self, storage_dir: Path | None = None) -> None:
+    def __init__(self, storage_dir: Optional[Path] = None) -> None:
         self._store: dict[str, TaskRecord] = {}
         self._lock = asyncio.Lock()
         self._storage_dir = storage_dir or (Path.home() / ".omc" / "server_tasks")
@@ -98,7 +98,7 @@ class TaskStore:
             pass
 
     async def create(
-        self, prompt: str, metadata: dict[str, Any] | None = None
+        self, prompt: str, metadata: Optional[dict[str, Any]] = None
     ) -> TaskRecord:
         """创建新任务"""
         async with self._lock:
@@ -114,7 +114,7 @@ class TaskStore:
             self._save(record)
             return record
 
-    async def get(self, task_id: str) -> TaskRecord | None:
+    async def get(self, task_id: str) -> Optional[TaskRecord]:
         return self._store.get(task_id)
 
     async def list_all(self) -> list[TaskRecord]:
@@ -128,8 +128,8 @@ class TaskStore:
         self,
         task_id: str,
         status: TaskStatus,
-        result: dict[str, Any] | None = None,
-        error: str | None = None,
+        result: Optional[dict[str, Any]] = None,
+        error: Optional[str] = None,
     ) -> None:
         async with self._lock:
             if task_id not in self._store:
@@ -167,23 +167,23 @@ class TaskStore:
 class AuthContext:
     """认证上下文"""
 
-    def __init__(self, api_key: str | None) -> None:
+    def __init__(self, api_key: Optional[str]) -> None:
         self.api_key = api_key or ""
 
     @staticmethod
     def hash_key(key: str) -> str:
         return hashlib.sha256(key.encode()).hexdigest()[:16]
 
-    def verify(self, provided_key: str | None) -> bool:
+    def verify(self, provided_key: Optional[str]) -> bool:
         if not self.api_key:
             return True  # 未配置则跳过认证
         return provided_key == self.api_key
 
 
 def get_auth(
-    x_api_key: str | None = Header(None, alias="X-API-Key"),
+    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
     auth_ctx: AuthContext = Depends(lambda: AuthContext(None)),
-) -> str | None:
+) -> Optional[str]:
     """FastAPI 依赖：验证 API Key"""
     ctx = AuthContext(auth_ctx.api_key)
     if not ctx.verify(x_api_key):
@@ -248,8 +248,8 @@ async def run_agent_task(prompt: str, task_id: str, store: TaskStore) -> None:
 
 
 def create_app(
-    api_key: str | None = None,
-    store: TaskStore | None = None,
+    api_key: Optional[str] = None,
+    store: Optional[TaskStore] = None,
 ) -> tuple[FastAPI, TaskStore]:
     """创建 FastAPI 应用"""
     app = FastAPI(
@@ -274,15 +274,15 @@ def create_app(
 
     class RunRequest(BaseModel):
         prompt: str
-        metadata: dict[str, Any] | None = None
+        metadata: Optional[dict[str, Any]] = None
 
     class TaskResponse(BaseModel):
         task_id: str
         status: str
         created_at: str
         prompt: str
-        started_at: str | None = None
-        completed_at: str | None = None
+        started_at: Optional[str] = None
+        completed_at: Optional[str] = None
         execution_time: float = 0.0
         metadata: dict[str, Any] = {}
 

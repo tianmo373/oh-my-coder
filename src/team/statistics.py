@@ -10,7 +10,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 @dataclass
@@ -125,7 +125,7 @@ class TeamStatistics:
     - 数据自动清理（保留30天）
     """
 
-    def __init__(self, db_path: str | None = None):
+    def __init__(self, db_path: Optional[str] = None):
         """
         初始化
 

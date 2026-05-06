@@ -65,7 +65,7 @@ class WorkflowStep:
     agent_name: str
     description: str
     dependencies: list[str] = field(default_factory=list)  # 依赖的前序步骤
-    condition: Callable[[dict], bool] | None = None  # 执行条件
+    condition: Optional[Callable[[dict], bool]] = None  # 执行条件
     retry_count: int = 0
     timeout: float = 300.0  # 5分钟默认超时
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -83,7 +83,7 @@ class WorkflowResult:
     total_tokens: int
     total_cost: float
     execution_time: float
-    error: str | None = None
+    error: Optional[str] = None
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
     agent_names: list[str] = field(
         default_factory=list
@@ -198,9 +198,9 @@ class Orchestrator:
     def __init__(
         self,
         model_router,
-        state_dir: Path | None = None,
-        skills_dir: Path | None = None,
-        project_path: Path | None = None,
+        state_dir: Optional[Path] = None,
+        skills_dir: Optional[Path] = None,
+        project_path: Optional[Path] = None,
     ):
         """
         Args:
@@ -899,7 +899,7 @@ class Orchestrator:
                 indent=2,
             )
 
-    def load_workflow_result(self, workflow_id: str) -> WorkflowResult | None:
+    def load_workflow_result(self, workflow_id: str) -> Optional[WorkflowResult]:
         """加载工作流结果"""
         result_file = self.state_dir / f"workflow_{workflow_id}.json"
 
@@ -926,7 +926,7 @@ class Orchestrator:
         """列出活跃的工作流"""
         return list(self._active_workflows.keys())
 
-    def get_workflow_status(self, workflow_id: str) -> WorkflowResult | None:
+    def get_workflow_status(self, workflow_id: str) -> Optional[WorkflowResult]:
         """获取工作流状态"""
         return self._active_workflows.get(workflow_id)
 
