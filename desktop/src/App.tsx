@@ -542,7 +542,52 @@ export default function App() {
         setLoading(false);
         return;
       }
-      const result = await omcApi.chatSend({ message: text, model: currentModel });
+
+      // Quick fix: use direct LLM API call instead of `omc run`
+      // Get API key + endpoint for current model from SettingsPanel encrypted storage
+      let endpoint = '';
+      let apiKey = '';
+      try {
+        const stored = localStorage.getItem('omc-model-configs');
+        if (stored) {
+          // XOR decrypt (same as SettingsPanel.tsx)
+          const decoded = atob(stored);
+          let decrypted = '';
+          const key = 'omc-v1-key-2024';
+          for (let i = 0; i < decoded.length; i++) {
+            decrypted += String.fromCharCode(decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+          }
+          const configs = JSON.parse(decrypted);
+          const cfg = configs[currentModel] || {};
+          endpoint = cfg.endpoint || '';
+          apiKey = cfg.api_key || '';
+        }
+        if (!apiKey) {
+          // Fallback: legacy unencrypted omc-api-keys
+          const saved = localStorage.getItem('omc-api-keys');
+          if (saved) {
+            const entries = JSON.parse(saved);
+            const entry = entries.find(e => e.model === currentModel);
+            if (entry) apiKey = entry.apiKey;
+          }
+        }
+      } catch (e) { /* silently ignore config read errors */ }
+
+      // Fallback endpoint for common providers
+      const DEFAULT_ENDPOINTS: Record<string, string> = {
+        'glm': 'https://open.bigmodel.cn/api/paas/v4',
+        'deepseek': 'https://api.deepseek.com/v1',
+        'kimi': 'https://api.moonshot.cn/v1',
+        'doubao': 'https://ark.cn-beijing.volces.com/api/v3',
+        'minimax': 'https://api.minimax.chat/v1',
+        'baichuan': 'https://api.baichuan-ai.com/v1',
+      };
+      if (!endpoint) {
+        const provider = currentModel?.split('-')[0] || '';
+        endpoint = DEFAULT_ENDPOINTS[provider] || '';
+      }
+
+      const result = await omcApi.chatDirect({ endpoint, model: currentModel, apiKey, message: text.trim() });
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',

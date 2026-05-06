@@ -115,6 +115,67 @@ function setupIpc() {
     return ApiBridge.chatSend(event, opts);
   });
 
+  // Chat — direct LLM API call (quick fix: bypasses omc run)
+  // Payload: { endpoint, model, apiKey, message }
+  ipcMain.handle('omc:chat:direct', async (event, { endpoint, model, apiKey, message }) => {
+    try {
+      const { execFileSync } = require('child_process');
+      const { spawn } = require('child_process');
+
+      const payload = {
+        model,
+        messages: [{ role: 'user', content: message }],
+        stream: true,
+      };
+
+      // Use curl for streaming HTTP POST (cross-platform)
+      const curlCmd = [
+        'curl', '-s', '-N',
+        '-X', 'POST', endpoint,
+        '-H', 'Content-Type: application/json',
+        '-H', `Authorization: Bearer ${apiKey}`,
+        '-d', JSON.stringify(payload),
+      ];
+
+      const child = spawn(curlCmd[0], curlCmd.slice(1), {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        shell: false,
+      });
+
+      let fullResponse = '';
+
+      child.stdout.on('data', (chunk) => {
+        const text = chunk.toString();
+        fullResponse += text;
+        if (event && event.sender && !event.sender.isDestroyed()) {
+          event.sender.send('omc:chat:chunk', text);
+        }
+      });
+
+      child.stderr.on('data', (d) => {
+        if (event && event.sender && !event.sender.isDestroyed()) {
+          event.sender.send('omc:chat:error', d.toString());
+        }
+      });
+
+      return new Promise((resolve) => {
+        child.on('close', (code) => {
+          resolve({ code, stdout: fullResponse, stderr: '' });
+        });
+        child.on('error', (e) => {
+          resolve({ code: 1, stdout: '', stderr: e.message });
+        });
+        // Timeout after 60s
+        setTimeout(() => {
+          child.kill('SIGTERM');
+          resolve({ code: 124, stdout: fullResponse, stderr: 'timeout' });
+        }, 60000);
+      });
+    } catch (e) {
+      return { code: 1, stdout: '', stderr: e.message };
+    }
+  });
+
   // Config
   ipcMain.handle('omc:config:get', async () => {
     const envPath = path.join(CONFIG_PATH, '.env');

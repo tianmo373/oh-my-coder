@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('omc', {
 
   // Chat
   chatSend: (opts) => ipcRenderer.invoke('omc:chat:send', opts),
+  chatDirect: (opts) => ipcRenderer.invoke('omc:chat:direct', opts),
   onChatChunk: (cb) => {
     const h = (_, data) => cb(data);
     ipcRenderer.on('omc:chat:chunk', h);
