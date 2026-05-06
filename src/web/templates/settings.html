@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>设置 - Oh My Coder</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=20260506">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -102,6 +102,71 @@
             color: var(--text-muted);
         }
 
+        /* Add Custom Model Card */
+        .model-card-add {
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+            gap: 8px;
+        }
+        .model-card-add:hover { border-color: var(--primary); background: var(--primary-light); }
+        .model-card-add-icon { font-size: 28px; color: var(--text-muted); }
+        .model-card-add-text { font-size: 13px; color: var(--text-muted); }
+
+        /* Custom model delete button */
+        .model-card-delete {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: none;
+            background: var(--danger);
+            color: #fff;
+            font-size: 14px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .model-card-custom { position: relative; }
+        .model-card-custom:hover .model-card-delete { opacity: 1; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            width: 480px;
+            max-width: 90vw;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .modal h2 { font-size: 18px; margin-bottom: 20px; }
+        .modal .form-group { margin-bottom: 16px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
         .ollama-status {
             display: flex;
             align-items: center;
@@ -189,99 +254,394 @@
                     <div class="model-grid" id="cloudModels">
                         <div class="model-card" data-model="deepseek">
                             <div class="model-card-header">
-                                <span class="model-card-name">DeepSeek</span>
-                                <span class="badge badge-success">免费</span>
+                                <span class="model-card-name">DeepSeek V4</span>
+                                <span class="badge badge-warning">低成本</span>
                             </div>
-                            <div class="model-card-desc">性价比最高，每天 4000 万 token 免费额度</div>
+                            <div class="model-card-desc">高性能对话模型，支持函数调用</div>
+                            <div class="model-card-meta"><span>🇨🇳 国内直连</span></div>
+                        </div>
+                        <div class="model-card" data-model="deepseek-reasoner">
+                            <div class="model-card-header">
+                                <span class="model-card-name">DeepSeek R1</span>
+                                <span class="badge badge-warning">低成本</span>
+                            </div>
+                            <div class="model-card-desc">深度推理模型，适合复杂逻辑任务</div>
                             <div class="model-card-meta"><span>🇨🇳 国内直连</span></div>
                         </div>
                         <div class="model-card" data-model="glm">
                             <div class="model-card-header">
-                                <span class="model-card-name">智谱 GLM</span>
+                                <span class="model-card-name">GLM-4-Flash</span>
                                 <span class="badge badge-success">免费</span>
                             </div>
-                            <div class="model-card-desc">GLM-4.7-Flash 完全免费，国产大模型</div>
+                            <div class="model-card-desc">免费高性能，支持函数调用、视觉</div>
+                            <div class="model-card-meta"><span>🇨🇳 国内直连</span></div>
+                        </div>
+                        <div class="model-card" data-model="glm-4v">
+                            <div class="model-card-header">
+                                <span class="model-card-name">GLM-4V-Flash</span>
+                                <span class="badge badge-success">免费</span>
+                            </div>
+                            <div class="model-card-desc">免费视觉模型，支持图像理解</div>
+                            <div class="model-card-meta"><span>🇨🇳 国内直连</span></div>
+                        </div>
+                        <div class="model-card" data-model="mimo">
+                            <div class="model-card-header">
+                                <span class="model-card-name">MiMo V2 Flash</span>
+                                <span class="badge badge-success">免费</span>
+                            </div>
+                            <div class="model-card-desc">小米 MiMo，免费超长上下文（256K）</div>
                             <div class="model-card-meta"><span>🇨🇳 国内直连</span></div>
                         </div>
                         <div class="model-card" data-model="kimi">
                             <div class="model-card-header">
-                                <span class="model-card-name">Kimi</span>
+                                <span class="model-card-name">Kimi 128K</span>
                                 <span class="badge badge-warning">低成本</span>
                             </div>
-                            <div class="model-card-desc">支持超长上下文（20万字）</div>
-                            <div class="model-card-meta"><span>🇨🇳 国内直连</span></div>
-                        </div>
-                        <div class="model-card" data-model="tongyi">
-                            <div class="model-card-header">
-                                <span class="model-card-name">通义千问</span>
-                                <span class="badge badge-warning">低成本</span>
-                            </div>
-                            <div class="model-card-desc">阿里云大模型，多模态支持</div>
-                            <div class="model-card-meta"><span>🇨🇳 国内直连</span></div>
-                        </div>
-                        <div class="model-card" data-model="wenxin">
-                            <div class="model-card-header">
-                                <span class="model-card-name">文心一言</span>
-                                <span class="badge badge-warning">低成本</span>
-                            </div>
-                            <div class="model-card-desc">百度大模型，中文能力强</div>
+                            <div class="model-card-desc">月之暗面，128K 超长上下文</div>
                             <div class="model-card-meta"><span>🇨🇳 国内直连</span></div>
                         </div>
                         <div class="model-card" data-model="doubao">
                             <div class="model-card-header">
-                                <span class="model-card-name">豆包</span>
+                                <span class="model-card-name">Doubao-Pro</span>
                                 <span class="badge badge-warning">低成本</span>
                             </div>
                             <div class="model-card-desc">字节跳动大模型，性价比高</div>
+                            <div class="model-card-meta"><span>🇨🇳 国内直连</span></div>
+                        </div>
+                        <div class="model-card" data-model="tiangong">
+                            <div class="model-card-header">
+                                <span class="model-card-name">天工 3.0</span>
+                                <span class="badge badge-warning">低成本</span>
+                            </div>
+                            <div class="model-card-desc">天工大模型 3.0</div>
+                            <div class="model-card-meta"><span>🇨🇳 国内直连</span></div>
+                        </div>
+                        <div class="model-card" data-model="baichuan">
+                            <div class="model-card-header">
+                                <span class="model-card-name">百川 4</span>
+                                <span class="badge badge-warning">低成本</span>
+                            </div>
+                            <div class="model-card-desc">百川智能 4</div>
                             <div class="model-card-meta"><span>🇨🇳 国内直连</span></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- API Keys Panel -->
+                        <!-- API Keys Panel -->
             <div class="settings-panel" id="panel-apikeys">
                 <h1 class="page-title">API Keys</h1>
-                <p class="page-desc">配置各模型的 API Key，所有密钥本地存储，不会上传。</p>
+                <p class="page-desc">配置各模型供应商的 API Key。密钥仅本地存储，不会上传。</p>
 
-                <div class="card">
-                    <div class="key-row">
-                        <div class="form-group" style="margin-bottom:0">
-                            <label class="form-label">DeepSeek API Key</label>
+                <style>
+                    .provider-card { margin-bottom: 20px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+                    .provider-card-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border); }
+                    .provider-card-header .provider-info { display: flex; align-items: center; gap: 12px; }
+                    .provider-card-header .provider-emoji { font-size: 24px; }
+                    .provider-card-header .provider-name { font-weight: 700; font-size: 16px; }
+                    .provider-card-header .provider-models { font-size: 13px; color: var(--text-muted); }
+                    .provider-card-body { padding: 20px; }
+                    .provider-card-body .form-group { margin-bottom: 14px; }
+                    .provider-card-body .form-group:last-of-type { margin-bottom: 0; }
+                    .provider-card-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--bg-tertiary); border-top: 1px solid var(--border); gap: 10px; }
+                    .provider-card-footer .key-status { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); margin: 0; }
+                    .provider-card-footer .btn-group { display: flex; gap: 8px; }
+                    .provider-card-footer .btn-sm { padding: 6px 16px; font-size: 13px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text); transition: all 0.2s; }
+                    .provider-card-footer .btn-sm:hover { background: var(--bg-tertiary); }
+                    .provider-card-footer .btn-sm-save { background: var(--primary); color: #fff; border-color: var(--primary); }
+                    .provider-card-footer .btn-sm-save:hover { background: var(--primary-dark); }
+                    .provider-card-footer .btn-sm-reset { color: var(--text-muted); }
+                    .provider-card-footer .btn-sm-reset:hover { color: var(--danger); border-color: var(--danger); }
+                    .provider-card-footer .btn-sm-delete { color: var(--text-muted); }
+                    .provider-card-footer .btn-sm-delete:hover { color: #fff; background: var(--danger); border-color: var(--danger); }
+                    .provider-card.saved { border-color: var(--success); }
+                    .provider-card.saved .provider-card-footer { background: rgba(52, 211, 153, 0.05); }
+                    .provider-card.error { border-color: var(--danger); }
+                    .add-provider-card { border: 2px dashed var(--border); border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 20px; }
+                    .add-provider-card:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.03); }
+                    .add-provider-card .add-icon { font-size: 32px; color: var(--text-muted); margin-bottom: 8px; }
+                    .add-provider-card .add-text { font-size: 14px; color: var(--text-muted); }
+                    .provider-card .toggle-url { font-size: 12px; color: var(--primary); cursor: pointer; margin-bottom: 8px; display: inline-block; }
+                    .provider-card .toggle-url:hover { text-decoration: underline; }
+                    .provider-card .url-group { display: none; }
+                    .provider-card .url-group.show { display: block; }
+                    .toast-save { position: fixed; top: 20px; right: 20px; background: var(--success); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 14px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+                    .toast-save.show { opacity: 1; }
+                    .toast-save.error { background: var(--danger); }
+                </style>
+
+                <!-- DeepSeek -->
+                <div class="provider-card" id="card-deepseek" data-provider="deepseek">
+                    <div class="provider-card-header">
+                        <div class="provider-info">
+                            <span class="provider-emoji">🔮</span>
+                            <div>
+                                <div class="provider-name">DeepSeek</div>
+                                <div class="provider-models">V4 · R1（共享同一 API Key）</div>
+                            </div>
+                        </div>
+                        <span class="badge badge-low">低成本</span>
+                    </div>
+                    <div class="provider-card-body">
+                        <span class="toggle-url" onclick="toggleUrl('deepseek')">⚙️ 修改 Base URL</span>
+                        <div class="url-group" id="url-group-deepseek">
+                            <div class="form-group">
+                                <label class="form-label">Base URL</label>
+                                <input type="text" class="form-input" id="url-deepseek" value="https://api.deepseek.com/v1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
                             <input type="password" class="form-input" id="key-deepseek" placeholder="sk-xxxxxxxx">
                         </div>
+                    </div>
+                    <div class="provider-card-footer">
                         <div class="key-status"><div class="key-dot unset" id="dot-deepseek"></div><span id="status-deepseek">未配置</span></div>
-                    </div>
-                    <div class="key-row">
-                        <div class="form-group" style="margin-bottom:0">
-                            <label class="form-label">智谱 GLM API Key</label>
-                            <input type="password" class="form-input" id="key-glm" placeholder="填写 free 使用免费版">
+                        <div class="btn-group">
+                            <button class="btn-sm btn-sm-reset" onclick="resetProvider('deepseek')">重置</button>
+                            <button class="btn-sm btn-sm-save" onclick="saveProvider('deepseek')">保存</button>
                         </div>
-                        <div class="key-status"><div class="key-dot unset" id="dot-glm"></div><span id="status-glm">未配置</span></div>
                     </div>
-                    <div class="key-row">
-                        <div class="form-group" style="margin-bottom:0">
-                            <label class="form-label">Kimi API Key</label>
+                </div>
+
+                <!-- 智谱 GLM -->
+                <div class="provider-card" id="card-glm" data-provider="glm">
+                    <div class="provider-card-header">
+                        <div class="provider-info">
+                            <span class="provider-emoji">🟢</span>
+                            <div>
+                                <div class="provider-name">智谱 GLM</div>
+                                <div class="provider-models">GLM-4-Flash · GLM-4V-Flash（免费额度）</div>
+                            </div>
+                        </div>
+                        <span class="badge badge-free">免费</span>
+                    </div>
+                    <div class="provider-card-body">
+                        <span class="toggle-url" onclick="toggleUrl('glm')">⚙️ 修改 Base URL</span>
+                        <div class="url-group" id="url-group-glm">
+                            <div class="form-group">
+                                <label class="form-label">Base URL</label>
+                                <input type="text" class="form-input" id="url-glm" value="https://open.bigmodel.cn/api/paas/v4">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API Key <span style="font-size:12px;color:var(--text-muted)">（填写 free 使用免费版）</span></label>
+                            <input type="password" class="form-input" id="key-glm" placeholder="free 或 your-api-key">
+                        </div>
+                    </div>
+                    <div class="provider-card-footer">
+                        <div class="key-status"><div class="key-dot unset" id="dot-glm"></div><span id="status-glm">未配置</span></div>
+                        <div class="btn-group">
+                            <button class="btn-sm btn-sm-reset" onclick="resetProvider('glm')">重置</button>
+                            <button class="btn-sm btn-sm-save" onclick="saveProvider('glm')">保存</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 小米 MiMo -->
+                <div class="provider-card" id="card-mimo" data-provider="mimo">
+                    <div class="provider-card-header">
+                        <div class="provider-info">
+                            <span class="provider-emoji">📱</span>
+                            <div>
+                                <div class="provider-name">小米 MiMo</div>
+                                <div class="provider-models">MiMo V2 Flash（100万 token 超长上下文）</div>
+                            </div>
+                        </div>
+                        <span class="badge badge-free">免费</span>
+                    </div>
+                    <div class="provider-card-body">
+                        <span class="toggle-url" onclick="toggleUrl('mimo')">⚙️ 修改 Base URL</span>
+                        <div class="url-group" id="url-group-mimo">
+                            <div class="form-group">
+                                <label class="form-label">Base URL</label>
+                                <input type="text" class="form-input" id="url-mimo" value="https://api.xiaomimimo.com/v1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
+                            <input type="password" class="form-input" id="key-mimo" placeholder="sk-xxxxxxxx">
+                        </div>
+                    </div>
+                    <div class="provider-card-footer">
+                        <div class="key-status"><div class="key-dot unset" id="dot-mimo"></div><span id="status-mimo">未配置</span></div>
+                        <div class="btn-group">
+                            <button class="btn-sm btn-sm-reset" onclick="resetProvider('mimo')">重置</button>
+                            <button class="btn-sm btn-sm-save" onclick="saveProvider('mimo')">保存</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kimi -->
+                <div class="provider-card" id="card-kimi" data-provider="kimi">
+                    <div class="provider-card-header">
+                        <div class="provider-info">
+                            <span class="provider-emoji">🌙</span>
+                            <div>
+                                <div class="provider-name">Kimi</div>
+                                <div class="provider-models">Kimi 128K（超长上下文）</div>
+                            </div>
+                        </div>
+                        <span class="badge badge-medium">中等</span>
+                    </div>
+                    <div class="provider-card-body">
+                        <span class="toggle-url" onclick="toggleUrl('kimi')">⚙️ 修改 Base URL</span>
+                        <div class="url-group" id="url-group-kimi">
+                            <div class="form-group">
+                                <label class="form-label">Base URL</label>
+                                <input type="text" class="form-input" id="url-kimi" value="https://api.moonshot.cn/v1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
                             <input type="password" class="form-input" id="key-kimi" placeholder="sk-xxxxxxxx">
                         </div>
+                    </div>
+                    <div class="provider-card-footer">
                         <div class="key-status"><div class="key-dot unset" id="dot-kimi"></div><span id="status-kimi">未配置</span></div>
-                    </div>
-                    <div class="key-row">
-                        <div class="form-group" style="margin-bottom:0">
-                            <label class="form-label">通义千问 API Key</label>
-                            <input type="password" class="form-input" id="key-tongyi" placeholder="sk-xxxxxxxx">
+                        <div class="btn-group">
+                            <button class="btn-sm btn-sm-reset" onclick="resetProvider('kimi')">重置</button>
+                            <button class="btn-sm btn-sm-save" onclick="saveProvider('kimi')">保存</button>
                         </div>
-                        <div class="key-status"><div class="key-dot unset" id="dot-tongyi"></div><span id="status-tongyi">未配置</span></div>
                     </div>
-                    <div class="key-row">
-                        <div class="form-group" style="margin-bottom:0">
-                            <label class="form-label">文心一言 API Key</label>
-                            <input type="password" class="form-input" id="key-wenxin" placeholder="sk-xxxxxxxx">
+                </div>
+
+                <!-- 豆包 -->
+                <div class="provider-card" id="card-doubao" data-provider="doubao">
+                    <div class="provider-card-header">
+                        <div class="provider-info">
+                            <span class="provider-emoji">🫘</span>
+                            <div>
+                                <div class="provider-name">豆包</div>
+                                <div class="provider-models">Doubao-Pro-32K</div>
+                            </div>
                         </div>
-                        <div class="key-status"><div class="key-dot unset" id="dot-wenxin"></div><span id="status-wenxin">未配置</span></div>
+                        <span class="badge badge-medium">中等</span>
                     </div>
-                    <div style="margin-top:24px;">
-                        <button class="btn btn-primary" onclick="saveApiKeys()">保存 API Keys</button>
+                    <div class="provider-card-body">
+                        <span class="toggle-url" onclick="toggleUrl('doubao')">⚙️ 修改 Base URL</span>
+                        <div class="url-group" id="url-group-doubao">
+                            <div class="form-group">
+                                <label class="form-label">Base URL</label>
+                                <input type="text" class="form-input" id="url-doubao" value="https://ark.cn-beijing.volces.com/api/v3">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
+                            <input type="password" class="form-input" id="key-doubao" placeholder="sk-xxxxxxxx">
+                        </div>
+                    </div>
+                    <div class="provider-card-footer">
+                        <div class="key-status"><div class="key-dot unset" id="dot-doubao"></div><span id="status-doubao">未配置</span></div>
+                        <div class="btn-group">
+                            <button class="btn-sm btn-sm-reset" onclick="resetProvider('doubao')">重置</button>
+                            <button class="btn-sm btn-sm-save" onclick="saveProvider('doubao')">保存</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 天工 -->
+                <div class="provider-card" id="card-tiangong" data-provider="tiangong">
+                    <div class="provider-card-header">
+                        <div class="provider-info">
+                            <span class="provider-emoji">🏗️</span>
+                            <div>
+                                <div class="provider-name">天工</div>
+                                <div class="provider-models">天工 3.0</div>
+                            </div>
+                        </div>
+                        <span class="badge badge-medium">中等</span>
+                    </div>
+                    <div class="provider-card-body">
+                        <span class="toggle-url" onclick="toggleUrl('tiangong')">⚙️ 修改 Base URL</span>
+                        <div class="url-group" id="url-group-tiangong">
+                            <div class="form-group">
+                                <label class="form-label">Base URL</label>
+                                <input type="text" class="form-input" id="url-tiangong" value="https://model-platform.tiangong.cn/v1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
+                            <input type="password" class="form-input" id="key-tiangong" placeholder="sk-xxxxxxxx">
+                        </div>
+                    </div>
+                    <div class="provider-card-footer">
+                        <div class="key-status"><div class="key-dot unset" id="dot-tiangong"></div><span id="status-tiangong">未配置</span></div>
+                        <div class="btn-group">
+                            <button class="btn-sm btn-sm-reset" onclick="resetProvider('tiangong')">重置</button>
+                            <button class="btn-sm btn-sm-save" onclick="saveProvider('tiangong')">保存</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 百川 -->
+                <div class="provider-card" id="card-baichuan" data-provider="baichuan">
+                    <div class="provider-card-header">
+                        <div class="provider-info">
+                            <span class="provider-emoji">🌊</span>
+                            <div>
+                                <div class="provider-name">百川</div>
+                                <div class="provider-models">百川 4</div>
+                            </div>
+                        </div>
+                        <span class="badge badge-medium">中等</span>
+                    </div>
+                    <div class="provider-card-body">
+                        <span class="toggle-url" onclick="toggleUrl('baichuan')">⚙️ 修改 Base URL</span>
+                        <div class="url-group" id="url-group-baichuan">
+                            <div class="form-group">
+                                <label class="form-label">Base URL</label>
+                                <input type="text" class="form-input" id="url-baichuan" value="https://api.baichuan-ai.com/v1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
+                            <input type="password" class="form-input" id="key-baichuan" placeholder="sk-xxxxxxxx">
+                        </div>
+                    </div>
+                    <div class="provider-card-footer">
+                        <div class="key-status"><div class="key-dot unset" id="dot-baichuan"></div><span id="status-baichuan">未配置</span></div>
+                        <div class="btn-group">
+                            <button class="btn-sm btn-sm-reset" onclick="resetProvider('baichuan')">重置</button>
+                            <button class="btn-sm btn-sm-save" onclick="saveProvider('baichuan')">保存</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom provider cards -->
+                <div id="customProviderCards"></div>
+
+                <!-- Add custom provider -->
+                <div class="add-provider-card" onclick="openAddProviderModal()">
+                    <div class="add-icon">+</div>
+                    <div class="add-text">添加其他 OpenAI 兼容供应商</div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:4px">支持任何 OpenAI API 兼容的模型</div>
+                </div>
+
+                <!-- Add Provider Modal -->
+                <div id="addProviderModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9999;display:none;justify-content:center;align-items:center" onclick="closeAddProviderModal()">
+                    <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:16px;padding:32px;width:500px;max-width:90vw" onclick="event.stopPropagation()">
+                        <h3 style="margin:0 0 24px;font-size:18px">添加自定义供应商</h3>
+                        <div class="form-group">
+                            <label class="form-label">供应商名称 <span style="color:var(--danger)">*</span></label>
+                            <input type="text" class="form-input" id="new-provider-name" placeholder="例如：OpenAI、Claude、本地 Ollama">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">模型 ID <span style="color:var(--danger)">*</span></label>
+                            <input type="text" class="form-input" id="new-provider-model" placeholder="例如：gpt-4o、claude-3.5-sonnet、qwen2.5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Base URL <span style="color:var(--danger)">*</span></label>
+                            <input type="text" class="form-input" id="new-provider-url" placeholder="https://api.openai.com/v1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
+                            <input type="password" class="form-input" id="new-provider-key" placeholder="sk-xxxxxxxx（本地模型可留空）">
+                        </div>
+                        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px">
+                            <button class="btn btn-secondary" onclick="closeAddProviderModal()">取消</button>
+                            <button class="btn btn-primary" onclick="addCustomProvider()">添加</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -295,12 +655,15 @@
                     <div class="form-group">
                         <label class="form-label">默认模型</label>
                         <select class="form-select" id="default-model">
-                            <option value="deepseek">DeepSeek (推荐)</option>
-                            <option value="glm">智谱 GLM</option>
-                            <option value="kimi">Kimi</option>
-                            <option value="tongyi">通义千问</option>
-                            <option value="wenxin">文心一言</option>
-                            <option value="doubao">豆包</option>
+                            <option value="deepseek">DeepSeek V4 (推荐·低成本)</option>
+                            <option value="deepseek-reasoner">DeepSeek R1 (深度推理)</option>
+                            <option value="glm">GLM-4-Flash (免费)</option>
+                            <option value="glm-4v">GLM-4V-Flash (免费·视觉)</option>
+                            <option value="mimo">MiMo V2 Flash (免费)</option>
+                            <option value="kimi">Kimi 128K (低成本)</option>
+                            <option value="doubao">Doubao-Pro (低成本)</option>
+                            <option value="tiangong">天工 3.0 (低成本)</option>
+                            <option value="baichuan">百川 4 (低成本)</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -418,8 +781,8 @@
             if (card) {
                 document.querySelectorAll('.model-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
-                localStorage.setItem('selected-model', card.dataset.model);
-                showToast(`已选择: ${card.dataset.model}`);
+            } else if (!e.target.closest('.modal') && !e.target.closest('.model-card-add') && !e.target.closest('.model-card-delete')) {
+                document.querySelectorAll('.model-card').forEach(c => c.classList.remove('selected'));
             }
         });
 
@@ -430,16 +793,18 @@
                 const data = await res.json();
                 const models = data.models || {};
                 // Update key statuses
-                ['deepseek', 'glm', 'kimi', 'tongyi', 'wenxin'].forEach(k => {
+                const providers = ['deepseek', 'glm', 'mimo', 'kimi', 'doubao', 'tiangong', 'baichuan']; providers.forEach(k => {
                     const m = models[k];
                     const dot = document.getElementById('dot-' + k);
                     const status = document.getElementById('status-' + k);
                     const input = document.getElementById('key-' + k);
+                    const urlInput = document.getElementById('url-' + k);
                     if (m && m.has_key) {
                         if (dot) { dot.className = 'key-dot set'; }
                         if (status) { status.textContent = '已配置 (' + (m.api_key_masked || '****') + ')'; }
                         if (input) { input.placeholder = m.api_key_masked || '已配置'; }
                     }
+                    if (m && m.base_url && urlInput) { urlInput.value = m.base_url; }
                 });
                 // Defaults
                 const defaults = data.defaults || {};
@@ -455,12 +820,107 @@
         }
         loadSettings();
 
-        // Save API Keys
+                // Provider config
+        const PROVIDERS = [
+            { id: 'deepseek', defaultUrl: 'https://api.deepseek.com/v1' },
+            { id: 'glm', defaultUrl: 'https://open.bigmodel.cn/api/paas/v4' },
+            { id: 'mimo', defaultUrl: 'https://api.xiaomimimo.com/v1' },
+            { id: 'kimi', defaultUrl: 'https://api.moonshot.cn/v1' },
+            { id: 'doubao', defaultUrl: 'https://ark.cn-beijing.volces.com/api/v3' },
+            { id: 'tiangong', defaultUrl: 'https://model-platform.tiangong.cn/v1' },
+            { id: 'baichuan', defaultUrl: 'https://api.baichuan-ai.com/v1' },
+        ];
+
+        // Toggle Base URL visibility
+        function toggleUrl(id) {
+            const group = document.getElementById('url-group-' + id);
+            if (group) group.classList.toggle('show');
+        }
+
+        // Toast notification
+        function showToastSmall(msg, type) {
+            let t = document.querySelector('.toast-save');
+            if (!t) { t = document.createElement('div'); t.className = 'toast-save'; document.body.appendChild(t); }
+            t.textContent = msg;
+            t.className = 'toast-save' + (type === 'error' ? ' error' : '');
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        // Save single provider
+        async function saveProvider(id) {
+            const card = document.getElementById('card-' + id);
+            const keyInput = document.getElementById('key-' + id);
+            const urlInput = document.getElementById('url-' + id);
+            const keyVal = keyInput?.value?.trim();
+            const urlVal = urlInput?.value?.trim();
+            const conf = {};
+            if (keyVal) conf.api_key = keyVal;
+            if (urlVal) conf.base_url = urlVal;
+            if (Object.keys(conf).length === 0) {
+                showToastSmall('请填写 API Key', 'error');
+                return;
+            }
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ models: { [id]: conf } })
+                });
+                if (res.ok) {
+                    card.classList.add('saved');
+                    showToastSmall('✅ ' + id + ' 已保存');
+                    setTimeout(() => card.classList.remove('saved'), 2000);
+                    loadSettings();
+                } else {
+                    showToastSmall('保存失败', 'error');
+                }
+            } catch (e) {
+                showToastSmall('保存失败: ' + e.message, 'error');
+            }
+        }
+
+        // Reset single provider
+        function resetProvider(id) {
+            const keyInput = document.getElementById('key-' + id);
+            const urlInput = document.getElementById('url-' + id);
+            if (keyInput) { keyInput.value = ''; keyInput.placeholder = 'sk-xxxxxxxx'; }
+            if (urlInput) {
+                const p = PROVIDERS.find(x => x.id === id);
+                if (p) urlInput.value = p.defaultUrl;
+            }
+            const dot = document.getElementById('dot-' + id);
+            const status = document.getElementById('status-' + id);
+            if (dot) dot.className = 'key-dot unset';
+            if (status) status.textContent = '未配置';
+            // Also delete from backend
+            fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ models: { [id]: { api_key: '', base_url: '' } } })
+            });
+            showToastSmall('已重置 ' + id);
+        }
+
+        // Save all providers at once
         async function saveApiKeys() {
             const keys = {};
-            ['deepseek', 'glm', 'kimi', 'tongyi', 'wenxin'].forEach(k => {
-                const v = document.getElementById('key-' + k)?.value;
-                if (v) keys[k] = { api_key: v };
+            PROVIDERS.forEach(p => {
+                const keyVal = document.getElementById('key-' + p.id)?.value?.trim();
+                const urlVal = document.getElementById('url-' + p.id)?.value?.trim();
+                const conf = {};
+                if (keyVal) conf.api_key = keyVal;
+                if (urlVal) conf.base_url = urlVal;
+                if (Object.keys(conf).length > 0) keys[p.id] = conf;
+            });
+            // Include custom providers
+            getCustomProviders().forEach(cp => {
+                const keyVal = document.getElementById('key-custom-' + cp.id)?.value?.trim();
+                const urlVal = document.getElementById('url-custom-' + cp.id)?.value?.trim();
+                const conf = {};
+                if (keyVal) conf.api_key = keyVal;
+                if (urlVal) conf.base_url = urlVal;
+                if (Object.keys(conf).length > 0) keys['custom_' + cp.id] = conf;
             });
             try {
                 const res = await fetch('/api/settings', {
@@ -468,10 +928,132 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ models: keys })
                 });
-                if (res.ok) { showToast('API Keys 已保存'); loadSettings(); }
-                else showToast('保存失败', 'error');
-            } catch (e) { showToast('保存失败: ' + e.message, 'error'); }
+                if (res.ok) { showToastSmall('✅ 所有 API Keys 已保存'); loadSettings(); }
+                else showToastSmall('保存失败', 'error');
+            } catch (e) { showToastSmall('保存失败: ' + e.message, 'error'); }
         }
+
+        // Custom Providers
+        const CUSTOM_PROVIDERS_KEY = 'omc-custom-providers';
+
+        function getCustomProviders() {
+            try { return JSON.parse(localStorage.getItem(CUSTOM_PROVIDERS_KEY) || '[]'); } catch { return []; }
+        }
+        function saveCustomProviders(providers) {
+            localStorage.setItem(CUSTOM_PROVIDERS_KEY, JSON.stringify(providers));
+        }
+
+        function openAddProviderModal() {
+            document.getElementById('addProviderModal').style.display = 'flex';
+        }
+        function closeAddProviderModal() {
+            document.getElementById('addProviderModal').style.display = 'none';
+            ['new-provider-name', 'new-provider-model', 'new-provider-url', 'new-provider-key'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+        }
+
+        function addCustomProvider() {
+            const name = document.getElementById('new-provider-name').value.trim();
+            const model = document.getElementById('new-provider-model').value.trim();
+            const url = document.getElementById('new-provider-url').value.trim();
+            const key = document.getElementById('new-provider-key').value.trim();
+            if (!name || !model || !url) {
+                showToastSmall('请填写必填项', 'error');
+                return;
+            }
+            const id = 'cp-' + Date.now();
+            const providers = getCustomProviders();
+            providers.push({ id, name, model, url, key });
+            saveCustomProviders(providers);
+            renderCustomProviders();
+            closeAddProviderModal();
+            showToastSmall('✅ 已添加 ' + name);
+        }
+
+        function deleteCustomProvider(id) {
+            const providers = getCustomProviders().filter(p => p.id !== id);
+            saveCustomProviders(providers);
+            renderCustomProviders();
+            showToastSmall('已删除');
+        }
+
+        function saveCustomProvider(id) {
+            const keyVal = document.getElementById('key-custom-' + id)?.value?.trim();
+            const urlVal = document.getElementById('url-custom-' + id)?.value?.trim();
+            const conf = {};
+            if (keyVal) conf.api_key = keyVal;
+            if (urlVal) conf.base_url = urlVal;
+            if (Object.keys(conf).length === 0) {
+                showToastSmall('请填写 API Key', 'error');
+                return;
+            }
+            fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ models: { ['custom_' + id]: conf } })
+            }).then(r => {
+                if (r.ok) {
+                    const card = document.getElementById('card-custom-' + id);
+                    if (card) card.classList.add('saved');
+                    showToastSmall('✅ 已保存');
+                    setTimeout(() => card?.classList.remove('saved'), 2000);
+                }
+            });
+        }
+
+        function resetCustomProvider(id) {
+            const keyInput = document.getElementById('key-custom-' + id);
+            const urlInput = document.getElementById('url-custom-' + id);
+            if (keyInput) { keyInput.value = ''; keyInput.placeholder = 'sk-xxxxxxxx'; }
+            const providers = getCustomProviders();
+            const p = providers.find(x => x.id === id);
+            if (p && urlInput) urlInput.value = p.url;
+            showToastSmall('已重置');
+        }
+
+        function renderCustomProviders() {
+            const container = document.getElementById('customProviderCards');
+            const providers = getCustomProviders();
+            container.innerHTML = providers.map(p => `
+                <div class="provider-card" id="card-custom-${p.id}" data-provider="custom:${p.id}">
+                    <div class="provider-card-header">
+                        <div class="provider-info">
+                            <span class="provider-emoji">🔌</span>
+                            <div>
+                                <div class="provider-name">${esc(p.name)}</div>
+                                <div class="provider-models">${esc(p.model)}</div>
+                            </div>
+                        </div>
+                        <span class="badge badge-info">自定义</span>
+                    </div>
+                    <div class="provider-card-body">
+                        <div class="form-group">
+                            <label class="form-label">Base URL</label>
+                            <input type="text" class="form-input" id="url-custom-${p.id}" value="${esc(p.url)}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
+                            <input type="password" class="form-input" id="key-custom-${p.id}" placeholder="sk-xxxxxxxx" value="${esc(p.key || '')}">
+                        </div>
+                    </div>
+                    <div class="provider-card-footer">
+                        <div class="key-status"><div class="key-dot ${p.key ? 'set' : 'unset'}" id="dot-custom-${p.id}"></div><span id="status-custom-${p.id}">${p.key ? '已配置' : '未配置'}</span></div>
+                        <div class="btn-group">
+                            <button class="btn-sm btn-sm-delete" onclick="deleteCustomProvider('${p.id}')">删除</button>
+                            <button class="btn-sm btn-sm-reset" onclick="resetCustomProvider('${p.id}')">重置</button>
+                            <button class="btn-sm btn-sm-save" onclick="saveCustomProvider('${p.id}')">保存</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            // Update default model dropdown
+            updateDefaultModelDropdown(providers.map(p => ({ id: 'custom:' + p.id, name: p.name })));
+        }
+
+        // Initialize custom providers
+        renderCustomProviders();
 
         // Save Preferences
         async function savePreferences() {
@@ -497,6 +1079,40 @@
             const card = document.querySelector(`[data-model="${lastModel}"]`);
             if (card) card.classList.add('selected');
         }
+
     </script>
+
+    <!-- Add Custom Model Modal -->
+    <div class="modal-overlay" id="addModelModal" onclick="closeAddModelModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h2>➕ 添加自定义模型</h2>
+            <form id="addModelForm" onsubmit="event.preventDefault();addCustomModel()">
+                <div class="form-group">
+                    <label class="form-label">模型名称 *</label>
+                    <input type="text" class="form-input" id="newModelName" placeholder="例: GPT-4o" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">提供商</label>
+                    <input type="text" class="form-input" id="newModelProvider" placeholder="例: OpenAI">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">API 地址 *</label>
+                    <input type="text" class="form-input" id="newModelEndpoint" placeholder="https://api.openai.com/v1/chat/completions" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">模型 ID</label>
+                    <input type="text" class="form-input" id="newModelId" placeholder="例: gpt-4o（留空则从 API 地址推断）">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">API Key</label>
+                    <input type="password" class="form-input" id="newModelApiKey" placeholder="sk-xxxxxxxx（可选）">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeAddModelModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

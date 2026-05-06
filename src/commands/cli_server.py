@@ -130,9 +130,9 @@ def start(
             f"  [green]Host:[/]  {host}\n"
             f"  [green]Port:[/]  {port}\n"
             + (
-                "  [yellow]Auth:[/]  API Key 已启用[/yellow]\n"
+                "  [yellow]Auth:[/]  API Key 已启用\n"
                 if effective_key
-                else "  [dim]Auth:[/]  无认证[/dim]\n"
+                else "  [dim]Auth:[/]  无认证\n"
             ),
             border_style="cyan",
         )
