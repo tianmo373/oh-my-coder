@@ -117,4 +117,4 @@ MIT - See Oh My Coder main repository for details.
 ## Contributing
 
 This is a community template. Improvements welcome!
-See [CONTRIBUTING.md](../../../CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](../../../../CONTRIBUTING.md) for guidelines.
