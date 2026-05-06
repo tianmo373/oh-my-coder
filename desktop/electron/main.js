@@ -240,6 +240,22 @@ function setupIpc() {
       return { ok: false, exists: false };
     }
   });
+
+  // Model Config Test
+  ipcMain.handle('omc:model:config:test', async (_, { modelId, config }) => {
+    try {
+      // Simple validation: check if API key looks valid
+      const { api_key, base_url } = config || {};
+      if (!api_key || api_key.length < 10) {
+        return { ok: false, msg: 'API Key is too short or missing' };
+      }
+      // TODO: Actually test the connection by making a request to the provider
+      // For now, just validate key format
+      return { ok: true, msg: 'Key format looks valid (live test not implemented)' };
+    } catch (e) {
+      return { ok: false, msg: e.message || 'Test failed' };
+    }
+  });
 }
 
 // ── Window ───────────────────────────────────────────────────────────────────

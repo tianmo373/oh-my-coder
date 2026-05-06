@@ -49,4 +49,7 @@ contextBridge.exposeInMainWorld('omc', {
     ipcRenderer.on('navigate', h);
     return () => ipcRenderer.removeListener('navigate', h);
   },
+
+  // Model Config Test
+  modelConfigTest: (modelId, config) => ipcRenderer.invoke('omc:model:config:test', { modelId, config }),
 });
