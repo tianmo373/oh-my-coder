@@ -651,6 +651,7 @@ class ModelRouter:
         messages: list[Message],
         complexity: str = "medium",
         use_cache: bool = True,
+        override_model: Optional[str] = None,
         **kwargs,
     ) -> ModelResponse:
         """
@@ -660,29 +661,59 @@ class ModelRouter:
         1. 缓存相同消息的响应
         2. 故障转移：主模型失败自动切换备用
         3. 任务类型识别：自动降级/升级 tier
+        4. override_model：用户指定模型时直接使用，忽略自动选择
         """
-        # 1. 检查缓存
+        # 0. 处理用户指定的模型覆盖
+        forced_provider: Optional[str] = None
+        forced_tier: Optional[str] = None
+        if override_model:
+            mapped = self._MODEL_ID_TO_PROVIDER.get(override_model)
+            if mapped:
+                # 自定义模型或已知模型 ID → 映射到 provider
+                forced_provider = mapped
+                forced_tier = "high"  # 自定义/指定模型统一用 high tier
+                logger.info(f"使用用户指定模型: {override_model} → {forced_provider}")
+            else:
+                # 完全未知的模型 ID → 尝试直接作为 provider 名
+                if override_model in self._models:
+                    forced_provider = override_model
+                    forced_tier = "high"
+                    logger.info(f"使用用户指定 provider: {override_model}")
+                else:
+                    logger.warning(f"未知的 override_model: {override_model}，忽略")
+
+        # 1. 检查缓存（不区分 override，相同消息返回相同响应）
         if use_cache and self._cache:
             cached = self._cache.get(messages)
             if cached:
                 logger.info(f"使用缓存响应（task={task_type}）")
                 return cached
 
-        # 2. 选择模型
-        decision = self.select(task_type, complexity)
+        # 2. 选择模型（用户指定时跳过自动选择）
+        if forced_provider and forced_tier:
+            decision = RoutingDecision(
+                task_type=task_type,
+                selected_provider=forced_provider,
+                selected_tier=forced_tier,
+                reason=f"用户指定模型: {override_model}",
+                estimated_cost=0.0,
+            )
+        else:
+            decision = self.select(task_type, complexity)
 
-        # 3. 获取模型实例（变量未使用，仅用于调试）
-        # model = self._models[decision.selected_provider][decision.selected_tier]
-
-        # 4. 故障转移：按 fallback 顺序尝试（仅已初始化的 provider）
-        fallback_order = [
-            p
-            for p in self.config.fallback_order
-            if p in self._models and decision.selected_tier in self._models[p]
-        ]
-        # 确保当前选择的在最前
-        if decision.selected_provider not in fallback_order:
-            fallback_order.insert(0, decision.selected_provider)
+        # 3. 故障转移：按 fallback 顺序尝试（仅已初始化的 provider）
+        # 用户指定模型时，只用该模型，不 failover
+        if forced_provider:
+            fallback_order = [forced_provider] if forced_provider in self._models else []
+        else:
+            fallback_order = [
+                p
+                for p in self.config.fallback_order
+                if p in self._models and decision.selected_tier in self._models[p]
+            ]
+            # 确保当前选择的在最前
+            if decision.selected_provider not in fallback_order:
+                fallback_order.insert(0, decision.selected_provider)
 
         last_error: Optional[Exception] = None
         rate_limited_providers: list[str] = []
