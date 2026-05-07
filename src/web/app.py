@@ -740,6 +740,8 @@ async def get_settings():
         raw_key = _m.get("api_key", "")
         _m["api_key_masked"] = _mask_key(raw_key)
         _m["has_key"] = bool(raw_key)
+        # 保留原始 key 供前端回填（localhost 安全）
+        # 不删除 api_key 字段，前端需要回填到 input
     return JSONResponse(settings)
 
 
