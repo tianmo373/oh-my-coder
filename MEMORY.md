@@ -1,21 +1,22 @@
 # MEMORY.md — 长期记忆
 
-> 最后更新：2026-05-06
+> 最后更新：2026-05-07
 
 ---
 
 ## 🛡️ CI/CD 核心原则
 
-### 本地 ≠ CI
-CI 是干净环境，本地有缓存/残留。本地通过不代表 CI 绿。
-
-### 提交前检查清单
+### 代码修改后必须执行的流水线（铁律）
 ```bash
+# 任何代码修改后，按顺序执行，缺一不可：
 python3 -m ruff check . --fix    # 1. 全面检查+自动修复（整个项目，不是单个文件）
 python3 -m ruff check .          # 2. 验证无错误
 python3 -m pytest tests/ -q      # 3. 测试通过
-git add -A && git push
+git add -A && git commit && git push  # 4. 提交推送
 ```
+
+### 本地 ≠ CI
+CI 是干净环境，本地有缓存/残留。本地通过不代表 CI 绿。
 
 ### 常见 CI 问题
 
@@ -59,6 +60,28 @@ def foo(x: Union[Path, str]) -> Optional[ModuleInfo]: ...
 - 循环未使用变量加下划线 `for x, _url in items`
 - import 块必须排序
 
+### 2. 为什么 78 个错误会积累？（2026/05/07）⭐⭐⭐
+**根因分析**：
+1. **pre-commit hook 形同虚设** — 配置了 `language: system`，但很多提交绕过了 hook（GitHub Web UI、部分 git 客户端、AI 生成代码直接写文件）
+2. **没有 CI 自动拦截** — 没有 GitHub Actions 在 PR 时跑 ruff check，错误可以合入主分支
+3. **AI 写代码不跑 lint** — 我和其他 AI agent 生成代码后没有验证就提交，截断的文件（cli_stats.py、t3_write_summary.py）直接入库
+4. **只修单文件不查全量** — 之前的教训（5/5）只修了当时出错的文件，没有定期全量扫描
+5. **没有写后即检的习惯** — 代码写完 → 应该立即 lint → 但实际是写完就提交了
+
+**解法**：
+- **铁律**：任何代码修改后必须跑 `ruff check . --fix && ruff check . && pytest`
+- **AI 写代码后必须验证**：写完文件后立即 `ruff check <file>`，截断的文件会报 syntax error
+- **定期全量扫描**：每周至少一次 `ruff check .` 全量检查，不让错误积累
+- **考虑加 GitHub Actions**：PR 必须过 ruff check 才能合入
+
+### 3. --unsafe-fixes 的陷阱（2026/05/07）⭐⭐
+ruff 的 `--unsafe-fixes` 会把 `Optional[str]` 改成 `str | None`，这是 Python 3.10+ 语法。项目 target 是 3.9 时，这会直接报 SyntaxError。
+
+**规则**：
+- `--fix` 是安全的，可以放心用
+- `--unsafe-fixes` 必须人工审查改动，不能盲目用
+- ruff.toml 中已 ignore UP045 的项目不受影响，但新项目/example 要注意
+
 ### 2. 改代码必须同步文档（2026/05/06）⭐⭐⭐
 改了代码就 grep 一遍文档，旧值必须清零。详细规则见 `rules/doc-sync-rule.md`。
 
@@ -78,7 +101,7 @@ def foo(x: Union[Path, str]) -> Optional[ModuleInfo]: ...
 
 ### oh-my-coder (CLI)
 https://github.com/VOBC/oh-my-coder
-- **测试**: 1029 passed, 40 skipped, 2 warnings
+- **测试**: 1120 passed, 52 skipped, 17 warnings
 - **完成**: P2-7 社区模板、P2-8 Monorepo、ShellCheck 全绿、Python 3.9 兼容性
 - **待完成**: P2-1 自动测试增强、P2-2 成本优化建议（`omc cost`）
 
@@ -88,4 +111,4 @@ https://github.com/VOBC/oh-my-coder
 
 ---
 
-_最后更新：2026-05-06 压缩记忆，删除过时内容_
+_最后更新：2026-05-07 更新教训 + 项目进度_
