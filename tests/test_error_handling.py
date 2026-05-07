@@ -257,7 +257,7 @@ class TestRouterHTTPErrorFailover:
     @pytest.mark.asyncio
     async def test_all_providers_401_raises_no_model_available(self):
         """所有 provider 都返回 401 应抛 NoModelAvailableError"""
-        config = RouterConfig(deepseek_api_key="test_key")
+        config = RouterConfig(deepseek_api_key="test_key", fallback_order=["deepseek"])
         router = ModelRouter(config)
 
         http_error_401 = _make_http_error(401, "Invalid API key")
@@ -278,7 +278,7 @@ class TestRouterHTTPErrorFailover:
     @pytest.mark.asyncio
     async def test_all_providers_500_raises_no_model_available(self):
         """所有 provider 都返回 500 应抛 NoModelAvailableError"""
-        config = RouterConfig(deepseek_api_key="test_key")
+        config = RouterConfig(deepseek_api_key="test_key", fallback_order=["deepseek"])
         router = ModelRouter(config)
 
         http_error_500 = _make_http_error(500, "Internal Server Error")
@@ -297,7 +297,7 @@ class TestRouterHTTPErrorFailover:
     @pytest.mark.asyncio
     async def test_retry_succeeds_on_second_attempt(self):
         """500 第一次失败、第二次成功应正常返回"""
-        config = RouterConfig(deepseek_api_key="test_key")
+        config = RouterConfig(deepseek_api_key="test_key", fallback_order=["deepseek"])
         router = ModelRouter(config)
 
         http_error_500 = _make_http_error(500, "Temporary Error")
@@ -445,7 +445,7 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_network_timeout_retries_3_times(self):
         """网络超时（非 HTTP 错误）应重试 3 次"""
-        config = RouterConfig(deepseek_api_key="test_key")
+        config = RouterConfig(deepseek_api_key="test_key", fallback_order=["deepseek"])
         router = ModelRouter(config)
 
         deepseek_model = router._models.get("deepseek", {}).get("low")
@@ -465,7 +465,7 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_429_vs_500_retry_difference(self):
         """429 只调 1 次，500 重试 3 次 — 行为必须不同"""
-        config = RouterConfig(deepseek_api_key="test_key")
+        config = RouterConfig(deepseek_api_key="test_key", fallback_order=["deepseek"])
         router = ModelRouter(config)
 
         # === 429 场景 ===
@@ -506,7 +506,7 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_messages_still_routes(self):
         """空消息列表仍能正确路由（不 crash）"""
-        config = RouterConfig(deepseek_api_key="test_key")
+        config = RouterConfig(deepseek_api_key="test_key", fallback_order=["deepseek"])
         router = ModelRouter(config)
 
         success_response = _make_success_response("Empty OK")

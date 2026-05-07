@@ -218,6 +218,23 @@ PASS / FAIL / NEED_FIX
                 outputs[agent_name] = f"[ERROR] {output.error}"
         return outputs
 
+    async def call_model(
+        self,
+        task_type: str,
+        messages: list,
+        complexity: str = "medium",
+        use_cache: bool = True,
+        **kwargs,
+    ):
+        """调用模型路由器"""
+        return await self.model_router.route_and_call(
+            task_type=task_type,
+            messages=messages,
+            complexity=complexity,
+            use_cache=use_cache,
+            **kwargs,
+        )
+
     def _build_validation_messages(
         self,
         workflow_name: str,
