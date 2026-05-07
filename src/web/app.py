@@ -139,6 +139,19 @@ class TaskManager:
             except Exception:
                 pass  # Queue full, skip
 
+    def delete_task(self, task_id: str) -> bool:
+        if task_id not in self._tasks:
+            return False
+        # Close queue if exists
+        queue = self._queues.pop(task_id, None)
+        if queue:
+            try:
+                queue.put_nowait(None)  # Sentinel to close SSE
+            except Exception:
+                pass
+        del self._tasks[task_id]
+        return True
+
     def get_task(self, task_id: str) -> Optional[dict]:
         return self._tasks.get(task_id)
 
@@ -323,6 +336,22 @@ async def get_task(task_id: str):
     return JSONResponse(task)
 
 
+@app.delete("/api/tasks/{task_id}")
+async def delete_task(task_id: str):
+    """删除任务"""
+    if not task_manager.delete_task(task_id):
+        raise HTTPException(status_code=404, detail="Task not found")
+    return JSONResponse({"status": "deleted"})
+
+
+@app.get("/api/history")
+async def api_history():
+    """获取任务历史（兼容 history.html）"""
+    tasks = task_manager.list_tasks()
+    tasks.sort(key=lambda t: t.get("started_at", ""), reverse=True)
+    return JSONResponse({"records": tasks})
+
+
 @app.post("/api/execute")
 async def execute_task(background: BackgroundTasks, payload: Optional[dict] = None):
     """
@@ -451,10 +480,24 @@ async def run_task(
                 wf_result.steps_failed.append(agent_name)
                 task_manager.update_step(task_id, agent_name, "failed", "执行超时")
                 task_manager._tasks[task_id]["stats"]["steps_failed"].append(agent_name)
-            except Exception:
+            except Exception as e:
                 wf_result.steps_failed.append(agent_name)
+                # 提取用户友好的错误信息
+                err_str = str(e)
+                if "429" in err_str or "Too Many Requests" in err_str:
+                    error_msg = "API 限流 (429)，请稍后重试或切换模型"
+                elif "401" in err_str or "Unauthorized" in err_str:
+                    error_msg = "API Key 无效或已过期，请检查设置"
+                elif "403" in err_str or "Forbidden" in err_str:
+                    error_msg = "API 访问被拒绝，请检查 API Key 权限"
+                elif "timeout" in err_str.lower() or "超时" in err_str:
+                    error_msg = "API 请求超时，请稍后重试"
+                elif "NoModelAvailable" in type(e).__name__:
+                    error_msg = f"所有模型均不可用: {err_str[:150]}"
+                else:
+                    error_msg = f"{type(e).__name__}: {err_str[:200]}"
                 task_manager.update_step(
-                    task_id, agent_name, "failed", "Agent 执行失败"
+                    task_id, agent_name, "failed", error_msg
                 )
                 task_manager._tasks[task_id]["stats"]["steps_failed"].append(agent_name)
 

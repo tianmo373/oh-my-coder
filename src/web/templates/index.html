@@ -354,6 +354,11 @@
             </form>
         </div>
 
+        <!-- Dynamic Step Progress (for non-standard workflows) -->
+        <div id="stepProgress" style="display:none;margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;">
+            <div id="stepProgressInner" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
+        </div>
+
         <!-- Response (hidden) -->
         <div id="responseSection" class="response-container" style="display:none;">
             <div class="response-tabs">
@@ -531,6 +536,9 @@
             ['explore','analyst','architect','executor','verifier'].forEach(s => {
                 state.stepStatus[s] = 'waiting'; state.stepOutputs[s] = ''; setStepStatus(s, 'waiting');
             });
+            // 清空动态步骤进度
+            const dsi = document.getElementById('stepProgressInner');
+            if (dsi) dsi.innerHTML = '';
         }
         function advancePipeline(step) {
             const steps = ['explore','analyst','architect','executor','verifier'];
@@ -569,11 +577,78 @@
             es.onmessage = e => { try { handleSSE(JSON.parse(e.data)); } catch(err) {} };
             es.onerror = () => { es.close(); };
         }
+        // 动态步骤名称映射
+        const STEP_LABELS = {
+            'explore': '🔍 探索', 'analyst': '🧠 分析', 'architect': '🏗️ 设计',
+            'executor': '💻 实现', 'verifier': '✅ 验证',
+            'code-reviewer': '🔍 代码审查', 'security-reviewer': '🛡️ 安全审查',
+            'code-simplifier': '✂️ 代码简化', 'planner': '📋 规划',
+            'critic': '🔎 批判分析', 'writer': '📝 文档',
+            'performance': '⚡ 性能分析', 'database': '🗄️ 数据库审查',
+        };
+        function getStepLabel(step) { return STEP_LABELS[step] || `🤖 ${step}`; }
+
+        function updateDynamicStep(step, status) {
+            const el = document.getElementById('stepProgressInner');
+            if (!el) return;
+            // 找到或创建这个步骤的标签
+            let tag = el.querySelector(`[data-step="${step}"]`);
+            if (!tag) {
+                tag = document.createElement('span');
+                tag.setAttribute('data-step', step);
+                tag.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:500;transition:all 0.3s;';
+                el.appendChild(tag);
+            }
+            tag.textContent = getStepLabel(step);
+            if (status === 'active') {
+                tag.style.background = 'var(--primary-light)'; tag.style.color = 'var(--primary)'; tag.style.border = '1px solid var(--primary)';
+                tag.innerHTML = getStepLabel(step) + ' <span style="width:14px;height:14px;border:2px solid var(--primary);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;"></span>';
+            } else if (status === 'completed') {
+                tag.style.background = 'rgba(16,185,129,0.1)'; tag.style.color = '#10b981'; tag.style.border = '1px solid #10b981';
+                tag.textContent = '✅ ' + getStepLabel(step).replace(/^[^\s]+ /, '');
+            } else if (status === 'failed') {
+                tag.style.background = 'rgba(239,68,68,0.1)'; tag.style.color = '#ef4444'; tag.style.border = '1px solid #ef4444';
+                tag.textContent = '❌ ' + getStepLabel(step).replace(/^[^\s]+ /, '');
+            }
+        }
+
         function handleSSE(d) {
             const { type, step, content, stats } = d;
-            if (type === 'step_active') { setStepStatus(step, 'active'); }
-            else if (type === 'step_completed') { state.stepOutputs[step] = content || ''; advancePipeline(step); }
-            else if (type === 'step_failed') { setStepStatus(step, 'failed'); }
+            if (type === 'step_active') {
+                setStepStatus(step, 'active');
+                updateDynamicStep(step, 'active');
+                // 确保响应区域可见
+                if (document.getElementById('responseSection').style.display === 'none') {
+                    document.getElementById('responseSection').style.display = 'block';
+                    document.getElementById('stepProgress').style.display = 'block';
+                }
+                // 自动切换到当前步骤的面板
+                const panel = document.getElementById(`panel-${step}`);
+                if (panel) {
+                    document.querySelectorAll('.response-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.response-panel').forEach(p => p.classList.remove('active'));
+                    // 尝试点击对应的tab
+                    const tab = document.querySelector(`[data-tab="${step}"]`);
+                    if (tab) { tab.classList.add('active'); panel.classList.add('active'); }
+                    else { document.querySelector('[data-tab="result"]').classList.add('active'); document.getElementById('panel-result').classList.add('active'); }
+                }
+            }
+            else if (type === 'step_completed') {
+                state.stepOutputs[step] = content || '';
+                advancePipeline(step);
+                updateDynamicStep(step, 'completed');
+                // 实时更新面板内容
+                const panel = document.getElementById(`panel-${step}`);
+                if (panel) panel.innerHTML = `<div class="markdown-body">${md(content || '')}</div>`;
+            }
+            else if (type === 'step_failed') {
+                setStepStatus(step, 'failed');
+                updateDynamicStep(step, 'failed');
+                showToast(`❌ ${step} 失败: ${content || '未知错误'}`, 'error');
+                // 在面板显示错误
+                const panel = document.getElementById(`panel-${step}`);
+                if (panel) panel.innerHTML = `<div style="color:var(--danger);padding:16px;">❌ <b>${step}</b> 执行失败:<br><pre style="margin-top:8px;white-space:pre-wrap;font-size:13px;">${content || '未知错误'}</pre></div>`;
+            }
             else if (type === 'complete') { state.result = d.result || d; renderResult(); }
             else if (type === 'error') { showToast(`执行失败: ${content}`, 'error'); stopRunning(); }
         }
@@ -581,16 +656,50 @@
         // ===== Render =====
         function renderResult() {
             document.getElementById('responseSection').style.display = 'block';
+            document.getElementById('stepProgress').style.display = 'block';
             stopRunning();
             const r = state.result;
-            document.getElementById('panel-result').innerHTML = `<div class="markdown-body">${md(r?.result || r)}</div>`;
+            const stats = r?.stats;
+            const hasFailures = stats?.steps_failed?.length > 0;
+            const allFailed = stats?.steps_failed?.length > 0 && stats?.steps_completed?.length === 0;
+
+            // 主结果面板
+            let resultHtml = '';
+            if (allFailed) {
+                resultHtml = `<div style="text-align:center;padding:40px 20px;">
+                    <div style="font-size:48px;margin-bottom:16px;">❌</div>
+                    <h3 style="color:var(--danger);margin-bottom:8px;">任务执行失败</h3>
+                    <p style="color:var(--text-muted);">所有步骤均失败，请检查 API 配置后重试</p>
+                    ${stats?.steps_failed?.map(s => `<div style="margin-top:12px;padding:8px 16px;background:var(--bg-secondary);border-radius:8px;display:inline-block;font-size:13px;">❌ ${s}: ${state.stepOutputs[s] || '未知错误'}</div>`).join('')}
+                </div>`;
+            } else if (hasFailures) {
+                resultHtml = `<div class="markdown-body">${md(r?.result || '')}</div>
+                    <div style="margin-top:16px;padding:12px 16px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;">
+                        <b style="color:var(--danger);">⚠️ 部分步骤失败：</b>
+                        ${stats?.steps_failed?.map(s => `<div style="margin-top:6px;font-size:13px;">❌ <b>${s}</b>: ${state.stepOutputs[s] || '未知错误'}</div>`).join('')}
+                    </div>`;
+            } else {
+                resultHtml = `<div class="markdown-body">${md(r?.result || r)}</div>`;
+            }
+            document.getElementById('panel-result').innerHTML = resultHtml;
+
+            // 各步骤面板
             ['explore','analyst','architect','executor','verifier'].forEach(s => {
                 const p = document.getElementById(`panel-${s}`);
-                if (p) p.innerHTML = `<div class="markdown-body">${md(state.stepOutputs[s] || r?.outputs?.[s]?.result)}</div>`;
+                if (p && !p.querySelector('pre')) { // 不覆盖已有的错误信息
+                    p.innerHTML = `<div class="markdown-body">${md(state.stepOutputs[s] || r?.outputs?.[s]?.result)}</div>`;
+                }
             });
-            renderStats(r?.stats);
+
+            renderStats(stats);
             document.querySelector('[data-tab="result"]').click();
-            showToast('执行完成！🎉', 'success');
+            if (allFailed) {
+                showToast('❌ 任务执行失败，请检查 API 配置', 'error');
+            } else if (hasFailures) {
+                showToast('⚠️ 任务完成，部分步骤失败', 'error');
+            } else {
+                showToast('执行完成！🎉', 'success');
+            }
         }
         function renderStats(stats) {
             const p = document.getElementById('panel-stats');
@@ -601,7 +710,20 @@
                     <div class="stat-card"><div class="stat-value">${stats.execution_time||0}s</div><div class="stat-label">执行时间</div></div>
                     <div class="stat-card"><div class="stat-value">¥${(stats.total_cost||0).toFixed(4)}</div><div class="stat-label">估算成本</div></div>
                     <div class="stat-card"><div class="stat-value">${(stats.steps_completed||[]).length}/${stats.steps_total||5}</div><div class="stat-label">完成步骤</div></div>
+                </div>
+                <div style="text-align:right;margin-top:8px;">
+                    <button class="btn btn-ghost btn-sm" onclick="deleteCurrentTask()" style="color:var(--danger);font-size:13px;">🗑️ 删除此任务</button>
+                    <a href="/history" class="btn btn-ghost btn-sm" style="font-size:13px;margin-left:8px;">📋 查看全部历史</a>
                 </div>`;
+        }
+        async function deleteCurrentTask() {
+            if (!state.currentTask) return;
+            if (!confirm('确定要删除这个任务吗？')) return;
+            try {
+                await fetch(`/api/tasks/${state.currentTask}`, { method: 'DELETE' });
+                document.getElementById('responseSection').style.display = 'none';
+                showToast('已删除', 'info');
+            } catch (e) {}
         }
 
         // ===== Form Submit =====
@@ -624,7 +746,7 @@
                     })
                 });
                 const data = await res.json();
-                if (data.status === 'started') { showToast('任务已启动', 'info', 2000); startSSE(data.task_id); }
+                if (data.status === 'started') { state.currentTask = data.task_id; showToast('任务已启动', 'info', 2000); startSSE(data.task_id); }
                 else if (data.status === 'success') { state.result = data.result; renderResult(); }
                 else { showToast(data.message || '执行失败', 'error'); stopRunning(); }
             } catch (err) { showToast(`网络错误: ${err.message}`, 'error'); stopRunning(); }

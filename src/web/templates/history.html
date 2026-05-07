@@ -65,6 +65,11 @@
             white-space: nowrap;
         }
         .empty-state { padding: 80px 24px; }
+        .btn-delete-task {
+            background: none; border: none; cursor: pointer; font-size: 16px;
+            opacity: 0.4; transition: all 0.2s; padding: 4px; border-radius: 4px;
+        }
+        .btn-delete-task:hover { opacity: 1; background: rgba(239,68,68,0.1); }
 
         @media (max-width: 768px) {
             .history-item-title { max-width: 100%; }
@@ -101,6 +106,7 @@
         <div class="history-toolbar">
             <input type="text" class="history-search" id="searchInput" placeholder="🔍 搜索任务...">
             <button class="btn btn-ghost btn-sm" onclick="loadHistory()">刷新</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearAllTasks()" style="color:var(--danger);">清除全部</button>
         </div>
 
         <div class="history-list" id="historyList">
@@ -155,10 +161,13 @@
                             ? '<span class="badge badge-danger">失败</span>'
                             : '<span class="badge badge-muted">' + status + '</span>';
                     return `
-                        <div class="history-item">
+                        <div class="history-item" data-task-id="${r.task_id}">
                             <div class="history-item-header">
                                 <span class="history-item-title">${r.task || r.task_id}</span>
-                                ${statusBadge}
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    ${statusBadge}
+                                    <button class="btn-delete-task" onclick="event.stopPropagation();deleteTask('${r.task_id}')" title="删除任务">🗑️</button>
+                                </div>
                             </div>
                             <div class="history-item-meta">
                                 <span>🕐 ${r.started_at || '-'}</span>
@@ -183,6 +192,39 @@
         });
 
         loadHistory();
+
+        // Delete task
+        async function deleteTask(taskId) {
+            if (!confirm('确定要删除这个任务吗？')) return;
+            try {
+                const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    const item = document.querySelector(`[data-task-id="${taskId}"]`);
+                    if (item) { item.style.opacity = '0'; item.style.transform = 'translateX(20px)'; setTimeout(() => item.remove(), 300); }
+                    setTimeout(() => { if (!document.querySelector('.history-item')) loadHistory(); }, 400);
+                } else {
+                    alert('删除失败');
+                }
+            } catch (e) {
+                alert('删除失败: ' + e.message);
+            }
+        }
+
+        // Clear all tasks
+        async function clearAllTasks() {
+            if (!confirm('确定要清除所有任务记录吗？此操作不可恢复。')) return;
+            try {
+                const res = await fetch('/api/tasks');
+                const data = await res.json();
+                const tasks = data.tasks || [];
+                for (const t of tasks) {
+                    await fetch(`/api/tasks/${t.task_id}`, { method: 'DELETE' });
+                }
+                loadHistory();
+            } catch (e) {
+                alert('清除失败: ' + e.message);
+            }
+        }
     </script>
 </body>
 </html>

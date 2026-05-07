@@ -702,9 +702,13 @@ class ModelRouter:
             decision = self.select(task_type, complexity)
 
         # 3. 故障转移：按 fallback 顺序尝试（仅已初始化的 provider）
-        # 用户指定模型时，只用该模型，不 failover
+        # 用户指定模型时，优先使用该模型，失败后自动降级到默认 fallback
         if forced_provider:
             fallback_order = [forced_provider] if forced_provider in self._models else []
+            # 添加默认 fallback 作为降级选项（排除已添加的）
+            for p in self.config.fallback_order:
+                if p not in fallback_order and p in self._models and decision.selected_tier in self._models[p]:
+                    fallback_order.append(p)
         else:
             fallback_order = [
                 p
