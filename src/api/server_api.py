@@ -243,6 +243,30 @@ async def run_agent_task(prompt: str, task_id: str, store: TaskStore) -> None:
 
 
 # =============================================================================
+# 请求/响应模型（必须在模块顶层定义，避免 Pydantic v2 + Python 3.9 前向引用 bug）
+# =============================================================================
+
+
+class RunRequest(BaseModel):
+    prompt: str
+    metadata: Optional[dict[str, Any]] = None
+
+
+class TaskResponse(BaseModel):
+    task_id: str
+    status: str
+    created_at: str
+    prompt: str
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+    execution_time: float = 0.0
+    metadata: dict[str, Any] = {}
+
+    class Config:
+        from_attributes = True
+
+
+# =============================================================================
 # FastAPI App
 # =============================================================================
 
@@ -267,27 +291,6 @@ def create_app(
     _store = store or TaskStore()
     _auth = AuthContext(api_key)
     _app_state: dict[str, Any] = {"store": _store, "auth": _auth}
-
-    # ---------------------------------------------------------------------------
-    # 请求模型
-    # ---------------------------------------------------------------------------
-
-    class RunRequest(BaseModel):
-        prompt: str
-        metadata: Optional[dict[str, Any]] = None
-
-    class TaskResponse(BaseModel):
-        task_id: str
-        status: str
-        created_at: str
-        prompt: str
-        started_at: Optional[str] = None
-        completed_at: Optional[str] = None
-        execution_time: float = 0.0
-        metadata: dict[str, Any] = {}
-
-        class Config:
-            from_attributes = True
 
     # ---------------------------------------------------------------------------
     # 路由
