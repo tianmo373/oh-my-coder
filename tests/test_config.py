@@ -9,7 +9,7 @@
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pytest
 
@@ -32,14 +32,14 @@ class ConfigManager:
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
         self.config_file.write_text(json.dumps(cfg, indent=2, ensure_ascii=False))
 
-    def get(self, key: str, model: str | None = None) -> Any:
+    def get(self, key: str, model: Optional[str] = None) -> Any:
         """获取配置项"""
         cfg = self._load()
         if model:
             return cfg.get("models", {}).get(model, {}).get(key)
         return cfg.get(key)
 
-    def set(self, key: str, value: Any, model: str | None = None) -> None:
+    def set(self, key: str, value: Any, model: Optional[str] = None) -> None:
         """设置配置项"""
         cfg = self._load()
         if model:
@@ -52,7 +52,7 @@ class ConfigManager:
             cfg[key] = value
         self._save(cfg)
 
-    def delete(self, key: str, model: str | None = None) -> None:
+    def delete(self, key: str, model: Optional[str] = None) -> None:
         """删除配置项"""
         cfg = self._load()
         if model:
@@ -67,7 +67,7 @@ class ConfigManager:
         cfg = self._load()
         return list(cfg.get("models", {}).keys())
 
-    def get_all(self, model: str | None = None) -> dict[str, Any]:
+    def get_all(self, model: Optional[str] = None) -> dict[str, Any]:
         """获取所有配置或指定模型的配置"""
         cfg = self._load()
         if model:
