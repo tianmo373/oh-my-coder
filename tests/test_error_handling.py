@@ -297,7 +297,7 @@ class TestRouterHTTPErrorFailover:
     @pytest.mark.asyncio
     async def test_retry_succeeds_on_second_attempt(self):
         """500 第一次失败、第二次成功应正常返回"""
-        config = RouterConfig(deepseek_api_key="test_key", fallback_order=["deepseek"])
+        config = RouterConfig(deepseek_api_key="test_key")
         router = ModelRouter(config)
 
         http_error_500 = _make_http_error(500, "Temporary Error")
@@ -506,7 +506,7 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_messages_still_routes(self):
         """空消息列表仍能正确路由（不 crash）"""
-        config = RouterConfig(deepseek_api_key="test_key", fallback_order=["deepseek"])
+        config = RouterConfig(deepseek_api_key="test_key")
         router = ModelRouter(config)
 
         success_response = _make_success_response("Empty OK")
