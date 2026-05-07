@@ -10,7 +10,6 @@ A minimal agent that demonstrates:
 
 import os
 import sys
-from typing import Optional
 
 import httpx
 from pydantic import BaseModel, Field
@@ -28,7 +27,7 @@ class WeatherResult(BaseModel):
     city: str = Field(description="City name")
     temperature: str = Field(description="Current temperature")
     condition: str = Field(description="Weather condition")
-    humidity: Optional[str] = Field(default=None, description="Humidity percentage")
+    humidity: str | None = Field(default=None, description="Humidity percentage")
 
 
 @tool(description="Get current weather for a city")
@@ -64,7 +63,7 @@ def get_weather(city: str) -> str:
 class WeatherAgent(Agent):
     """A simple weather query agent."""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         super().__init__()
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not self.api_key:
