@@ -2,8 +2,7 @@
 文件统计结果的数据模型定义。
 """
 
-from dataclasses import dataclass, field, asdict
-from typing import Dict, List
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -16,7 +15,7 @@ class FileStats:
     size: int = 0
     """文件总大小（字节）"""
 
-    files: List[str] = field(default_factory=list)
+    files: list[str] = field(default_factory=list)
     """文件路径列表（相对于项目根目录）"""
 
 
@@ -33,13 +32,13 @@ class StatsResult:
     total_size: int = 0
     """总大小（字节）"""
 
-    by_type: Dict[str, FileStats] = field(default_factory=dict)
+    by_type: dict[str, FileStats] = field(default_factory=dict)
     """按文件类型分类的统计结果"""
 
-    by_directory: Dict[str, int] = field(default_factory=dict)
+    by_directory: dict[str, int] = field(default_factory=dict)
     """按目录分类的文件数量"""
 
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     """统计过程中遇到的错误列表"""
 
     root_path: str = ""
@@ -90,27 +89,27 @@ class StatsResult:
         """生成人类可读的统计报告。"""
         lines = []
         lines.append("=" * 50)
-        lines.append(f"📊 项目文件统计报告")
+        lines.append("📊 项目文件统计报告")
         lines.append("=" * 50)
         lines.append(f"根目录: {self.root_path}")
-        lines.append(f"")
+        lines.append("")
         lines.append(f"📁 总目录数: {self.total_dirs}")
         lines.append(f"📄 总文件数: {self.total_files}")
         lines.append(f"💾 总大小:   {self._format_size(self.total_size)}")
-        lines.append(f"")
+        lines.append("")
 
         if self.by_type:
-            lines.append(f"📂 按文件类型统计:")
+            lines.append("📂 按文件类型统计:")
             lines.append(f"{'类型':<25} {'数量':>8} {'大小':>12}")
             lines.append("-" * 47)
             for file_type, stats in self.by_type.items():
                 lines.append(
                     f"{file_type:<25} {stats.count:>8} {self._format_size(stats.size):>12}"
                 )
-            lines.append(f"")
+            lines.append("")
 
         if self.by_directory:
-            lines.append(f"📁 按目录统计 (Top 20):")
+            lines.append("📁 按目录统计 (Top 20):")
             lines.append(f"{'目录':<40} {'数量':>8}")
             lines.append("-" * 48)
             for i, (directory, count) in enumerate(self.by_directory.items()):
@@ -118,7 +117,7 @@ class StatsResult:
                     lines.append(f"{'... (更多)':<40}")
                     break
                 lines.append(f"{directory:<40} {count:>8}")
-            lines.append(f"")
+            lines.append("")
 
         if self.errors:
             lines.append(f"⚠️ 统计过程中的错误 ({len(self.errors)}):")
@@ -126,7 +125,7 @@ class StatsResult:
                 lines.append(f"  - {err}")
             if len(self.errors) > 5:
                 lines.append(f"  ... 还有 {len(self.errors) - 5} 个错误")
-            lines.append(f"")
+            lines.append("")
 
         lines.append("=" * 50)
         return "\n".join(lines)

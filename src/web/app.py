@@ -7,7 +7,6 @@ Web 界面入口 - FastAPI 应用
 
 import asyncio
 import json as _json
-import os
 import re
 import shutil
 import subprocess
@@ -17,7 +16,6 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
-from urllib.parse import urlparse
 
 import uvicorn
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
@@ -95,7 +93,7 @@ def _preprocess_target(target: str, target_type: str, task_id: str) -> tuple:
                 shutil.rmtree(tmp_dir, ignore_errors=True)
                 raise RuntimeError(f"git clone 失败: {result.stderr.strip()[:200]}")
             return str(tmp_dir), f"\n\n## 源代码来源\nGitHub 仓库: {target}\n已克隆到: {tmp_dir}"
-        except Exception as e:
+        except Exception:
             shutil.rmtree(tmp_dir, ignore_errors=True)
             raise
 
@@ -484,7 +482,7 @@ async def save_report(payload: Optional[dict] = None):
         f"- **模型**: {task.get('model', '-')}",
         f"- **工作流**: {task.get('workflow', '-')}",
         f"- **项目路径**: {task.get('project_path', '-')}\n",
-        f"## 统计\n",
+        "## 统计\n",
         f"- Tokens: {task.get('stats', {}).get('total_tokens', 0)}",
         f"- 执行时间: {task.get('stats', {}).get('execution_time', 0)}s",
         f"- 成本: ¥{task.get('stats', {}).get('total_cost', 0):.4f}",

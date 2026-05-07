@@ -4,8 +4,9 @@ T3: 撰写 Hacker News 首页内容总结
 基于分类结果，生成一段 200-300 字的自然语言总结。
 """
 
-from .t2_classify_posts import ClassificationResult, classify_all_posts
 from .t1_extract_posts import extract_posts
+from .t2_classify_posts import ClassificationResult, classify_all_posts
+
 
 def generate_summary(result: ClassificationResult) -> str:
     """
@@ -19,24 +20,24 @@ def generate_summary(result: ClassificationResult) -> str:
     """
     hot_posts = result.hot_posts
     categories = result.categories
-    
+
     # 找出最热门的帖子
     top_post = hot_posts[0] if hot_posts else result.posts[0]
     second_post = hot_posts[1] if len(hot_posts) > 1 else None
-    
+
     # 统计各类别帖子数量
     category_counts = {cat: len(posts) for cat, posts in categories.items()}
     top_categories = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)[:3]
-    
+
     # 构建总结
     summary_parts = []
-    
+
     # 开头：整体介绍
     summary_parts.append(
         f"Hacker News 首页今日呈现了{len(result.posts)}条热门科技动态，"
         f"涵盖硬件、AI、开源、编程、安全等多个领域。"
     )
-    
+
     # 核心热门话题
     if top_post:
         summary_parts.append(
@@ -45,14 +46,14 @@ def generate_summary(result: ClassificationResult) -> str:
             f"获得了{top_post.points}点赞和{top_post.comments}条评论，"
             f"成为今日焦点。"
         )
-    
+
     if second_post:
         summary_parts.append(
             f"紧随其后的是「{second_post.title}」"
             f"（来自{second_post.source}），"
             f"同样引发了社区的热烈讨论。"
         )
-    
+
     # 类别分布
     if top_categories:
         cat_names = {
@@ -68,7 +69,7 @@ def generate_summary(result: ClassificationResult) -> str:
         summary_parts.append(
             f"从主题分布看，{category_text}是今日讨论最活跃的领域。"
         )
-    
+
     # 有趣发现
     unique_posts = [p for p in result.posts if p not in hot_posts and p.points > 100]
     if unique_posts:
@@ -79,15 +80,15 @@ def generate_summary(result: ClassificationResult) -> str:
             f"虽然排名不高，但获得了{interesting.points}点赞，"
             f"值得关注。"
         )
-    
+
     # 整体趋势
     ai_related = len(categories.get("ai_ml", []))
     if ai_related > 3:
         summary_parts.append(
-            f"整体来看，AI和编程话题持续占据主导地位，"
-            f"反映出技术社区对前沿工具和开发效率的持续关注。"
+            "整体来看，AI和编程话题持续占据主导地位，"
+            "反映出技术社区对前沿工具和开发效率的持续关注。"
         )
-    
+
     return "".join(summary_parts)
 
 def main(raw_content: str) -> str:
@@ -151,4 +152,8 @@ if __name__ == "__main__":
 328 points by unforgivenpasta 18 hours ago | hide | 329 comments
 22. Show HN: Agent-skills-eval – Test whether Agent Skills improve outputs ( github.com/darkrishabh )
 32 points by darkrishabh 5 hours ago | hide | 9 comments
-23. From
+23. From local to global: scaling governance for AI ( nature.com )\n15 points by ai_governance 30 minutes ago | hide | 2 comments\n"""
+
+    result = classify_all_posts(extract_posts(test_content))
+    summary = generate_summary(result)
+    print(summary)

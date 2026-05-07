@@ -4,8 +4,8 @@ T2: 对 Hacker News 帖子进行主题分类和热点识别
 根据标题和来源，判断每篇帖子的核心领域，并标记热门帖子。
 """
 
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
+
 from .t1_extract_posts import Post
 
 # 定义分类类别
@@ -37,17 +37,17 @@ def classify_post(post: Post) -> list[str]:
     title_lower = post.title.lower()
     source_lower = post.source.lower()
     text = f"{title_lower} {source_lower}"
-    
+
     matched_categories = []
     for category, keywords in CATEGORIES.items():
         for keyword in keywords:
             if keyword in text:
                 matched_categories.append(category)
                 break
-    
+
     if not matched_categories:
         matched_categories.append("other")
-    
+
     return matched_categories
 
 
@@ -70,7 +70,7 @@ def classify_all_posts(posts: list[Post]) -> ClassificationResult:
     """
     categories: dict[str, list[Post]] = {}
     hot_posts: list[Post] = []
-    
+
     for post in posts:
         # 分类
         matched = classify_post(post)
@@ -78,11 +78,11 @@ def classify_all_posts(posts: list[Post]) -> ClassificationResult:
             if cat not in categories:
                 categories[cat] = []
             categories[cat].append(post)
-        
+
         # 热门识别
         if post.points > 500 or post.comments > 200:
             hot_posts.append(post)
-    
+
     return ClassificationResult(
         posts=posts,
         categories=categories,
@@ -92,12 +92,12 @@ def classify_all_posts(posts: list[Post]) -> ClassificationResult:
 def print_classification(result: ClassificationResult) -> None:
     """打印分类结果"""
     print("=== 分类结果 ===\n")
-    
+
     for category, posts in sorted(result.categories.items()):
         print(f"\n--- {category} ({len(posts)} 条) ---")
         for post in posts:
             print(f"  {post.rank}. {post.title}")
-    
+
     print("\n\n=== 热门话题 (点赞 > 500 或评论 > 200) ===\n")
     for post in result.hot_posts:
         print(f"  {post.rank}. {post.title} (点赞: {post.points}, 评论: {post.comments})")
@@ -105,7 +105,7 @@ def print_classification(result: ClassificationResult) -> None:
 if __name__ == "__main__":
     # 测试分类
     from .t1_extract_posts import extract_posts
-    
+
     test_content = """
 1. Valve releases Steam Controller CAD files under Creative Commons license ( digitalfoundry.net )
 1505 points by haunter 20 hours ago | hide | 496 comments

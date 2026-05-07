@@ -6,16 +6,16 @@
 
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Optional
 
 from .models import FileStats, StatsResult
 
 
 def _is_excluded(
     path: Path,
-    exclude_dirs: Set[str],
-    exclude_files: Set[str],
-    exclude_extensions: Set[str],
+    exclude_dirs: set[str],
+    exclude_files: set[str],
+    exclude_extensions: set[str],
 ) -> bool:
     """检查路径是否应被排除。
 
@@ -121,9 +121,9 @@ def _get_file_type(path: Path) -> str:
 
 def count_files(
     root_path: str | Path,
-    exclude_dirs: Optional[Set[str]] = None,
-    exclude_files: Optional[Set[str]] = None,
-    exclude_extensions: Optional[Set[str]] = None,
+    exclude_dirs: Optional[set[str]] = None,
+    exclude_files: Optional[set[str]] = None,
+    exclude_extensions: Optional[set[str]] = None,
     follow_symlinks: bool = False,
     max_depth: Optional[int] = None,
 ) -> StatsResult:
@@ -248,13 +248,13 @@ def count_files(
     total_files = 0
     total_dirs = 0
     total_size = 0
-    by_type: Dict[str, FileStats] = {}
-    by_directory: Dict[str, int] = {}
-    errors: List[str] = []
+    by_type: dict[str, FileStats] = {}
+    by_directory: dict[str, int] = {}
+    errors: list[str] = []
 
     # 使用栈进行深度优先遍历（避免递归深度限制）
     # 栈元素: (路径, 当前深度)
-    stack: List[Tuple[Path, int]] = [(root, 0)]
+    stack: list[tuple[Path, int]] = [(root, 0)]
 
     while stack:
         current_path, current_depth = stack.pop()
@@ -303,7 +303,7 @@ def count_files(
                             by_directory[parent_dir] = 0
                         by_directory[parent_dir] += 1
 
-        except PermissionError as e:
+        except PermissionError:
             errors.append(f"权限不足，跳过目录: {current_path}")
         except OSError as e:
             errors.append(f"访问错误，跳过目录: {current_path} - {e}")
