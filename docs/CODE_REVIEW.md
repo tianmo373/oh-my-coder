@@ -215,7 +215,6 @@ bandit -r src/ -ll
 - [架构设计](./dev/architecture.md)
 - [开发规范](./dev/development-report.md)
 - [测试指南](./dev/testing.md)
-- [安全策略](../SECURITY.md)
 
 ---
 
