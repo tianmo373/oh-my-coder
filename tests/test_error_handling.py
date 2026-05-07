@@ -257,42 +257,62 @@ class TestRouterHTTPErrorFailover:
     @pytest.mark.asyncio
     async def test_all_providers_401_raises_no_model_available(self):
         """所有 provider 都返回 401 应抛 NoModelAvailableError"""
-        config = RouterConfig(deepseek_api_key="test_key", fallback_order=["deepseek"])
+        config = RouterConfig(
+            deepseek_api_key="test_key",
+            glm_api_key="test_glm_key",
+        )
         router = ModelRouter(config)
 
         http_error_401 = _make_http_error(401, "Invalid API key")
 
         deepseek_model = router._models.get("deepseek", {}).get("low")
-        if deepseek_model:
+        glm_model = router._models.get("glm", {}).get("low")
+
+        if deepseek_model and glm_model:
             with patch.object(
                 deepseek_model, "generate", new_callable=AsyncMock
             ) as mock_ds:
                 mock_ds.side_effect = http_error_401
 
-                messages = [Message(role="user", content="test")]
-                with pytest.raises(NoModelAvailableError) as exc_info:
-                    await router.route_and_call(TaskType.EXPLORE, messages)
+                with patch.object(
+                    glm_model, "generate", new_callable=AsyncMock
+                ) as mock_glm:
+                    mock_glm.side_effect = http_error_401
 
-                assert "不可用" in str(exc_info.value) or "401" in str(exc_info.value)
+                    messages = [Message(role="user", content="test")]
+                    with pytest.raises(NoModelAvailableError) as exc_info:
+                        await router.route_and_call(TaskType.EXPLORE, messages)
+
+                    assert "不可用" in str(exc_info.value) or "401" in str(exc_info.value)
 
     @pytest.mark.asyncio
     async def test_all_providers_500_raises_no_model_available(self):
         """所有 provider 都返回 500 应抛 NoModelAvailableError"""
-        config = RouterConfig(deepseek_api_key="test_key", fallback_order=["deepseek"])
+        config = RouterConfig(
+            deepseek_api_key="test_key",
+            glm_api_key="test_glm_key",
+        )
         router = ModelRouter(config)
 
         http_error_500 = _make_http_error(500, "Internal Server Error")
 
         deepseek_model = router._models.get("deepseek", {}).get("low")
-        if deepseek_model:
+        glm_model = router._models.get("glm", {}).get("low")
+
+        if deepseek_model and glm_model:
             with patch.object(
                 deepseek_model, "generate", new_callable=AsyncMock
             ) as mock_ds:
                 mock_ds.side_effect = http_error_500
 
-                messages = [Message(role="user", content="test")]
-                with pytest.raises(NoModelAvailableError):
-                    await router.route_and_call(TaskType.EXPLORE, messages)
+                with patch.object(
+                    glm_model, "generate", new_callable=AsyncMock
+                ) as mock_glm:
+                    mock_glm.side_effect = http_error_500
+
+                    messages = [Message(role="user", content="test")]
+                    with pytest.raises(NoModelAvailableError):
+                        await router.route_and_call(TaskType.EXPLORE, messages)
 
     @pytest.mark.asyncio
     async def test_retry_succeeds_on_second_attempt(self):
@@ -445,63 +465,93 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_network_timeout_retries_3_times(self):
         """网络超时（非 HTTP 错误）应重试 3 次"""
-        config = RouterConfig(deepseek_api_key="test_key", fallback_order=["deepseek"])
+        # 需要同时 mock 所有 provider，否则会 failover
+        config = RouterConfig(
+            deepseek_api_key="test_key",
+            glm_api_key="test_glm_key",
+        )
         router = ModelRouter(config)
 
         deepseek_model = router._models.get("deepseek", {}).get("low")
-        if deepseek_model:
+        glm_model = router._models.get("glm", {}).get("low")
+
+        if deepseek_model and glm_model:
             with patch.object(
                 deepseek_model, "generate", new_callable=AsyncMock
             ) as mock_ds:
                 mock_ds.side_effect = httpx.ConnectTimeout("Connection timed out")
 
-                messages = [Message(role="user", content="test")]
-                with pytest.raises(NoModelAvailableError):
-                    await router.route_and_call(TaskType.EXPLORE, messages)
+                with patch.object(
+                    glm_model, "generate", new_callable=AsyncMock
+                ) as mock_glm:
+                    mock_glm.side_effect = httpx.ConnectTimeout("Connection timed out")
 
-                # 网络错误也应重试 3 次
-                assert mock_ds.call_count == 3
+                    messages = [Message(role="user", content="test")]
+                    with pytest.raises(NoModelAvailableError):
+                        await router.route_and_call(TaskType.EXPLORE, messages)
+
+                    # 网络错误也应重试 3 次
+                    assert mock_ds.call_count == 3
+                    # glm 也应该被尝试
+                    assert mock_glm.call_count == 3
 
     @pytest.mark.asyncio
     async def test_429_vs_500_retry_difference(self):
         """429 只调 1 次，500 重试 3 次 — 行为必须不同"""
-        config = RouterConfig(deepseek_api_key="test_key", fallback_order=["deepseek"])
+        # 需要同时 mock 所有 provider
+        config = RouterConfig(
+            deepseek_api_key="test_key",
+            glm_api_key="test_glm_key",
+        )
         router = ModelRouter(config)
 
         # === 429 场景 ===
         http_error_429 = _make_http_error(429, "Rate limit")
         deepseek_model = router._models.get("deepseek", {}).get("low")
-        if deepseek_model:
+        glm_model = router._models.get("glm", {}).get("low")
+
+        if deepseek_model and glm_model:
             with patch.object(
                 deepseek_model, "generate", new_callable=AsyncMock
             ) as mock_ds_429:
                 mock_ds_429.side_effect = http_error_429
 
-                messages = [Message(role="user", content="test")]
-                with pytest.raises(RateLimitError):
-                    await router.route_and_call(TaskType.EXPLORE, messages)
+                with patch.object(
+                    glm_model, "generate", new_callable=AsyncMock
+                ) as mock_glm_429:
+                    mock_glm_429.side_effect = http_error_429
 
-                calls_429 = mock_ds_429.call_count
+                    messages = [Message(role="user", content="test")]
+                    with pytest.raises(RateLimitError):
+                        await router.route_and_call(TaskType.EXPLORE, messages)
 
-        # === 500 场景 ===
-        http_error_500 = _make_http_error(500, "Server Error")
-        deepseek_model = router._models.get("deepseek", {}).get("low")
-        if deepseek_model:
+                    calls_429_ds = mock_ds_429.call_count
+                    calls_429_glm = mock_glm_429.call_count
+
+            # === 500 场景 ===
+            http_error_500 = _make_http_error(500, "Server Error")
             with patch.object(
                 deepseek_model, "generate", new_callable=AsyncMock
             ) as mock_ds_500:
                 mock_ds_500.side_effect = http_error_500
 
-                messages = [Message(role="user", content="test")]
-                with pytest.raises(NoModelAvailableError):
-                    await router.route_and_call(TaskType.EXPLORE, messages)
+                with patch.object(
+                    glm_model, "generate", new_callable=AsyncMock
+                ) as mock_glm_500:
+                    mock_glm_500.side_effect = http_error_500
 
-                calls_500 = mock_ds_500.call_count
+                    messages = [Message(role="user", content="test")]
+                    with pytest.raises(NoModelAvailableError):
+                        await router.route_and_call(TaskType.EXPLORE, messages)
 
-        # 429 调用 1 次，500 调用 3 次
-        if deepseek_model:
-            assert calls_429 == 1, f"429 should call 1 time, got {calls_429}"
-            assert calls_500 == 3, f"500 should call 3 times, got {calls_500}"
+                    calls_500_ds = mock_ds_500.call_count
+                    calls_500_glm = mock_glm_500.call_count
+
+            # 429 每个 provider 只调用 1 次，500 每个 provider 调用 3 次
+            assert calls_429_ds == 1, f"429 should call deepseek 1 time, got {calls_429_ds}"
+            assert calls_429_glm == 1, f"429 should call glm 1 time, got {calls_429_glm}"
+            assert calls_500_ds == 3, f"500 should call deepseek 3 times, got {calls_500_ds}"
+            assert calls_500_glm == 3, f"500 should call glm 3 times, got {calls_500_glm}"
 
     @pytest.mark.asyncio
     async def test_empty_messages_still_routes(self):

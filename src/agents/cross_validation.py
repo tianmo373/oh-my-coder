@@ -35,6 +35,8 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from ..core.router import ModelRouter
 
+from ..core.router import TaskType
+
 
 # ------------------------------------------------------------------
 # 验证结果模型
@@ -304,9 +306,9 @@ PASS / FAIL / NEED_FIX
             msg_objects = [
                 Message(role=m["role"], content=m["content"]) for m in messages
             ]
-            resp = await self.call_model(
-                task_type="analysis",
-                messages=msg_objects,
+            resp = await self.model_router.route_and_call(
+                TaskType.CODE_REVIEW,
+                msg_objects,
                 complexity="high",
             )
             raw_text = resp.content if resp else ""
