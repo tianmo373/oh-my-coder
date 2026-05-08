@@ -305,7 +305,7 @@ def create_orchestrator(router: ModelRouter) -> Orchestrator:
         "executor",
         "verifier",
         "debugger",
-        "code_reviewer",
+        "code-reviewer",
         "test_engineer",
         "security",
         "tracer",
