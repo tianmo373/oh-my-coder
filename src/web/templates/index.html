@@ -370,6 +370,7 @@
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
                             <label for="modelSelect" class="form-label" style="margin-bottom:0">模型选择</label>
                             <button type="button" onclick="openAddCustomModel()" style="background:var(--primary);color:white;border:none;border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">+ 自定义模型</button>
+                            <button type="button" onclick="openCustomModelsPanel()" style="background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer">⚙️ 管理</button>
                         </div>
                         <select id="modelSelect" class="form-select">
                             <option value="deepseek" selected>DeepSeek V4 (推荐·低成本)</option>
@@ -865,6 +866,37 @@
         const CUSTOM_MODELS_KEY = 'omc-custom-models';
         function getCustomModels() { try { return JSON.parse(localStorage.getItem(CUSTOM_MODELS_KEY) || '[]'); } catch { return []; } }
         function saveCustomModels(models) { localStorage.setItem(CUSTOM_MODELS_KEY, JSON.stringify(models)); }
+        let editingModelIndex = -1;
+        function openEditCustomModel(index) {
+            const models = getCustomModels();
+            const m = models[index];
+            if (!m) return;
+            editingModelIndex = index;
+            document.getElementById('cm-name').value = m.name || '';
+            document.getElementById('cm-provider').value = m.provider || '';
+            document.getElementById('cm-url').value = m.url || '';
+            document.getElementById('cm-key').value = m.key || '';
+            document.getElementById('cm-model-id').value = m.modelId || '';
+            document.getElementById('cm-modal-title').textContent = '编辑自定义模型';
+            document.getElementById('cm-submit-btn').textContent = '💾 保存修改';
+            document.getElementById('addCustomModelModal').style.display = 'flex';
+        }
+        function confirmDeleteCustomModel(index) {
+            const models = getCustomModels();
+            const m = models[index];
+            if (!m) return;
+            if (confirm('确定删除自定义模型 "' + m.name + '"？')) {
+                const updated = models.filter((_, i) => i !== index);
+                saveCustomModels(updated);
+                injectCustomModels();
+                showToast('已删除 "' + m.name + '"', 'info');
+            }
+        }
+        function resetModalState() {
+            editingModelIndex = -1;
+            document.getElementById('cm-modal-title').textContent = '添加自定义模型';
+            document.getElementById('cm-submit-btn').textContent = '✅ 添加';
+        }
 
         function openAddCustomModel() {
             document.getElementById('addCustomModelModal').style.display = 'flex';
@@ -875,13 +907,14 @@
                 const el = document.getElementById(id);
                 if (el) el.value = '';
             });
+            resetModalState();
         }
         function addCustomModel() {
             const name = document.getElementById('cm-name').value.trim();
             const url = document.getElementById('cm-url').value.trim();
             if (!name || !url) { showToast('请填写模型名称和 API 地址', 'error'); return; }
             const model = {
-                id: 'cm-' + Date.now(),
+                id: editingModelIndex >= 0 ? getCustomModels()[editingModelIndex].id : 'cm-' + Date.now(),
                 name: name,
                 provider: document.getElementById('cm-provider').value.trim() || '自定义',
                 url: url,
@@ -889,11 +922,17 @@
                 modelId: document.getElementById('cm-model-id').value.trim() || name
             };
             const models = getCustomModels();
-            models.push(model);
+            if (editingModelIndex >= 0) {
+                models[editingModelIndex] = model;
+                showToast('✅ 已保存 "' + name + '"', 'success');
+            } else {
+                models.push(model);
+                showToast('✅ 已添加 "' + name + '"', 'success');
+            }
             saveCustomModels(models);
             injectCustomModels();
+            resetModalState();
             closeAddCustomModel();
-            showToast('✅ 已添加 ' + name, 'success');
         }
         async function testCustomModel() {
             const url = document.getElementById('cm-url').value.trim();
@@ -949,10 +988,39 @@
 
     </script>
 
+    <!-- Custom Models Management Panel -->
+    <div id="customModelsPanel" style="display:none;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <span style="font-size:14px;font-weight:600;color:var(--text-secondary)">已配置的自定义模型</span>
+            <button class="btn btn-sm btn-ghost" onclick="closeCustomModelsPanel()" style="font-size:13px">收起 ▲</button>
+        </div>
+        <div id="cm-list"></div>
+        <div id="cm-empty-msg" style="text-align:center;color:var(--text-muted);font-size:13px;padding:16px 0;display:none">暂无自定义模型</div>
+    </div>
+    <script>
+        function openCustomModelsPanel() {
+            renderCustomModelsList();
+            document.getElementById('customModelsPanel').style.display = 'block';
+        }
+        function closeCustomModelsPanel() {
+            document.getElementById('customModelsPanel').style.display = 'none';
+        }
+        function renderCustomModelsList() {
+            const list = document.getElementById('cm-list');
+            const emptyMsg = document.getElementById('cm-empty-msg');
+            const models = getCustomModels();
+            if (!models.length) { list.innerHTML = ''; emptyMsg.style.display = 'block'; return; }
+            emptyMsg.style.display = 'none';
+            list.innerHTML = models.map((m, i) => '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + m.name + '</div><div style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (m.url || '') + '</div></div><div style="display:flex;gap:6px;flex-shrink:0;margin-left:12px"><button class="btn btn-sm btn-ghost" onclick="openEditCustomModel(' + i + ')" title="编辑">✏️</button><button class="btn btn-sm btn-ghost" onclick="confirmDeleteCustomModel(' + i + ')" title="删除" style="color:var(--danger)">🗑️</button></div></div>').join('');
+        }
+        // Render the panel when page loads
+        setTimeout(renderCustomModelsList, 500);
+    </script>
+
     <!-- Add Custom Model Modal -->
     <div id="addCustomModelModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9999;justify-content:center;align-items:center" onclick="closeAddCustomModel()">
         <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:16px;padding:32px;width:480px;max-width:90vw" onclick="event.stopPropagation()">
-            <h3 style="margin:0 0 24px;font-size:18px">添加自定义模型</h3>
+            <h3 id="cm-modal-title" style="margin:0 0 24px;font-size:18px">添加自定义模型</h3>
             <div class="form-group">
                 <label class="form-label">模型名称 <span style="color:var(--danger)">*</span></label>
                 <input type="text" class="form-input" id="cm-name" placeholder="例如：我的 Qwen Coder">
@@ -976,7 +1044,7 @@
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px">
                 <button type="button" class="btn btn-secondary" id="cm-test-btn" onclick="testCustomModel()">🔗 测试连接</button>
                 <button type="button" class="btn btn-secondary" onclick="closeAddCustomModel()">取消</button>
-                <button type="button" class="btn btn-primary" onclick="addCustomModel()">添加</button>
+                <button type="button" class="btn btn-primary" id="cm-submit-btn" onclick="addCustomModel()">✅ 添加</button>
             </div>
             <div id="cm-test-msg" style="margin-top:10px;font-size:13px;display:none;"></div>
         </div>
