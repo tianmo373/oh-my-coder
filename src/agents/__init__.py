@@ -10,6 +10,7 @@ from .api_agent import APIAgent
 from .architect import ArchitectAgent
 from .auth_agent import AuthAgent
 from .base import BaseAgent, get_agent, list_agents, register_agent
+from .code_research import CodeResearchAgent
 from .code_reviewer import CodeReviewerAgent
 from .code_simplifier import CodeSimplifierAgent
 from .critic import CriticAgent
@@ -58,6 +59,7 @@ __all__ = [
     "DebuggerAgent",
     "TracerAgent",
     "PerformanceAgent",
+    "CodeResearchAgent",
     # ========================
     # 审查通道（2）
     # ========================
