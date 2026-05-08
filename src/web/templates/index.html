@@ -95,6 +95,185 @@
         .task-header h2 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
         .task-subtitle { font-size: 14px; color: var(--text-muted); }
 
+        /* ===== Chat Interface ===== */
+        .chat-messages {
+            height: 60vh;
+            min-height: 300px;
+            max-height: 700px;
+            overflow-y: auto;
+            padding: 20px 24px;
+            scroll-behavior: smooth;
+        }
+        .chat-welcome {
+            text-align: center;
+            padding: 60px 20px 40px;
+            color: var(--text-muted);
+        }
+        .chat-welcome-icon {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; margin: 0 auto 16px;
+        }
+        .chat-welcome h3 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+        .chat-welcome p { font-size: 14px; margin: 0; }
+        .chat-msg {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            max-width: 85%;
+            animation: msgFadeIn 0.3s ease;
+        }
+        @keyframes msgFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-msg.user {
+            flex-direction: row-reverse;
+            margin-left: auto;
+        }
+        .chat-msg-avatar {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; flex-shrink: 0;
+        }
+        .chat-msg.assistant .chat-msg-avatar {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+        .chat-msg.user .chat-msg-avatar {
+            background: var(--bg-secondary);
+        }
+        .chat-msg-bubble {
+            border-radius: 16px;
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+        .chat-msg.assistant .chat-msg-bubble {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-top-left-radius: 4px;
+        }
+        .chat-msg.user .chat-msg-bubble {
+            background: var(--primary);
+            color: #fff;
+            border-top-right-radius: 4px;
+        }
+        .chat-msg-bubble pre {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+        .chat-msg-bubble code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+        .chat-msg-bubble :not(pre) > code {
+            background: var(--bg-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .chat-msg-bubble ul, .chat-msg-bubble ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        .chat-msg-bubble li { margin-bottom: 4px; }
+        .chat-msg-loading {
+            display: flex; gap: 4px; padding: 4px 0;
+        }
+        .chat-msg-loading span {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            animation: loadBounce 1.2s infinite;
+        }
+        .chat-msg-loading span:nth-child(2) { animation-delay: 0.2s; }
+        .chat-msg-loading span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes loadBounce { 0%,80%,100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+
+        /* Chat Input Area */
+        .chat-input-area {
+            border-top: 1px solid var(--border);
+            background: var(--card);
+            padding: 12px 16px 12px;
+        }
+        .chat-input-form {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px 8px 8px 16px;
+            transition: border-color 0.2s;
+        }
+        .chat-input-form:focus-within {
+            border-color: var(--primary);
+        }
+        .chat-input {
+            flex: 1;
+            border: none;
+            background: none;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            min-height: 24px;
+            max-height: 150px;
+            padding: 4px 0;
+        }
+        .chat-input::placeholder { color: var(--text-muted); }
+        .chat-send-btn {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            transition: opacity 0.2s;
+        }
+        .chat-send-btn:hover { opacity: 0.85; }
+        .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .chat-input-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+        .chat-model-select {
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            outline: none;
+        }
+        .chat-model-select:hover { border-color: var(--primary); }
+        .chat-clear-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            padding: 4px;
+        }
+        .chat-clear-btn:hover { opacity: 1; }
+
         /* Response */
         .response-container { margin-top: 32px; }
         .response-tabs {
@@ -347,62 +526,50 @@
 
 
 
-        <!-- Mode Toggle -->
-        <div style="display:flex;justify-content:center;gap:8px;margin-bottom:24px;">
-            <button type="button" id="mode-chat-btn" class="btn btn-primary btn-sm" onclick="setMode('chat')" style="padding:8px 20px;font-size:14px;">💬 聊天模式</button>
-            <button type="button" id="mode-form-btn" class="btn btn-ghost btn-sm" onclick="setMode('form')" style="padding:8px 20px;font-size:14px;">📝 表单模式</button>
-        </div>
-
         <!-- Chat Interface (Default View) -->
-        <div class="task-card" id="chatCard">
-            <div class="task-header">
-                <h2>💬 聊天任务助手</h2>
-                <p class="task-subtitle">用自然语言描述你的需求，AI 会帮你梳理和确认后再执行 <button type="button" onclick="clearChat()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:2px 10px;font-size:12px;cursor:pointer;color:var(--text-muted);margin-left:8px;" onmouseover="this.style.borderColor='var(--danger)';this.style.color='var(--danger)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">🗑️ 清空</button></p>
-            </div>
-            
+        <div class="task-card" id="chatCard" style="padding:0;overflow:hidden;">
             <!-- Chat Messages Area -->
-            <div id="chatMessages" style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;min-height:200px;max-height:400px;overflow-y:auto;">
-                <div class="chat-message assistant" style="display:flex;gap:12px;margin-bottom:16px;">
-                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🤖</div>
-                    <div style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;">
-                        <p style="margin:0;color:var(--text);">你好！我是 Oh My Coder 的 AI 助手。请告诉我你想做什么，比如：</p>
-                        <ul style="margin:8px 0 0;padding-left:20px;color:var(--text-secondary);font-size:14px;">
-                            <li>"帮我实现一个用户登录系统"</li>
-                            <li>"审查一下这个项目的代码质量"</li>
-                            <li>"修复这个 bug：点击按钮没反应"</li>
-                        </ul>
-                    </div>
+            <div id="chatMessages" class="chat-messages">
+                <div class="chat-welcome">
+                    <div class="chat-welcome-icon">🤖</div>
+                    <h3>Oh My Coder</h3>
+                    <p>你好！我是 AI 编程助手，请告诉我你想做什么。</p>
                 </div>
             </div>
             
             <!-- Task Confirmation Panel (hidden by default) -->
-            <div id="taskConfirmPanel" style="display:none;background:var(--primary-light);border:1px solid var(--primary);border-radius:12px;padding:20px;margin-bottom:20px;">
-                <h4 style="margin:0 0 12px;color:var(--primary);font-size:16px;">📋 任务确认</h4>
-                <div id="taskSummary" style="background:var(--card);border-radius:8px;padding:12px;margin-bottom:16px;"></div>
-                <div style="display:flex;gap:10px;justify-content:flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="cancelTask()">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="confirmAndExecute()">✅ 确认执行</button>
+            <div id="taskConfirmPanel" style="display:none;background:var(--primary-light);border-top:1px solid var(--primary);padding:16px 20px;">
+                <h4 style="margin:0 0 10px;color:var(--primary);font-size:14px;">📋 任务确认</h4>
+                <div id="taskSummary" style="background:var(--card);border-radius:8px;padding:12px;margin-bottom:12px;font-size:14px;"></div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="cancelTask()">取消</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="confirmAndExecute()">✅ 确认执行</button>
                 </div>
             </div>
             
-            <!-- Chat Input -->
-            <form id="chatForm" style="display:flex;gap:12px;align-items:flex-end;">
-                <select id="chatModelSelect" style="flex-shrink:0;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-family:inherit;font-size:13px;">
-                    <option value="deepseek-chat" selected>DeepSeek V4 (推荐)</option>
-                    <option value="deepseek-reasoner">DeepSeek R1 (推理)</option>
-                    <option value="glm-4-flash">GLM-4-Flash (免费)</option>
-                    <option value="glm-4v-flash">GLM-4V-Flash (视觉)</option>
-                    <option value="MiniMax-Text-01">MiMo V2 Flash (免费)</option>
-                    <option value="moonshot-v1-128k">Kimi 128K</option>
-                    <option value="doubao-pro-32k">Doubao-Pro</option>
-                    <option value="tiangong-3">天工 3.0</option>
-                    <option value="Baichuan4">百川 4</option>
-                </select>
-                <textarea id="chatInput" class="form-textarea" placeholder="描述你的需求..." rows="2" style="flex:1;margin-bottom:0;" required></textarea>
-                <button type="submit" class="btn btn-primary" id="chatSubmitBtn" style="height:48px;padding:0 20px;">
-                    <span>发送</span>
-                </button>
-            </form>
+            <!-- Chat Input Area -->
+            <div class="chat-input-area">
+                <form id="chatForm" class="chat-input-form">
+                    <textarea id="chatInput" class="chat-input" placeholder="输入消息..." rows="1" required></textarea>
+                    <button type="submit" class="chat-send-btn" id="chatSubmitBtn" title="发送">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                    </button>
+                </form>
+                <div class="chat-input-footer">
+                    <select id="chatModelSelect" class="chat-model-select">
+                        <option value="deepseek-chat" selected>DeepSeek V4</option>
+                        <option value="deepseek-reasoner">DeepSeek R1</option>
+                        <option value="glm-4-flash">GLM-4-Flash</option>
+                        <option value="glm-4v-flash">GLM-4V-Flash</option>
+                        <option value="MiniMax-Text-01">MiMo V2 Flash</option>
+                        <option value="moonshot-v1-128k">Kimi 128K</option>
+                        <option value="doubao-pro-32k">Doubao-Pro</option>
+                        <option value="tiangong-3">天工 3.0</option>
+                        <option value="Baichuan4">百川 4</option>
+                    </select>
+                    <button type="button" class="chat-clear-btn" onclick="clearChat()" title="清空对话">🗑️</button>
+                </div>
+            </div>
         </div>
 
         <!-- Task Form (Hidden by Default) -->
@@ -488,7 +655,6 @@
             <div id="stepProgressInner" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
         </div>
 
-        /* Undo/Redo bar (shown after task completes) */
         <div class="undo-redo-bar" id="undoRedoBar">
             <button class="undo-btn" id="undoBtn" onclick="undoState()" disabled>↩️ 撤销</button>
             <span class="history-label" id="historyLabel"></span>
@@ -512,44 +678,6 @@
             <div class="response-panel" data-panel="executor" id="panel-executor"></div>
             <div class="response-panel" data-panel="stats" id="panel-stats"></div>
         </div>
-
-        <!-- Examples -->
-        <section style="margin-bottom:40px;">
-            <h3 style="font-size:18px;font-weight:600;text-align:center;margin-bottom:20px;">💡 试试这些任务</h3>
-            <div class="examples-grid">
-                <button class="example-card" data-task="实现一个 REST API 用户管理接口，包含 CRUD 操作，使用 FastAPI 框架" data-workflow="build">
-                    <span class="example-icon">🌐</span>
-                    <span class="example-title">REST API 开发</span>
-                    <span class="example-desc">FastAPI 用户管理 CRUD</span>
-                </button>
-                <button class="example-card" data-task="审查当前项目的代码质量和安全漏洞" data-workflow="review">
-                    <span class="example-icon">🔍</span>
-                    <span class="example-title">代码审查</span>
-                    <span class="example-desc">质量 + 安全检查</span>
-                </button>
-                <button class="example-card" data-task="修复登录页面无法正确跳转的问题" data-workflow="debug">
-                    <span class="example-icon">🐛</span>
-                    <span class="example-title">Bug 调试</span>
-                    <span class="example-desc">定位并修复问题</span>
-                </button>
-                <button class="example-card" data-task="为项目编写单元测试，覆盖核心业务逻辑" data-workflow="test">
-                    <span class="example-icon">🧪</span>
-                    <span class="example-title">测试用例</span>
-                    <span class="example-desc">核心逻辑全覆盖</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- Features -->
-        <section style="margin-bottom:40px;">
-            <h3 style="font-size:18px;font-weight:600;text-align:center;margin-bottom:20px;">⚡ 核心能力</h3>
-            <div class="grid-4">
-                <div class="feature-card"><span class="feature-icon">🧠</span><h4>智能路由</h4><p>按任务复杂度自动选模型，节省 30-50% Token</p></div>
-                <div class="feature-card"><span class="feature-icon">🤝</span><h4>多 Agent 协作</h4><p>多个专业 Agent 分工协作</p></div>
-                <div class="feature-card"><span class="feature-icon">💰</span><h4>零成本运行</h4><p>优先使用 GLM-4-Flash 免费额度</p></div>
-                <div class="feature-card"><span class="feature-icon">🔄</span><h4>全流程覆盖</h4><p>从探索分析到代码实现、测试验证</p></div>
-            </div>
-        </section>
         </main>
     </div><!-- /app-layout -->
 
@@ -1052,9 +1180,6 @@
 
         // Restore saved mode and chat history on page load
         document.addEventListener('DOMContentLoaded', () => {
-            const saved = localStorage.getItem('omc-ui-mode');
-            if (saved === 'form') setMode('form');
-            
             // Load sessions
             loadSessions();
             
@@ -1065,6 +1190,22 @@
                 container.innerHTML = '';
                 chatHistory.forEach(m => {
                     addChatMessage(m.role, m.content, false);
+                });
+            }
+            
+            // Textarea auto-resize
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+                });
+                // Submit on Enter (Shift+Enter for newline)
+                chatInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+                    }
                 });
             }
         });
@@ -1095,19 +1236,19 @@
 
         function addChatMessage(role, content, isHtml = false) {
             const container = document.getElementById('chatMessages');
+            // Remove welcome screen if present
+            const welcome = container.querySelector('.chat-welcome');
+            if (welcome) welcome.remove();
+            
             const msgDiv = document.createElement('div');
-            msgDiv.className = `chat-message ${role}`;
-            msgDiv.style.cssText = 'display:flex;gap:12px;margin-bottom:16px;animation:fadeIn 0.3s ease;';
+            msgDiv.className = `chat-msg ${role}`;
             
             const avatar = role === 'user' ? '👤' : '🤖';
-            const bgStyle = role === 'user' 
-                ? 'background:var(--primary-light);border-color:var(--primary);' 
-                : 'background:var(--card);border-color:var(--border);';
             
             msgDiv.innerHTML = `
-                <div style="width:36px;height:36px;border-radius:50%;background:${role === 'user' ? 'var(--primary)' : 'linear-gradient(135deg,var(--primary),var(--primary-dark))'};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:white;">${avatar}</div>
-                <div style="flex:1;${bgStyle}border:1px solid;border-radius:12px;padding:12px 16px;">
-                    ${isHtml ? content : `<p style="margin:0;color:var(--text);white-space:pre-wrap;">${content}</p>`}
+                <div class="chat-msg-avatar">${avatar}</div>
+                <div class="chat-msg-bubble">
+                    ${isHtml ? content : `<p style="margin:0;white-space:pre-wrap;">${content}</p>`}
                 </div>
             `;
             container.appendChild(msgDiv);
@@ -1119,15 +1260,16 @@
 
         function showTypingIndicator() {
             const container = document.getElementById('chatMessages');
+            const welcome = container.querySelector('.chat-welcome');
+            if (welcome) welcome.remove();
+            
             const typingDiv = document.createElement('div');
             typingDiv.id = 'typingIndicator';
-            typingDiv.style.cssText = 'display:flex;gap:12px;margin-bottom:16px;';
+            typingDiv.className = 'chat-msg assistant';
             typingDiv.innerHTML = `
-                <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🤖</div>
-                <div style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:4px;">
-                    <span style="width:8px;height:8px;background:var(--text-muted);border-radius:50%;animation:typing 1s infinite;"></span>
-                    <span style="width:8px;height:8px;background:var(--text-muted);border-radius:50%;animation:typing 1s infinite 0.2s;"></span>
-                    <span style="width:8px;height:8px;background:var(--text-muted);border-radius:50%;animation:typing 1s infinite 0.4s;"></span>
+                <div class="chat-msg-avatar">🤖</div>
+                <div class="chat-msg-bubble">
+                    <div class="chat-msg-loading"><span></span><span></span><span></span></div>
                 </div>
             `;
             container.appendChild(typingDiv);
@@ -1250,8 +1392,13 @@
             chatState.pendingTask = null;
             localStorage.removeItem('omc-chat-history');
             const container = document.getElementById('chatMessages');
-            container.innerHTML = '';
-            addChatMessage('assistant', '你好！我是 Oh My Coder 的 AI 助手。请告诉我你想做什么，比如：\n\n- 帮我实现一个用户登录系统\n- 审查一下这个项目的代码质量\n- 修复这个 bug：点击按钮没反应', true);
+            container.innerHTML = `
+                <div class="chat-welcome">
+                    <div class="chat-welcome-icon">🤖</div>
+                    <h3>Oh My Coder</h3>
+                    <p>你好！我是 AI 编程助手，请告诉我你想做什么。</p>
+                </div>
+            `;
             document.getElementById('taskConfirmPanel').style.display = 'none';
             showToast('聊天已清空', 'info', 2000);
         }
