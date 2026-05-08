@@ -1,0 +1,26 @@
+name: test
+description: 测试生成流程：探索 → 设计测试 → 实现测试 → 运行测试
+steps:
+  - id: explore
+    agent: explore
+    description: 探索代码库结构
+    timeout: 300
+    retry: 0
+  - id: test-engineer
+    agent: test-engineer
+    description: 设计测试用例
+    dependencies: [explore]
+    timeout: 300
+    retry: 0
+  - id: executor
+    agent: executor
+    description: 实现测试代码
+    dependencies: [test-engineer]
+    timeout: 600
+    retry: 1
+  - id: verifier
+    agent: verifier
+    description: 运行测试验证
+    dependencies: [executor]
+    timeout: 300
+    retry: 0

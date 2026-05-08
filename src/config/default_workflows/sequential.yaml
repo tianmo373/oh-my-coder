@@ -1,0 +1,32 @@
+name: sequential
+description: 通用顺序执行流程（自定义任务推荐模板）
+steps:
+  - id: explore
+    agent: explore
+    description: 探索代码库结构
+    timeout: 300
+    retry: 0
+  - id: analyst
+    agent: analyst
+    description: 深度分析需求与现状
+    dependencies: [explore]
+    timeout: 300
+    retry: 0
+  - id: planner
+    agent: planner
+    description: 制定详细执行计划
+    dependencies: [analyst]
+    timeout: 300
+    retry: 0
+  - id: executor
+    agent: executor
+    description: 执行实现
+    dependencies: [planner]
+    timeout: 600
+    retry: 1
+  - id: verifier
+    agent: verifier
+    description: 验证结果正确性
+    dependencies: [executor]
+    timeout: 300
+    retry: 0

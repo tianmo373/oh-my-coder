@@ -32,6 +32,7 @@ sys.path.insert(0, str(project_root))
 # 导入必须在 sys.path.insert 之后
 try:
     from src.agents.base import AgentContext, AgentOutput, AgentStatus, get_agent
+    from src.config.workflow_loader import WorkflowLoader
     from src.core.orchestrator import WORKFLOW_TEMPLATES, Orchestrator
     from src.core.router import ModelRouter, RouterConfig
     from src.web.dashboard_api import router as dashboard_router
@@ -1119,6 +1120,61 @@ async def test_connection(payload: dict):
             return JSONResponse({"ok": False, "msg": f"测试失败: {e}"}, status_code=500)
 
     return JSONResponse({"ok": False, "msg": "参数不完整（需 provider 或 base_url+model_id）"}, status_code=400)
+
+
+
+# ===== 工作流管理 API（P1-6 Agent 子系统重构 Phase 1）=====
+
+
+@app.get("/api/workflows")
+async def list_workflows():
+    """列出所有可用工作流（内置 + 用户自定义）"""
+    loader = WorkflowLoader()
+    workflows = loader.list_workflows()
+    # 标记内置 vs 用户自定义
+    builtin = set(loader.list_builtins())
+    return JSONResponse({
+        "workflows": [
+            {"name": w["name"], "builtin": w["name"] in builtin}
+            for w in workflows
+        ]
+    })
+
+
+@app.get("/api/workflows/{name}")
+async def get_workflow(name: str):
+    """获取指定工作流完整配置"""
+    config = WorkflowLoader().load_workflow(name)
+    if config is None:
+        return JSONResponse({"error": f"工作流 '{name}' 不存在"}, status_code=404)
+    return JSONResponse({"name": name, **config.model_dump()})
+
+
+
+@app.put("/api/workflows/{name}")
+async def save_workflow(name: str, payload: dict):
+    """保存或更新自定义工作流（PUT 用于创建或覆盖）"""
+    try:
+        WorkflowLoader().save_workflow(name, payload)
+        return JSONResponse({"status": "ok", "message": f"工作流 '{name}' 已保存"})
+    except Exception:
+        return JSONResponse({"error": f"工作流 '{name}' 保存失败"}, status_code=400)
+
+
+@app.delete("/api/workflows/{name}")
+async def delete_workflow(name: str):
+    """删除自定义工作流（内置不可删除）"""
+    loader = WorkflowLoader()
+    if loader.is_builtin(name):
+        return JSONResponse({"error": "内置工作流不可删除"}, status_code=403)
+    try:
+        loader.delete_workflow(name)
+        return JSONResponse({"status": "ok", "message": f"工作流 '{name}' 已删除"})
+    except FileNotFoundError:
+        return JSONResponse({"error": f"工作流 '{name}' 不存在"}, status_code=404)
+    except Exception:
+        return JSONResponse({"error": f"工作流 '{name}' 删除失败"}, status_code=400)
+
 
 
 # ===== 健康检查 =====

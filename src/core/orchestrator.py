@@ -30,6 +30,12 @@ from typing import TYPE_CHECKING, Any, Optional
 if TYPE_CHECKING:
     from ..agents.health_check import HealthChecker
 
+# Workflow loader
+try:
+    from src.config.workflow_loader import WorkflowLoader
+except ImportError:
+    WorkflowLoader = None  # type: ignore
+
 
 def _get_trace_context_cls():
     try:
@@ -234,6 +240,12 @@ class Orchestrator:
         # 分层记忆管理器（懒加载）
         self._memory_manager = None  # type: ignore
         self._project_path = project_path
+
+        # Workflow 加载器（YAML 驱动）
+        if WorkflowLoader is not None:
+            self.workflow_loader = WorkflowLoader()
+        else:
+            self.workflow_loader = None  # type: ignore
 
     # ------------------------------------------------------------------
     # Skill 自进化（Tier 0 自动注入）
@@ -479,7 +491,8 @@ class Orchestrator:
 
             agent_class = get_agent(name)
             if agent_class:
-                agent = agent_class(self.model_router)
+                # 注入 orchestrator，使 agent 可调用 call_subagent()
+                agent = agent_class(self.model_router, orchestrator=self)
                 self._agents[name] = agent
             else:
                 raise ValueError(f"未知的 Agent: {name}")
@@ -493,6 +506,79 @@ class Orchestrator:
                 # Agent 不支持此属性，静默跳过（如其他 agent 收到 sourcegraph 参数）
                 pass
         return agent
+
+    async def invoke_subagent(
+        self,
+        agent_name: str,
+        task: str,
+        context: dict[str, Any],
+        max_depth: int = 3,
+    ):
+        """
+        调用子 Agent（支持嵌套调用，防无限递归）
+
+        这是 P1-6 Agent 子系统重构 Phase 1 的核心新增方法。
+        允许任意 Agent 通过 Orchestrator 调度另一个 Agent 作为子任务。
+
+        典型用法（由 Agent 在 execute() 中调用）：
+            sub_result = await self.invoke_subagent(
+                agent_name="analyst",
+                task="分析这段代码的性能问题",
+                context={"project_path": "/path/to/project", ...},
+            )
+
+        Args:
+            agent_name: 子 Agent 名称（须在 AGENT_REGISTRY 中注册）
+            task: 子任务描述
+            context: 上下文（含 project_path, override_model 等）
+            max_depth: 最大调用深度，默认 3 层防递归
+
+        Returns:
+            AgentOutput: 子 Agent 的执行结果
+
+        Raises:
+            RecursionError: 超过 max_depth 时抛出
+            ValueError: agent_name 不存在时抛出
+        """
+        current_depth = context.get("_subagent_depth", 0)
+        if current_depth >= max_depth:
+            raise RecursionError(
+                f"子 Agent 调用超过最大深度 {max_depth}（防止无限递归）"
+            )
+
+        # 构造子 Agent 上下文
+        from ..agents.base import AgentContext, AgentOutput, AgentStatus
+
+        sub_context = AgentContext(
+            project_path=context.get("project_path", Path.cwd()),
+            task_description=task,
+            working_directory=context.get("working_directory"),
+            relevant_files=[],
+            previous_outputs=context.get("previous_outputs", {}),
+            metadata={"parent_depth": current_depth},
+            skill_context=context.get("skill_context", ""),
+            override_model=context.get("override_model"),
+        )
+        sub_context._subagent_depth = current_depth + 1  # type: ignore
+
+        # 获取子 Agent 实例
+        agent = self.get_agent(agent_name)
+
+        # 执行子任务（带超时保护）
+        import asyncio
+
+        try:
+            output = await asyncio.wait_for(
+                agent.execute(sub_context),
+                timeout=context.get("subagent_timeout", 300),
+            )
+            return output
+        except asyncio.TimeoutError:
+            return AgentOutput(
+                agent_name=agent_name,
+                status=AgentStatus.FAILED,
+                error=f"子 Agent 执行超时（>{context.get('subagent_timeout', 300)}s）",
+            )
 
     def _sourcegraph_overrides(self, context: dict[str, Any]) -> dict[str, Any]:
         """从 context 中提取 Sourcegraph 配置参数，传递给 Agent 实例"""
@@ -532,9 +618,12 @@ class Orchestrator:
             # autopilot 特殊处理：自动检测任务类型并路由
             if workflow_name == "autopilot":
                 actual = _detect_workflow_for_autopilot(context.get("task", ""))
-                steps = WORKFLOW_TEMPLATES.get(actual, [])
-                # 记录路由日志（写入 context 供后续使用）
+                workflow_name = actual
                 context["_autopilot_routed_to"] = actual
+
+            # 使用 YAML 工作流加载器（支持用户自定义覆盖）
+            if self.workflow_loader is not None:
+                steps = self.workflow_loader.load_workflow(workflow_name)
             else:
                 steps = WORKFLOW_TEMPLATES.get(workflow_name, [])
         else:

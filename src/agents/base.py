@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from src.models.base import Message, ModelResponse
+    from src.models.router import ModelRouter
 
 
 class AgentStatus(Enum):
@@ -105,15 +106,18 @@ class BaseAgent(ABC):
 
     def __init__(
         self,
-        model_router,
+        model_router: Optional[ModelRouter] = None,
         config: Optional[dict[str, Any]] = None,
+        orchestrator: Optional[Any] = None,
     ):
         """
         Args:
-            model_router: 模型路由器
+            model_router: 模型路由器（可选，CLI info 等只读场景可不传）
             config: Agent 特定配置
+            orchestrator: Orchestrator 实例（用于调用子 Agent），由 Orchestrator.get_agent() 自动注入
         """
         self.model_router = model_router
+        self.orchestrator = orchestrator
         self.config = config or {}
         self.status = AgentStatus.IDLE
         self._output_history: list[AgentOutput] = []
@@ -347,6 +351,68 @@ class BaseAgent(ABC):
     def get_output_history(self) -> list[AgentOutput]:
         """获取输出历史"""
         return self._output_history.copy()
+
+    async def call_subagent(
+        self,
+        agent_name: str,
+        task: str,
+        context: AgentContext,
+        max_depth: int = 3,
+    ) -> AgentOutput:
+        """
+        调用子 Agent（P1-6 Agent 子系统重构 Phase 1）
+
+        允许当前 Agent 将复杂任务分解，委托给其他专业 Agent 处理。
+        通过 orchestrator 实现，支持防递归和超时控制。
+
+        用法示例（由任意 Agent 在 execute() 中调用）：
+            result = await self.call_subagent(
+                agent_name="analyst",
+                task="分析这段代码的性能瓶颈",
+                context=context,
+            )
+            if result.status == AgentStatus.COMPLETED:
+                self.logger.info(f"Analyst 子任务完成: {result.result}")
+
+        Args:
+            agent_name: 子 Agent 名称（如 "analyst", "planner"）
+            task: 子任务描述
+            context: 当前 Agent 的执行上下文（会被转发）
+            max_depth: 最大调用深度，默认 3
+
+        Returns:
+            AgentOutput: 子 Agent 的执行结果
+
+        Raises:
+            RuntimeError: 如果 Orchestrator 未注入（不应该发生）
+        """
+        if self.orchestrator is None:
+            raise RuntimeError(
+                f"Agent '{self.name}' 无法调用子 Agent：Orchestrator 未注入。"
+                "请确认是通过 Orchestrator.get_agent() 创建此 Agent 实例。"
+            )
+
+        # 将当前 Agent 的 previous_outputs 合并到 context 中供子 Agent 使用
+        if not hasattr(context, "previous_outputs"):
+            context.previous_outputs = {}  # type: ignore
+        if self._output_history:
+            context.previous_outputs[self.name] = self._output_history[-1]
+
+        return await self.orchestrator.invoke_subagent(
+            agent_name=agent_name,
+            task=task,
+            context={
+                "project_path": str(context.project_path),
+                "override_model": context.override_model,
+                "skill_context": context.skill_context,
+                "working_directory": str(context.working_directory)
+                if context.working_directory
+                else None,
+                "previous_outputs": context.previous_outputs,
+                "_subagent_depth": context.metadata.get("_subagent_depth", 0),
+            },
+            max_depth=max_depth,
+        )
 
     def save_output(self, output_path: Path):
         """保存输出到文件"""
