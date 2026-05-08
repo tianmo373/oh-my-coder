@@ -219,8 +219,49 @@
             .examples-grid { grid-template-columns: 1fr; }
         }
 
-        /* Target tabs */
-        .target-tab {
+        /* Undo/Redo toolbar */
+        .undo-redo-bar {
+            display: none;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 12px 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+        }
+        .undo-redo-bar.visible { display: flex; }
+        .undo-btn, .redo-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            transition: var(--transition);
+            font-family: inherit;
+        }
+        .undo-btn:hover:not(:disabled), .redo-btn:hover:not(:disabled) {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .undo-btn:disabled, .redo-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .history-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+        }
+
             flex: 1;
             padding: 8px 12px;
             border: none;
@@ -405,6 +446,13 @@
         <!-- Dynamic Step Progress (for non-standard workflows) -->
         <div id="stepProgress" style="display:none;margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;">
             <div id="stepProgressInner" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
+        </div>
+
+        /* Undo/Redo bar (shown after task completes) */
+        <div class="undo-redo-bar" id="undoRedoBar">
+            <button class="undo-btn" id="undoBtn" onclick="undoState()" disabled>↩️ 撤销</button>
+            <span class="history-label" id="historyLabel"></span>
+            <button class="redo-btn" id="redoBtn" onclick="redoState()" disabled>↪️ 重做</button>
         </div>
 
         <!-- Response (hidden) -->
@@ -985,6 +1033,189 @@
             });
         }
         injectCustomModels();
+
+        // ===== Undo/Redo =====
+        // History stack: array of page snapshots
+        // Each snapshot stores: { responseVisible, panelStates, stepOutputs, stepStatus, result }
+        const historyStack = [];
+        let historyIndex = -1; // -1 = empty (no task done yet)
+        let redoStack = []; // redo stack holds snapshots after undo
+
+        function saveSnapshot() {
+            // Discard any redo entries when a new task is done
+            redoStack = [];
+
+            const snapshot = {
+                responseVisible: document.getElementById('responseSection').style.display !== 'none',
+                stepStatus: JSON.parse(JSON.stringify(state.stepStatus)),
+                stepOutputs: JSON.parse(JSON.stringify(state.stepOutputs)),
+                result: state.result ? JSON.parse(JSON.stringify(state.result)) : null,
+                currentTask: state.currentTask,
+                // Also save which tab is active
+                activePanel: document.querySelector('.response-panel.active')?.dataset.panel || 'result',
+                activeTab: document.querySelector('.response-tab.active')?.dataset.tab || 'result',
+            };
+
+            // Truncate future history if we've undone some steps, then push new snapshot
+            if (historyIndex < historyStack.length - 1) {
+                historyStack.length = historyIndex + 1;
+            }
+            historyStack.push(snapshot);
+            historyIndex = historyStack.length - 1;
+
+            updateUndoRedoButtons();
+        }
+
+        function updateUndoRedoButtons() {
+            const undoBtn = document.getElementById('undoBtn');
+            const redoBtn = document.getElementById('redoBtn');
+            const bar = document.getElementById('undoRedoBar');
+            const label = document.getElementById('historyLabel');
+
+            const canUndo = historyIndex > 0;
+            const canRedo = redoStack.length > 0;
+
+            undoBtn.disabled = !canUndo;
+            redoBtn.disabled = !canRedo;
+
+            // Show bar only when there's at least one completed task
+            if (historyIndex >= 1) {
+                bar.classList.add('visible');
+            } else {
+                bar.classList.remove('visible');
+            }
+
+            // Update label
+            if (historyIndex >= 1) {
+                label.textContent = `${historyIndex} / ${historyStack.length - 1} 条`;
+            } else {
+                label.textContent = '';
+            }
+        }
+
+        function undoState() {
+            if (historyIndex <= 0) return;
+
+            // Save current state to redo stack before undoing
+            const currentSnapshot = {
+                responseVisible: document.getElementById('responseSection').style.display !== 'none',
+                stepStatus: JSON.parse(JSON.stringify(state.stepStatus)),
+                stepOutputs: JSON.parse(JSON.stringify(state.stepOutputs)),
+                result: state.result ? JSON.parse(JSON.stringify(state.result)) : null,
+                currentTask: state.currentTask,
+                activeTab: document.querySelector('.response-tab.active')?.dataset.tab || 'result',
+            };
+            redoStack.push(currentSnapshot);
+
+            // Restore previous snapshot
+            historyIndex--;
+            const snap = historyStack[historyIndex];
+            restoreSnapshot(snap);
+            updateUndoRedoButtons();
+            showToast('↩️ 已撤销', 'info');
+        }
+
+        function redoState() {
+            if (redoStack.length === 0) return;
+
+            const snap = redoStack.pop();
+            historyIndex++;
+
+            // Save current state back to history stack
+            const currentSnapshot = {
+                responseVisible: document.getElementById('responseSection').style.display !== 'none',
+                stepStatus: JSON.parse(JSON.stringify(state.stepStatus)),
+                stepOutputs: JSON.parse(JSON.stringify(state.stepOutputs)),
+                result: state.result ? JSON.parse(JSON.stringify(state.result)) : null,
+                currentTask: state.currentTask,
+                activeTab: document.querySelector('.response-tab.active')?.dataset.tab || 'result',
+            };
+            if (historyIndex < historyStack.length) {
+                historyStack[historyIndex] = currentSnapshot;
+            }
+
+            // Restore redo snapshot
+            restoreSnapshot(snap);
+            updateUndoRedoButtons();
+            showToast('↪️ 已重做', 'info');
+        }
+
+        function restoreSnapshot(snap) {
+            // Restore step status
+            Object.assign(state.stepStatus, snap.stepStatus || {});
+            Object.assign(state.stepOutputs, snap.stepOutputs || {});
+            state.result = snap.result;
+            state.currentTask = snap.currentTask;
+
+            // Restore pipeline icons
+            ['explore','analyst','architect','executor','verifier'].forEach(s => {
+                const el = document.getElementById(`step-${s}`);
+                if (el) el.className = `pipeline-icon ${state.stepStatus[s] || 'waiting'}`;
+            });
+
+            // Restore response section visibility
+            if (snap.responseVisible) {
+                document.getElementById('responseSection').style.display = 'block';
+                document.getElementById('stepProgress').style.display = 'block';
+                document.getElementById('undoRedoBar').classList.add('visible');
+
+                // Restore panel contents
+                ['explore','analyst','architect','executor','verifier'].forEach(s => {
+                    const p = document.getElementById(`panel-${s}`);
+                    const content = state.stepOutputs[s] || '';
+                    if (p) p.innerHTML = `<div class="markdown-body">${md(content)}</div>`;
+                });
+
+                // Restore active tab
+                if (snap.activeTab) {
+                    document.querySelectorAll('.response-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.response-panel').forEach(p => p.classList.remove('active'));
+                    const tab = document.querySelector(`[data-tab="${snap.activeTab}"]`);
+                    const panel = document.querySelector(`[data-panel="${snap.activeTab}"]`);
+                    if (tab) tab.classList.add('active');
+                    if (panel) panel.classList.add('active');
+                }
+
+                // Restore result panel
+                const r = state.result;
+                if (r) {
+                    const stats = r?.stats;
+                    const hasFailures = stats?.steps_failed?.length > 0;
+                    const allFailed = hasFailures && (stats?.steps_completed?.length === 0);
+                    let resultHtml = '';
+                    if (allFailed) {
+                        resultHtml = `<div style="text-align:center;padding:40px 20px;">
+                            <div style="font-size:48px;margin-bottom:16px;">❌</div>
+                            <h3 style="color:var(--danger);margin-bottom:8px;">任务执行失败</h3>
+                            <p style="color:var(--text-muted);">所有步骤均失败，请检查 API 配置后重试</p>
+                        </div>`;
+                    } else {
+                        resultHtml = `<div class="markdown-body">${md(r?.result || '')}</div>`;
+                        if (hasFailures) {
+                            resultHtml += `<div style="margin-top:16px;padding:12px 16px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;">
+                                <b style="color:var(--danger);">⚠️ 部分步骤失败：</b>
+                                ${stats?.steps_failed?.map(s => `<div style="margin-top:6px;font-size:13px;">❌ <b>${s}</b></div>`).join('')}
+                            </div>`;
+                        }
+                    }
+                    document.getElementById('panel-result').innerHTML = resultHtml;
+
+                    // Restore stats
+                    renderStats(stats);
+                }
+            } else {
+                // Clear result view (undo to pre-task state)
+                document.getElementById('responseSection').style.display = 'none';
+                document.getElementById('stepProgress').style.display = 'none';
+            }
+        }
+
+        // After task completes, save snapshot
+        const _origRenderResult = renderResult;
+        renderResult = function() {
+            _origRenderResult.apply(this, arguments);
+            saveSnapshot();
+        };
 
     </script>
 
