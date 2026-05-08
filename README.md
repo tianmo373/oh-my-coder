@@ -637,12 +637,15 @@ omc context browser
 
 | 模型 ID | 名称 | 提供商 | 上下文 | 状态 |
 |---------|------|--------|--------|------|
-| `deepseek-chat` | DeepSeek V4 | DeepSeek | 128K | ✅ production |
-| `deepseek-reasoner` | DeepSeek R1 | DeepSeek | 128K | ✅ production |
-| `glm-4-flash` | GLM-4-Flash | 智谱 | 200K | ✅ production |
-| `glm-4v-flash` | GLM-4V-Flash（视觉） | 智谱 | 4K 图 | ✅ production |
-| `moonshot-v1-128k` | Kimi-V3-Pro | Moonshot | 128K | ✅ production |
-| `Baichuan4` | Baichuan4-Turbo | 百川 | 128K | ✅ production |
+| `deepseek-chat` | DeepSeek V4 | DeepSeek | 64K | ✅ production |
+| `deepseek-reasoner` | DeepSeek R1 | DeepSeek | 64K | ✅ production |
+| `glm-4-flash` | GLM-4-Flash | 智谱 | 128K | ✅ production |
+| `glm-4v-flash` | GLM-4V-Flash（视觉） | 智谱 | 128K | ✅ production |
+| `MiniMax-Text-01` | MiMo V2 Flash | 小米 | 200K | ✅ production |
+| `moonshot-v1-128k` | Kimi 128K | Moonshot | 128K | ✅ production |
+| `doubao-pro-32k` | Doubao-Pro | 字节跳动 | 32K | ✅ production |
+| `tiangong-3` | 天工 3.0 | 字节跳动 | 128K | ✅ production |
+| `Baichuan4` | 百川 4 | 百川 | 128K | ✅ production |
 
 ### 本地模型（Ollama）
 
