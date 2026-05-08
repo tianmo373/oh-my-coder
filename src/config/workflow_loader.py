@@ -128,6 +128,55 @@ class WorkflowLoader:
 
         return sorted(names)
 
+    def list_builtins(self) -> list[str]:
+        """返回内置工作流名称列表"""
+        names: set[str] = set()
+        if self._default_dir.exists():
+            for p in self._default_dir.glob("*.yaml"):
+                names.add(p.stem)
+        names.update(WORKFLOW_TEMPLATES.keys())
+        return sorted(names)
+
+    def is_builtin(self, name: str) -> bool:
+        """判断是否为内置工作流"""
+        return name in self.list_builtins()
+
+    def parse_yaml_string(self, yaml_str: str, name: str = "") -> Optional[WorkflowConfig]:
+        """
+        将 YAML 字符串解析为 WorkflowConfig。
+
+        Args:
+            yaml_str: YAML 内容字符串
+            name: 工作流名称（用于报错上下文）
+
+        Returns:
+            WorkflowConfig 或解析失败时 None
+        """
+        try:
+            raw = yaml.safe_load(yaml_str) or {}
+            steps = []
+            for s in raw.get("steps", []):
+                steps.append(
+                    StepConfig(
+                        id=s.get("id", s.get("agent", "step")),
+                        agent=s.get("agent", ""),
+                        description=s.get("description", ""),
+                        dependencies=list(s.get("dependencies", [])),
+                        timeout=float(s.get("timeout", 300)),
+                        retry=int(s.get("retry", 0)),
+                        metadata=s.get("metadata", {}),
+                    )
+                )
+            return WorkflowConfig(
+                name=raw.get("name", name) or name,
+                description=raw.get("description", ""),
+                steps=steps,
+                metadata=raw.get("metadata", {}),
+                source="user",
+            )
+        except Exception:
+            return None
+
     def get_workflow_config(self, name: str) -> Optional[WorkflowConfig]:
         """
         获取完整工作流配置（含 metadata）。
@@ -268,6 +317,4 @@ class WorkflowLoader:
             return True
         return False
 
-    def is_builtin(self, name: str) -> bool:
-        """判断是否为内置工作流"""
-        return (self._default_dir / f"{name}.yaml").exists()
+

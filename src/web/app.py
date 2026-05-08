@@ -1130,35 +1130,54 @@ async def test_connection(payload: dict):
 async def list_workflows():
     """列出所有可用工作流（内置 + 用户自定义）"""
     loader = WorkflowLoader()
-    workflows = loader.list_workflows()
-    # 标记内置 vs 用户自定义
+    names = loader.list_workflows()
     builtin = set(loader.list_builtins())
     return JSONResponse({
-        "workflows": [
-            {"name": w["name"], "builtin": w["name"] in builtin}
-            for w in workflows
-        ]
+        "workflows": names,
+        "builtin_count": len(builtin),
+        "user_count": len(names) - len(builtin),
     })
 
 
 @app.get("/api/workflows/{name}")
 async def get_workflow(name: str):
     """获取指定工作流完整配置"""
-    config = WorkflowLoader().load_workflow(name)
+    loader = WorkflowLoader()
+    config = loader.get_workflow_config(name)
     if config is None:
+        # Fallback: 尝试从 WORKFLOW_TEMPLATES
+        steps = WORKFLOW_TEMPLATES.get(name, [])
+        if steps:
+            return JSONResponse({
+                "name": name,
+                "description": "",
+                "source": "builtin",
+                "steps": [s.model_dump() if hasattr(s, "model_dump") else s for s in steps],
+            })
         return JSONResponse({"error": f"工作流 '{name}' 不存在"}, status_code=404)
-    return JSONResponse({"name": name, **config.model_dump()})
-
+    d = config.model_dump() if hasattr(config, "model_dump") else dict(config)
+    return JSONResponse({"name": name, **d})
 
 
 @app.put("/api/workflows/{name}")
 async def save_workflow(name: str, payload: dict):
     """保存或更新自定义工作流（PUT 用于创建或覆盖）"""
     try:
-        WorkflowLoader().save_workflow(name, payload)
+        loader = WorkflowLoader()
+        # 清除旧缓存
+        loader._cache.pop(name, None)
+        # 解析 YAML 字符串
+        yaml_str = payload.get("yaml", "")
+        config = loader.parse_yaml_string(yaml_str, name)
+        if config is None:
+            return JSONResponse({"error": "YAML 解析失败，请检查格式"}, status_code=400)
+        # 确保名称一致
+        config.name = name
+        config.source = "user"
+        loader.save_workflow(name, config)
         return JSONResponse({"status": "ok", "message": f"工作流 '{name}' 已保存"})
-    except Exception:
-        return JSONResponse({"error": f"工作流 '{name}' 保存失败"}, status_code=400)
+    except Exception as e:
+        return JSONResponse({"error": f"工作流 '{name}' 保存失败: {e}"}, status_code=400)
 
 
 @app.delete("/api/workflows/{name}")
