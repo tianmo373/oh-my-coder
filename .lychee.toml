@@ -1,0 +1,14 @@
+# Lychee link checker configuration
+# https://lychee.cli.rs/#/configuration/file
+
+# Exclude URLs that timeout or are unreliable
+exclude = [
+    # RealPython sometimes times out
+    "https://realpython.com/python-debugging-pdb/",
+]
+
+# Timeout for each URL (in seconds)
+timeout = 20
+
+# Maximum number of retries
+max_retries = 2
