@@ -500,7 +500,11 @@ async def save_report(payload: Optional[dict] = None):
         raise HTTPException(status_code=400, detail="task_id required")
 
     task_id = payload["task_id"]
+    # 先从内存查找（当前会话任务）
     task = task_manager.get_task(task_id)
+    # 如果内存没有，从历史记录查找（持久化任务）
+    if not task:
+        task = history_store.get(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
