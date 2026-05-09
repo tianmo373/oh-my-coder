@@ -982,6 +982,10 @@ steps:
                 if (btn.dataset.panel === 'workflows') {
                     loadWorkflows();
                 }
+                // Load custom models when switching to custom-models tab
+                if (btn.dataset.panel === 'custom-models') {
+                    renderCustomModels();
+                }
             });
         });
 

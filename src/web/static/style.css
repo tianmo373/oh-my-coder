@@ -364,6 +364,15 @@ a:hover { text-decoration: underline; }
     letter-spacing: 0.5px;
 }
 
+.form-link {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--primary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.form-link:hover { color: var(--primary-hover); text-decoration: underline; }
+
 .form-textarea,
 .form-input,
 .form-select {
