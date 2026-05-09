@@ -339,38 +339,32 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">分析目标</label>
-                        <div style="display:flex;gap:0;margin-bottom:8px;background:var(--bg-secondary);border-radius:8px;border:1px solid var(--border);overflow:hidden;">
+                        <div class="target-tabs-row">
                             <button type="button" id="tab-local" class="target-tab active" onclick="switchTargetTab('local')">📂 本地路径</button>
                             <button type="button" id="tab-github" class="target-tab" onclick="switchTargetTab('github')">🔗 GitHub</button>
                             <button type="button" id="tab-url" class="target-tab" onclick="switchTargetTab('url')">🌐 网页</button>
                         </div>
-                        <!-- 本地路径 -->
                         <div id="target-local" class="target-panel">
                             <input type="text" id="projectPath" class="form-input" placeholder="输入本地文件夹路径，或点击下方快捷按钮">
-                            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
-                                <button type="button" onclick="setPath('~/Desktop')" style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;color:var(--text-secondary);">📁 桌面</button>
-                                <button type="button" onclick="setPath('~/Documents')" style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;color:var(--text-secondary);">📄 文稿</button>
-                                <button type="button" onclick="setPath('~')" style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;color:var(--text-secondary);">🏠 用户目录</button>
-                                <button type="button" onclick="setPath('.')" style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;color:var(--text-secondary);">📂 当前目录</button>
+                            <div class="quick-buttons-row">
+                                <button type="button" onclick="setPath('~/Desktop')" class="quick-btn">📁 桌面</button>
+                                <button type="button" onclick="setPath('~/Documents')" class="quick-btn">📄 文稿</button>
+                                <button type="button" onclick="setPath('~')" class="quick-btn">🏠 用户目录</button>
+                                <button type="button" onclick="setPath('.')" class="quick-btn">📂 当前目录</button>
                             </div>
-                            <div class="form-hint" style="font-size:12px;color:var(--text-muted);margin-top:4px;">你想让 AI 分析哪个代码文件夹？留空则分析当前目录</div>
+                            <div class="form-hint">你想让 AI 分析哪个代码文件夹？留空则分析当前目录</div>
                         </div>
-                        <!-- GitHub URL -->
                         <div id="target-github" class="target-panel" style="display:none;">
                             <input type="text" id="githubUrl" class="form-input" placeholder="https://github.com/用户名/仓库名">
-                            <div class="form-hint" style="font-size:12px;color:var(--text-muted);margin-top:4px;">粘贴 GitHub 仓库链接，AI 会自动克隆并分析代码</div>
+                            <div class="form-hint">粘贴 GitHub 仓库链接，AI 会自动克隆并分析代码</div>
                         </div>
-                        <!-- 网页 URL -->
                         <div id="target-url" class="target-panel" style="display:none;">
                             <input type="text" id="webUrl" class="form-input" placeholder="https://example.com/page">
-                            <div class="form-hint" style="font-size:12px;color:var(--text-muted);margin-top:4px;">粘贴网页链接，AI 会抓取内容作为分析上下文</div>
+                            <div class="form-hint">粘贴网页链接，AI 会抓取内容作为分析上下文</div>
                         </div>
                     </div>
                     <div class="form-group">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                            <label for="modelSelect" class="form-label" style="margin-bottom:0">模型选择</label>
-                            <button type="button" onclick="openAddCustomModel()" style="background:var(--primary);color:white;border:none;border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">+ 自定义模型</button>
-                        </div>
+                        <label for="modelSelect" class="form-label">模型选择</label>
                         <select id="modelSelect" class="form-select">
                             <option value="deepseek" selected>DeepSeek V4 (推荐·低成本)</option>
                             <option value="deepseek-reasoner">DeepSeek R1 (深度推理)</option>
@@ -387,10 +381,15 @@
                     <div class="form-group">
                         <label for="workflowSelect" class="form-label">工作流</label>
                         <select id="workflowSelect" class="form-select">
-                            <option value="build" selected>🚀 完整开发</option>
+                            <option value="build" selected>🚀 完整开发 (build)</option>
                             <option value="review">🔍 代码审查</option>
                             <option value="debug">🐛 调试修复</option>
                             <option value="test">🧪 测试用例</option>
+                            <option value="refactor">♻️ 重构优化</option>
+                            <option value="doc">📖 文档生成</option>
+                            <option value="pair">👥 结对编程</option>
+                            <option value="autopilot">🤖 自动驾驶</option>
+                            <option value="sequential">📋 顺序执行</option>
                         </select>
                     </div>
                 </div>

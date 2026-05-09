@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import asdict
 
 """
 Web 界面入口 - FastAPI 应用
@@ -493,6 +494,29 @@ async def dashboard_files():
     return JSONResponse({"files": files, "project_path": project_path})
 
 
+@app.post("/api/open-folder")
+async def open_folder(payload: Optional[dict] = None):
+    """打开指定路径的文件夹（在文件管理器中显示）"""
+    if not payload or not payload.get("path"):
+        raise HTTPException(status_code=400, detail="path required")
+
+    path = payload["path"]
+    import platform
+    import subprocess
+
+    try:
+        system = platform.system()
+        if system == "Darwin":  # macOS
+            subprocess.run(["open", path], check=True)
+        elif system == "Windows":
+            subprocess.run(["explorer", path], check=True)
+        else:  # Linux
+            subprocess.run(["xdg-open", path], check=True)
+        return JSONResponse({"status": "ok", "message": f"已打开: {path}"})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
+
 @app.post("/api/save-report")
 async def save_report(payload: Optional[dict] = None):
     """保存任务报告到文件"""
@@ -504,7 +528,7 @@ async def save_report(payload: Optional[dict] = None):
     task = task_manager.get_task(task_id)
     # 如果内存没有，从历史记录查找（持久化任务）
     if not task:
-        task = history_store.get(task_id)
+        task = history_store.load(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
@@ -536,12 +560,27 @@ async def save_report(payload: Optional[dict] = None):
     ]
 
     # 各步骤输出
-    step_outputs = task.get("step_outputs", {})
+    # 先从 result.outputs 找（持久化历史任务）
+    step_outputs = task.get("result", {}).get("outputs", {})
+    # 兼容：如果 result.outputs 没有，尝试 step_outputs（内存任务）
+    if not step_outputs:
+        step_outputs = task.get("step_outputs", {})
     if step_outputs:
         lines.append("## 各步骤输出\n")
         for step_name, output in step_outputs.items():
             lines.append(f"### {step_name}\n")
-            lines.append(str(output))
+            # 根据类型正确处理换行符
+            if isinstance(output, str):
+                lines.append(output)
+            elif isinstance(output, dict):
+                # 如果字典中有 result 字段，直接使用 result 字符串
+                result = output.get("result") or output.get("output") or output.get("content")
+                if isinstance(result, str):
+                    lines.append(result)
+                else:
+                    lines.append(_json.dumps(output, ensure_ascii=False, indent=2))
+            else:
+                lines.append(_json.dumps(output, ensure_ascii=False, indent=2) if output else "无输出")
             lines.append("")
 
     # 最终结果
@@ -553,9 +592,15 @@ async def save_report(payload: Optional[dict] = None):
             lines.append(f"- 耗时: {final.get('execution_time', 0)}s")
             lines.append(f"- Tokens: {final.get('total_tokens', 0)}\n")
             for key, val in final.items():
-                if key not in ("summary", "execution_time", "total_tokens"):
+                if key not in ("summary", "execution_time", "total_tokens", "outputs"):
                     lines.append(f"### {key}\n")
-                    lines.append(str(val))
+                    # 正确处理不同类型
+                    if isinstance(val, str):
+                        lines.append(val)
+                    elif isinstance(val, dict):
+                        lines.append(_json.dumps(val, ensure_ascii=False, indent=2))
+                    else:
+                        lines.append(str(val))
                     lines.append("")
         else:
             lines.append(str(final))
@@ -1472,7 +1517,7 @@ async def get_workflow(name: str):
                 "steps": [s.model_dump() if hasattr(s, "model_dump") else s for s in steps],
             })
         return JSONResponse({"error": f"工作流 '{name}' 不存在"}, status_code=404)
-    d = config.model_dump() if hasattr(config, "model_dump") else dict(config)
+    d = config.model_dump() if hasattr(config, "model_dump") else asdict(config)
     return JSONResponse({"name": name, **d})
 
 

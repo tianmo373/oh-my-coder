@@ -665,7 +665,7 @@
             <!-- Workflows Panel -->
             <div class="settings-panel" id="panel-workflows">
                 <h1 class="page-title">工作流管理</h1>
-                <p class="page-desc">查看、内置工作流，编辑或创建自定义工作流。</p>
+                <p class="page-desc">查看内置工作流，或创建、编辑自定义工作流。</p>
 
                 <style>
                     .wf-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -695,6 +695,7 @@
 
                 <div class="wf-header">
                     <div></div>
+                    <button class="btn btn-primary" onclick="openCreateModal()">➕ 新建工作流</button>
                 </div>
 
                 <div id="wfList"><div class="wf-loading">加载中...</div></div>
@@ -832,6 +833,9 @@ steps:
     </footer>
 
     <script>
+        // ─── Global State (must be before any function that uses them) ───
+        let _workflowsCache = [];
+
         // Theme
         function loadTheme() {
             const t = localStorage.getItem('theme') || 'dark';
@@ -858,7 +862,12 @@ steps:
                 document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
                 document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
                 btn.classList.add('active');
-                document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+                const panelId = 'panel-' + btn.dataset.panel;
+                document.getElementById(panelId).classList.add('active');
+                // Load workflows when switching to workflows tab
+                if (btn.dataset.panel === 'workflows') {
+                    loadWorkflows();
+                }
             });
         });
 
@@ -1342,7 +1351,14 @@ steps:
 
         // ─── Workflow Management ───────────────────────────────────────────────
 
-        let _workflowsCache = [];
+        function escHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
 
         async function loadWorkflows() {
             const container = document.getElementById('wfList');
@@ -1350,21 +1366,28 @@ steps:
             container.innerHTML = '<div class="wf-loading">加载中...</div>';
             try {
                 const res = await fetch('/api/workflows');
-                if (!res.ok) throw new Error(await res.text());
+                if (!res.ok) throw new Error(`API错误: ${res.status} ${await res.text()}`);
                 const data = await res.json();
                 const names = data.workflows || [];
                 if (names.length === 0) {
-                    container.innerHTML = '<div class="wf-empty">暂无工作流</div>';
+                    container.innerHTML = '<div class="wf-empty">暂无工作流 <button class="btn btn-primary btn-sm" onclick="openCreateModal()">创建第一个</button></div>';
                     return;
                 }
                 _workflowsCache = [];
                 let html = '<div class="wf-grid">';
+                let loadedCount = 0;
+                let errorCount = 0;
                 for (const name of names) {
                     try {
                         const r = await fetch(`/api/workflows/${encodeURIComponent(name)}`);
-                        if (!r.ok) continue;
+                        if (!r.ok) {
+                            errorCount++;
+                            console.warn(`Failed to load workflow ${name}: ${r.status}`);
+                            continue;
+                        }
                         const wf = await r.json();
                         _workflowsCache.push(wf);
+                        loadedCount++;
                         const badge = wf.source === 'builtin'
                             ? '<span class="badge" style="background:var(--border);color:var(--text-muted)">内置</span>'
                             : '<span class="badge" style="background:var(--primary-light);color:var(--primary)">用户</span>';
@@ -1385,19 +1408,15 @@ steps:
                     } catch (e) { /* skip bad entry */ }
                 }
                 html += '</div>';
-                container.innerHTML = html;
+                if (loadedCount === 0) {
+                    container.innerHTML = `<div class="wf-empty">加载失败: 无法获取工作流详情 (错误: ${errorCount})<br><button class="btn btn-primary btn-sm" onclick="loadWorkflows()" style="margin-top:12px">重试</button></div>`;
+                } else {
+                    container.innerHTML = html;
+                }
             } catch (e) {
-                container.innerHTML = `<div class="wf-empty">加载失败: ${escHtml(String(e))}</div>`;
+                console.error('loadWorkflows error:', e);
+                container.innerHTML = `<div class="wf-empty">加载失败: ${escHtml(String(e))}<br><button class="btn btn-primary btn-sm" onclick="loadWorkflows()" style="margin-top:12px">重试</button></div>`;
             }
-        }
-
-        function escHtml(s) {
-            return String(s)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
         }
 
         function yamlToString(obj, indent) {
