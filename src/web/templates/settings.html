@@ -142,6 +142,49 @@
         .model-card-custom { position: relative; }
         .model-card-custom:hover .model-card-delete { opacity: 1; }
 
+        /* Custom Models List */
+        .custom-model-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+        .custom-model-item:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-secondary);
+        }
+        .custom-model-info { flex: 1; }
+        .custom-model-name { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .custom-model-meta { font-size: 12px; color: var(--text-muted); }
+        .custom-model-actions { display: flex; gap: 8px; }
+        .custom-model-actions button {
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .custom-model-actions button:hover { background: var(--bg-tertiary); }
+        .custom-model-actions .btn-edit { color: var(--primary); border-color: var(--primary); }
+        .custom-model-actions .btn-edit:hover { background: var(--primary-light); }
+        .custom-model-actions .btn-delete { color: var(--danger); border-color: var(--danger); }
+        .custom-model-actions .btn-delete:hover { background: var(--danger); color: #fff; }
+        .custom-model-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .custom-model-empty-icon { font-size: 48px; margin-bottom: 16px; }
+        .custom-model-empty-text { font-size: 15px; margin-bottom: 20px; }
+
         /* Modal */
         .modal-overlay {
             display: none;
@@ -225,6 +268,7 @@
             <button class="settings-nav-item" data-panel="apikeys">🔑 API Keys</button>
             <button class="settings-nav-item" data-panel="preferences">⚙️ 偏好设置</button>
             <button class="settings-nav-item" data-panel="workflows">🔄 工作流</button>
+            <button class="settings-nav-item" data-panel="custom-models">➕ 自定义模型</button>
         </aside>
 
         <!-- Content -->
@@ -701,6 +745,26 @@
                 <div id="wfList"><div class="wf-loading">加载中...</div></div>
             </div>
 
+            <!-- Custom Models Panel -->
+            <div class="settings-panel" id="panel-custom-models">
+                <h1 class="page-title">自定义模型</h1>
+                <p class="page-desc">添加你自己的模型，支持任何兼容 OpenAI API 的服务。</p>
+
+                <div class="card" style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div class="card-title">📦 我的模型</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">添加的模型会自动出现在首页模型下拉框中</div>
+                        </div>
+                        <button class="btn btn-primary" onclick="openAddCustomModelModal()">➕ 添加模型</button>
+                    </div>
+                </div>
+
+                <div id="customModelsList">
+                    <div class="wf-loading">加载中...</div>
+                </div>
+            </div>
+
             <!-- Preferences Panel -->
             <div class="settings-panel" id="panel-preferences">
                 <h1 class="page-title">偏好设置</h1>
@@ -824,6 +888,56 @@ steps:
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeWfModals()">取消</button>
                 <button class="btn" style="background:var(--danger);color:#fff;border-color:var(--danger)" onclick="confirmDeleteWorkflow()">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Model Modal -->
+    <div class="modal-overlay" id="customModelModal" onclick="closeCustomModelModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h2 id="cmModalTitle">➕ 添加自定义模型</h2>
+            <div class="form-group">
+                <label class="form-label">模型名称 <span style="color:var(--danger)">*</span></label>
+                <input type="text" class="form-input" id="cmName" placeholder="例如：GPT-4o">
+            </div>
+            <div class="form-group">
+                <label class="form-label">模型 ID <span style="color:var(--danger)">*</span> <span style="font-size:12px;color:var(--text-muted)">（API 调用时使用的 ID）</span></label>
+                <input type="text" class="form-input" id="cmModelId" placeholder="例如：gpt-4o">
+            </div>
+            <div class="form-group">
+                <label class="form-label">API 地址 <span style="color:var(--danger)">*</span></label>
+                <input type="text" class="form-input" id="cmUrl" placeholder="https://api.example.com/v1">
+            </div>
+            <div class="form-group">
+                <label class="form-label">API Key <span style="font-size:12px;color:var(--text-muted)">（可选）</span></label>
+                <input type="password" class="form-input" id="cmKey" placeholder="sk-xxxxxxxx">
+            </div>
+            <div class="form-group">
+                <label class="form-label">供应商名称 <span style="font-size:12px;color:var(--text-muted)">（可选，用于分组显示）</span></label>
+                <input type="text" class="form-input" id="cmProvider" placeholder="例如：OpenAI">
+            </div>
+            <div style="display:flex;gap:12px;justify-content:space-between;margin-top:20px;">
+                <button class="btn btn-secondary" id="cmTestBtn" onclick="testCustomModelConnection()">🔗 测试连接</button>
+                <div class="modal-actions" style="margin-top:0;">
+                    <button class="btn btn-secondary" onclick="closeCustomModelModal()">取消</button>
+                    <button class="btn btn-primary" onclick="saveCustomModel()">保存</button>
+                </div>
+            </div>
+            <div id="cmTestResult" style="margin-top:12px;font-size:13px;display:none;"></div>
+            <input type="hidden" id="cmEditId" value="">
+        </div>
+    </div>
+
+    <!-- Confirm Delete Custom Model Modal -->
+    <div class="modal-overlay" id="deleteCustomModelModal" onclick="closeDeleteCustomModelModal(event)">
+        <div class="modal" style="width:400px" onclick="event.stopPropagation()">
+            <h2>⚠️ 确认删除</h2>
+            <p style="color:var(--text-muted);margin-bottom:8px;">确定要删除模型</p>
+            <p style="font-weight:600;font-size:16px;margin-bottom:20px" id="deleteCmName"></p>
+            <p style="color:var(--danger);font-size:13px;margin-bottom:20px">⚠️ 此操作不可撤销，首页下拉框中的该模型也会被移除</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeDeleteCustomModelModal()">取消</button>
+                <button class="btn" style="background:var(--danger);color:#fff;border-color:var(--danger)" onclick="confirmDeleteCustomModel()">确认删除</button>
             </div>
         </div>
     </div>
@@ -1556,6 +1670,212 @@ steps:
             modal.querySelector('#wfDeleteName').textContent = `"${name}"`;
             modal.classList.add('active');
         }
+
+        // ========== Custom Models Management ==========
+        const CUSTOM_MODELS_KEY = 'omc-custom-models';
+
+        function getCustomModels() {
+            try { return JSON.parse(localStorage.getItem(CUSTOM_MODELS_KEY) || '[]'); }
+            catch { return []; }
+        }
+
+        function saveCustomModels(models) {
+            localStorage.setItem(CUSTOM_MODELS_KEY, JSON.stringify(models));
+        }
+
+        function renderCustomModels() {
+            const container = document.getElementById('customModelsList');
+            const models = getCustomModels();
+
+            if (models.length === 0) {
+                container.innerHTML = `
+                    <div class="custom-model-empty">
+                        <div class="custom-model-empty-icon">📦</div>
+                        <div class="custom-model-empty-text">还没有自定义模型</div>
+                        <button class="btn btn-primary" onclick="openAddCustomModelModal()">添加第一个模型</button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = models.map(m => `
+                <div class="custom-model-item">
+                    <div class="custom-model-info">
+                        <div class="custom-model-name">${escapeHtml(m.name)}</div>
+                        <div class="custom-model-meta">
+                            ${m.provider ? `<span style="color:var(--primary);">${escapeHtml(m.provider)}</span> · ` : ''}
+                            模型ID: ${escapeHtml(m.modelId || m.model_id || m.id)} ·
+                            API: ${escapeHtml(m.url).substring(0, 40)}${m.url.length > 40 ? '...' : ''}
+                        </div>
+                    </div>
+                    <div class="custom-model-actions">
+                        <button class="btn-edit" onclick="editCustomModel('${m.id}')">编辑</button>
+                        <button class="btn-delete" onclick="deleteCustomModel('${m.id}')">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
+        }
+
+        function openAddCustomModelModal() {
+            document.getElementById('cmModalTitle').textContent = '➕ 添加自定义模型';
+            document.getElementById('cmName').value = '';
+            document.getElementById('cmModelId').value = '';
+            document.getElementById('cmUrl').value = '';
+            document.getElementById('cmKey').value = '';
+            document.getElementById('cmProvider').value = '';
+            document.getElementById('cmEditId').value = '';
+            document.getElementById('cmTestResult').style.display = 'none';
+            document.getElementById('customModelModal').classList.add('active');
+        }
+
+        function closeCustomModelModal() {
+            document.getElementById('customModelModal').classList.remove('active');
+        }
+
+        function editCustomModel(id) {
+            const models = getCustomModels();
+            const m = models.find(x => x.id === id);
+            if (!m) return;
+
+            document.getElementById('cmModalTitle').textContent = '✏️ 编辑自定义模型';
+            document.getElementById('cmName').value = m.name || '';
+            document.getElementById('cmModelId').value = m.modelId || m.model_id || '';
+            document.getElementById('cmUrl').value = m.url || '';
+            document.getElementById('cmKey').value = m.key || '';
+            document.getElementById('cmProvider').value = m.provider || '';
+            document.getElementById('cmEditId').value = m.id;
+            document.getElementById('cmTestResult').style.display = 'none';
+            document.getElementById('customModelModal').classList.add('active');
+        }
+
+        function saveCustomModel() {
+            const name = document.getElementById('cmName').value.trim();
+            const modelId = document.getElementById('cmModelId').value.trim();
+            const url = document.getElementById('cmUrl').value.trim();
+            const key = document.getElementById('cmKey').value.trim();
+            const provider = document.getElementById('cmProvider').value.trim();
+            const editId = document.getElementById('cmEditId').value;
+
+            if (!name || !modelId || !url) {
+                showToast('请填写必填项：模型名称、模型 ID、API 地址', 'error');
+                return;
+            }
+
+            const models = getCustomModels();
+
+            if (editId) {
+                // Edit existing
+                const idx = models.findIndex(m => m.id === editId);
+                if (idx >= 0) {
+                    models[idx] = { ...models[idx], name, modelId, model_id: modelId, url, key, provider };
+                }
+            } else {
+                // Add new
+                const newModel = {
+                    id: 'cm-' + Date.now(),
+                    name,
+                    modelId,
+                    model_id: modelId,
+                    url,
+                    key,
+                    provider: provider || '自定义'
+                };
+                models.push(newModel);
+            }
+
+            saveCustomModels(models);
+            renderCustomModels();
+            closeCustomModelModal();
+            showToast(editId ? '✅ 已更新' : '✅ 已添加');
+        }
+
+        let _deleteCmId = null;
+
+        function deleteCustomModel(id) {
+            const models = getCustomModels();
+            const m = models.find(x => x.id === id);
+            if (!m) return;
+
+            _deleteCmId = id;
+            document.getElementById('deleteCmName').textContent = m.name;
+            document.getElementById('deleteCustomModelModal').classList.add('active');
+        }
+
+        function closeDeleteCustomModelModal() {
+            document.getElementById('deleteCustomModelModal').classList.remove('active');
+            _deleteCmId = null;
+        }
+
+        function confirmDeleteCustomModel() {
+            if (!_deleteCmId) return;
+
+            const models = getCustomModels().filter(m => m.id !== _deleteCmId);
+            saveCustomModels(models);
+            renderCustomModels();
+            closeDeleteCustomModelModal();
+            showToast('已删除');
+        }
+
+        async function testCustomModelConnection() {
+            const url = document.getElementById('cmUrl').value.trim();
+            const key = document.getElementById('cmKey').value.trim();
+            const modelId = document.getElementById('cmModelId').value.trim();
+            const resultDiv = document.getElementById('cmTestResult');
+
+            if (!url || !modelId) {
+                resultDiv.textContent = '⚠️ 请先填写 API 地址和模型 ID';
+                resultDiv.style.color = 'var(--danger)';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            const btn = document.getElementById('cmTestBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ 测试中...';
+            resultDiv.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/test-connection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ base_url: url, api_key: key, model_id: modelId })
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    resultDiv.textContent = '✅ ' + data.msg;
+                    resultDiv.style.color = 'var(--success)';
+                } else {
+                    resultDiv.textContent = '❌ ' + data.msg;
+                    resultDiv.style.color = 'var(--danger)';
+                }
+            } catch (e) {
+                resultDiv.textContent = '❌ 测试失败: ' + e.message;
+                resultDiv.style.color = 'var(--danger)';
+            }
+
+            resultDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = '🔗 测试连接';
+        }
+
+        // Auto-load custom models when the tab is opened
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.getElementById('panel-custom-models')) {
+                const obs = new MutationObserver(() => {
+                    const panel = document.getElementById('panel-custom-models');
+                    if (panel && panel.classList.contains('active')) renderCustomModels();
+                });
+                obs.observe(document.getElementById('panel-custom-models'), { attributes: true, attributeFilter: ['class'] });
+                // If already on custom models tab on load, load immediately
+                if (document.getElementById('panel-custom-models').classList.contains('active')) renderCustomModels();
+            }
+        });
 
         // Auto-load workflows when the workflows tab is opened (via MutationObserver)
         document.addEventListener('DOMContentLoaded', () => {
