@@ -416,6 +416,41 @@ a:hover { text-decoration: underline; }
     align-items: start;
 }
 
+/* Target tabs row */
+.target-tabs-row {
+    display: flex;
+    gap: 0;
+    margin-bottom: 8px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+/* Quick buttons row */
+.quick-buttons-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: nowrap;
+}
+
+.quick-btn {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.quick-btn:hover {
+    background: var(--border);
+    color: var(--text-primary);
+}
+
 /* ===== Badge ===== */
 .badge {
     display: inline-flex;
