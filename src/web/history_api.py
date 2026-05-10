@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Optional
 
 """
@@ -14,9 +15,29 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
+
+# ========================================
+# API Token 校验（IDOR 修复）
+# ========================================
+API_TOKEN = os.environ.get("OMC_API_TOKEN")
+security = HTTPBearer(auto_error=False)
+
+
+async def verify_api_token(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+) -> Optional[str]:
+    """验证 API Token，未配置 token 时允许操作"""
+    if not API_TOKEN:
+        return None  # 未配置 token，允许操作
+
+    if not credentials or credentials.credentials != API_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid API token")
+
+    return credentials.credentials
 
 # 创建路由器
 history_router = APIRouter(prefix="/api/history", tags=["history"])
@@ -174,8 +195,11 @@ async def get_history_detail(task_id: str):
 
 
 @history_router.delete("/{task_id}")
-async def delete_history(task_id: str):
-    """删除历史记录"""
+async def delete_history(
+    task_id: str,
+    token: Optional[str] = Depends(verify_api_token),
+):
+    """删除历史记录（需要 API token 校验）"""
     success = history_store.delete(task_id)
     return JSONResponse({"success": success})
 

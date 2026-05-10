@@ -20,7 +20,7 @@ from typing import Any, Optional
 from urllib.parse import urlparse
 
 import uvicorn
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -38,7 +38,12 @@ try:
     from src.core.orchestrator import WORKFLOW_TEMPLATES, Orchestrator
     from src.core.router import ModelRouter, RouterConfig
     from src.web.dashboard_api import router as dashboard_router
-    from src.web.history_api import agent_router, history_router, history_store
+    from src.web.history_api import (
+        agent_router,
+        history_router,
+        history_store,
+        verify_api_token,
+    )
     from src.web.local_models_api import router as local_models_router
     from src.web.share_api import router as share_router
     from src.web.team_api import router as team_router
@@ -440,8 +445,11 @@ async def get_task(task_id: str):
 
 
 @app.delete("/api/tasks/{task_id}")
-async def delete_task(task_id: str):
-    """删除任务"""
+async def delete_task(
+    task_id: str,
+    token: Optional[str] = Depends(verify_api_token),
+):
+    """删除任务（需要 API token 校验）"""
     if not task_manager.delete_task(task_id):
         raise HTTPException(status_code=404, detail="Task not found")
     return JSONResponse({"status": "deleted"})
