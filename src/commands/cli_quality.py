@@ -6,18 +6,20 @@ omc quality - 代码质量检查命令
 支持以下子命令：
 - omc quality check [path]  # 运行 ruff check
 - omc quality fix [path]   # 运行 ruff check --fix
-- omc quality all [path]   # 先 black 再 ruff check
+- omc quality type [path]  # 运行 mypy 类型检查
+- omc quality all [path]   # 先 black 再 ruff check 再 mypy
 """
 
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 
 import typer
 from rich.console import Console
 
-app = typer.Typer(help="代码质量检查 - ruff/black 集成")
+app = typer.Typer(help="代码质量检查 - ruff/black/mypy 集成")
 console = Console()
 
 
@@ -28,7 +30,28 @@ def _check_ruff_installed() -> bool:
 
 def _check_black_installed() -> bool:
     """检查 black 是否已安装"""
-    return shutil.which("black") is not None
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "black", "--version"],
+            capture_output=True,
+            check=True,
+        )
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
+
+def _check_mypy_installed() -> bool:
+    """检查 mypy 是否已安装"""
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "mypy", "--version"],
+            capture_output=True,
+            check=True,
+        )
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
 
 
 @app.command("check")
@@ -110,10 +133,68 @@ def quality_fix(
             console.print(result.stdout)
             if result.stderr:
                 console.print(f"[red]{result.stderr}[/red]")
-            console.print(f"\n[yellow]⚠️ 已修复部分问题，仍有 {result.returncode} 个问题待手动处理[/yellow]")
+            console.print(
+                f"\n[yellow]⚠️ 已修复部分问题，仍有 {result.returncode} 个问题待手动处理[/yellow]"
+            )
 
     except FileNotFoundError:
         console.print("[red]❌ ruff 命令未找到[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"[red]❌ 执行失败: {e}[/red]")
+        raise typer.Exit(1)
+
+
+@app.command("type")
+def quality_type(
+    path: Optional[str] = typer.Argument("src", help="要检查的路径（默认 src/）"),
+) -> None:
+    """
+    运行 mypy 类型检查
+
+    Examples:
+        omc quality type
+        omc quality type src/
+        omc quality type src/commands/
+    """
+    if not _check_mypy_installed():
+        console.print("[red]❌ mypy 未安装，请运行:[/red]")
+        console.print("  [cyan]pip install mypy[/cyan]")
+        raise typer.Exit(1)
+
+    target_path = Path(path) if path else Path("src")
+
+    console.print(f"[bold]🔍 运行 mypy 类型检查 {target_path}...[/bold]\n")
+
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "mypy", str(target_path), "--no-error-summary"],
+            capture_output=True,
+            text=True,
+        )
+
+        if result.returncode == 0:
+            console.print("[green]✅ 类型检查通过[/green]")
+        else:
+            # Parse output to count errors
+            output = result.stdout + result.stderr
+            lines = [
+                line for line in output.split("\n") if line.strip() and "error:" in line
+            ]
+            error_count = len(lines)
+
+            # Show up to 10 errors
+            console.print("[yellow]⚠️ 发现错误:[/yellow]\n")
+            for line in lines[:10]:
+                console.print(f"  {line}")
+            if len(lines) > 10:
+                console.print(f"\n  ... 还有 {len(lines) - 10} 个错误未显示")
+
+            console.print(f"\n[yellow]⚠️ 发现 {error_count} 个类型错误[/yellow]")
+            raise typer.Exit(1)
+
+    except FileNotFoundError:
+        console.print("[red]❌ mypy 命令未找到[/red]")
         raise typer.Exit(1)
     except Exception as e:
         console.print(f"[red]❌ 执行失败: {e}[/red]")
@@ -125,7 +206,7 @@ def quality_all(
     path: Optional[str] = typer.Argument("src", help="要处理的路径（默认 src/）"),
 ) -> None:
     """
-    先运行 black 格式化，再运行 ruff check
+    先运行 black 格式化，再运行 ruff check，最后运行 mypy 类型检查
 
     Examples:
         omc quality all
@@ -142,6 +223,11 @@ def quality_all(
         console.print("  [cyan]pip install black[/cyan]")
         raise typer.Exit(1)
 
+    if not _check_mypy_installed():
+        console.print("[red]❌ mypy 未安装，请运行:[/red]")
+        console.print("  [cyan]pip install mypy[/cyan]")
+        raise typer.Exit(1)
+
     target_path = Path(path) if path else Path("src")
 
     # Step 1: black 格式化
@@ -149,7 +235,7 @@ def quality_all(
 
     try:
         result = subprocess.run(
-            ["black", str(target_path)],
+            [sys.executable, "-m", "black", str(target_path)],
             capture_output=True,
             text=True,
         )
@@ -180,7 +266,7 @@ def quality_all(
         )
 
         if result.returncode == 0:
-            console.print("[green]✅ ruff check passed[/green]")
+            console.print("[green]✅ ruff check passed[/green]\n")
         else:
             console.print(result.stdout)
             if result.stderr:
@@ -194,6 +280,44 @@ def quality_all(
     except Exception as e:
         console.print(f"[red]❌ ruff 执行失败: {e}[/red]")
         raise typer.Exit(1)
+
+    # Step 3: mypy 类型检查
+    console.print(f"[bold]🔍 运行 mypy 类型检查 {target_path}...[/bold]\n")
+
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "mypy", str(target_path), "--no-error-summary"],
+            capture_output=True,
+            text=True,
+        )
+
+        if result.returncode == 0:
+            console.print("[green]✅ mypy 类型检查通过[/green]\n")
+        else:
+            output = result.stdout + result.stderr
+            lines = [
+                line for line in output.split("\n") if line.strip() and "error:" in line
+            ]
+            error_count = len(lines)
+
+            console.print("[yellow]⚠️ 发现类型错误:[/yellow]\n")
+            for line in lines[:10]:
+                console.print(f"  {line}")
+            if len(lines) > 10:
+                console.print(f"\n  ... 还有 {len(lines) - 10} 个错误未显示")
+
+            console.print(f"\n[yellow]⚠️ 发现 {error_count} 个类型错误[/yellow]")
+            raise typer.Exit(1)
+
+    except FileNotFoundError:
+        console.print("[red]❌ mypy 命令未找到[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"[red]❌ mypy 执行失败: {e}[/red]")
+        raise typer.Exit(1)
+
+    # All checks passed
+    console.print("[bold green]🎉 所有检查通过！[/bold green]")
 
 
 @app.callback(invoke_without_command=True)
