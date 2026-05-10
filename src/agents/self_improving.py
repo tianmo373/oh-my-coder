@@ -124,7 +124,7 @@ class LearningStore:
             """
             )
 
-    def record_feedback(self, feedback: ExecutionFeedback) -> int:
+    def record_feedback(self, feedback: ExecutionFeedback) -> Optional[int]:
         """记录执行反馈"""
         feedback.timestamp = datetime.now().isoformat()
         with sqlite3.connect(self.db_path) as conn:
@@ -152,7 +152,7 @@ class LearningStore:
             )
             return cursor.lastrowid
 
-    def record_adjustment(self, adjustment: StrategyAdjustment) -> int:
+    def record_adjustment(self, adjustment: StrategyAdjustment) -> Optional[int]:
         """记录策略调整"""
         adjustment.timestamp = datetime.now().isoformat()
         with sqlite3.connect(self.db_path) as conn:
@@ -307,7 +307,7 @@ class SelfImprovingAgent(BaseAgent):
         error: Optional[Exception] = None,
         user_correction: Optional[str] = None,
         retry_count: int = 0,
-    ) -> int:
+    ) -> Optional[int]:
         """记录执行结果"""
         error_type = None
         error_message = None
@@ -435,7 +435,7 @@ class SelfImprovingAgent(BaseAgent):
             effectiveness_score=0.5,  # 初始分数，后续根据效果调整
         )
 
-    def report(self, agent_type: Optional[str] = None) -> dict:
+    def report(self, agent_type: Optional[str] = None) -> dict[str, Any]:
         """生成学习报告"""
         report = {
             "generated_at": datetime.now().isoformat(),
@@ -463,7 +463,7 @@ class SelfImprovingAgent(BaseAgent):
             ).fetchall()
             return [row[0] for row in rows]
 
-    async def _run(self, task: str) -> AgentOutput:
+    async def run_command(self, task: str) -> AgentOutput:  # type: ignore[override]
         """执行自我改进任务"""
         import json
 
@@ -502,8 +502,9 @@ class SelfImprovingAgent(BaseAgent):
             data = self.report()
 
         return AgentOutput(
+            agent_name="self-improving",
             status=AgentStatus.SUCCESS,
-            content=json.dumps(data, ensure_ascii=False, indent=2),
+            result=json.dumps(data, ensure_ascii=False, indent=2),
         )
 
     def auto_create_skill(
@@ -726,7 +727,7 @@ class SelfImprovingAgent(BaseAgent):
 
         sm = SkillManager()
         best_practices = self._memory.get_by_category("best-practice")
-        results = {"created": [], "skipped": [], "errors": []}
+        results: dict[str, Any] = {"created": [], "skipped": [], "errors": []}
 
         for entry in best_practices:
             skill_id = entry.id
