@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
     <style>
         /* Pipeline */
         .pipeline-container {
@@ -476,9 +477,15 @@
             const icons = { success: '✅', error: '❌', info: 'ℹ️' };
             const t = document.createElement('div');
             t.className = `toast ${type}`;
-            t.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+            t.textContent = (icons[type] || 'ℹ️') + ' ' + msg;
             document.getElementById('toastContainer').appendChild(t);
             setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; setTimeout(() => t.remove(), 300); }, ms);
+        }
+
+        // ===== XSS Escape Helper =====
+        function escapeHtml(s) {
+            if (!s) return '';
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
         // ===== Theme =====
@@ -543,8 +550,8 @@
                 <div class="model-item">
                     <div class="model-item-icon">${m.icon}</div>
                     <div class="model-item-info">
-                        <div class="model-item-name">${m.name}</div>
-                        <div class="model-item-provider">${m.provider} · <span class="badge badge-${m.badge === '免费' ? 'success' : m.badge === '本地' ? 'primary' : 'warning'}" style="font-size:11px;">${m.badge}</span></div>
+                        <div class="model-item-name">${escapeHtml(m.name)}</div>
+                        <div class="model-item-provider">${escapeHtml(m.provider)} · <span class="badge badge-${m.badge === '免费' ? 'success' : m.badge === '本地' ? 'primary' : 'warning'}" style="font-size:11px;">${escapeHtml(m.badge)}</span></div>
                     </div>
                     <div class="model-item-status ${m.online ? 'online' : 'offline'}"></div>
                 </div>
@@ -614,7 +621,16 @@
 
         // ===== Markdown =====
         marked.setOptions({ breaks: true, gfm: true });
-        function md(t) { return t ? marked.parse(t) : '<p style="color:var(--text-muted)">暂无输出</p>'; }
+        function md(t) {
+            if (!t) return '<p style="color:var(--text-muted)">暂无输出</p>';
+            try {
+                const html = marked.parse(t);
+                if (typeof DOMPurify !== 'undefined') {
+                    return DOMPurify.sanitize(html, { USE_PROFILES: { html: true }, FORCE_BODY: false });
+                }
+                return html;
+            } catch (e) { return t; }
+        }
 
         // ===== SSE =====
         let es = null;
@@ -691,10 +707,9 @@
             else if (type === 'step_failed') {
                 setStepStatus(step, 'failed');
                 updateDynamicStep(step, 'failed');
-                showToast(`❌ ${step} 失败: ${content || '未知错误'}`, 'error');
-                // 在面板显示错误
+                showToast(`❌ ${escapeHtml(step)} 失败`, 'error');
                 const panel = document.getElementById(`panel-${step}`);
-                if (panel) panel.innerHTML = `<div style="color:var(--danger);padding:16px;">❌ <b>${step}</b> 执行失败:<br><pre style="margin-top:8px;white-space:pre-wrap;font-size:13px;">${content || '未知错误'}</pre></div>`;
+                if (panel) panel.innerHTML = `<div style="color:var(--danger);padding:16px;">❌ <b>${escapeHtml(step)}</b> 执行失败:<br><pre style="margin-top:8px;white-space:pre-wrap;font-size:13px;">${escapeHtml(content || '未知错误')}</pre></div>`;
             }
             else if (type === 'complete') { state.result = d.result || d; renderResult(); autoSaveReport(taskId); }
             else if (type === 'error') { showToast(`执行失败: ${content}`, 'error'); stopRunning(); }
@@ -723,7 +738,7 @@
                 resultHtml = `<div class="markdown-body">${md(r?.result || '')}</div>
                     <div style="margin-top:16px;padding:12px 16px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;">
                         <b style="color:var(--danger);">⚠️ 部分步骤失败：</b>
-                        ${stats?.steps_failed?.map(s => `<div style="margin-top:6px;font-size:13px;">❌ <b>${s}</b>: ${state.stepOutputs[s] || '未知错误'}</div>`).join('')}
+                        ${stats?.steps_failed?.map(s => `<div style="margin-top:6px;font-size:13px;">❌ <b>${escapeHtml(s)}</b>: ${escapeHtml(state.stepOutputs[s] || '未知错误')}</div>`).join('')}
                     </div>`;
             } else {
                 resultHtml = `<div class="markdown-body">${md(r?.result || r)}</div>`;
@@ -733,11 +748,10 @@
             // 各步骤面板
             ['explore','analyst','architect','executor','verifier'].forEach(s => {
                 const p = document.getElementById(`panel-${s}`);
-                if (p && !p.querySelector('pre')) { // 不覆盖已有的错误信息
+                if (p && !p.querySelector('pre')) {
                     p.innerHTML = `<div class="markdown-body">${md(state.stepOutputs[s] || r?.outputs?.[s]?.result)}</div>`;
                 }
             });
-
             renderStats(stats);
             document.querySelector('[data-tab="result"]').click();
             if (allFailed) {

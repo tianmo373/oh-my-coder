@@ -923,7 +923,7 @@ steps:
             const icons = { success: '✅', error: '❌', info: 'ℹ️' };
             const t = document.createElement('div');
             t.className = `toast ${type}`;
-            t.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+            t.textContent = (icons[type] || 'ℹ️') + ' ' + msg;
             document.getElementById('toastContainer').appendChild(t);
             setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
         }
@@ -1504,7 +1504,7 @@ steps:
             if (wf) yaml = yamlToString({ name: wf.name, description: wf.description, steps: wf.steps });
             const modal = document.getElementById('wfViewModal');
             modal.querySelector('#wfViewTitle').textContent = name;
-            modal.querySelector('#wfViewBadge').innerHTML = `<span class="badge" style="background:var(--border);color:var(--text-muted)">${wf?.source === 'builtin' ? '内置' : '用户'}</span>`;
+            modal.querySelector('#wfViewBadge').textContent = wf?.source === 'builtin' ? '内置' : '用户';
             modal.querySelector('#wfViewCode').textContent = yaml;
             modal.classList.add('active');
         }

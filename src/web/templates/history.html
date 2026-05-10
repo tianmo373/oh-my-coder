@@ -158,6 +158,9 @@
     <footer class="footer"><p>Made with ❤️ by Oh My Coder</p></footer>
 
     <script>
+        // XSS escape helper
+        function esc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
         // Theme
         function loadTheme() {
             const t = localStorage.getItem('theme') || 'dark';
@@ -197,19 +200,25 @@
                         : status === 'failed'
                             ? '<span class="badge badge-danger">失败</span>'
                             : '<span class="badge badge-muted">' + status + '</span>';
+                    const ts = r.started_at || '-';
+                    const wf = r.workflow || '-';
+                    const model = r.model || '-';
+                    const taskId = r.task_id;
+                    const taskTitle = (r.task || r.task_id || '').replace(/'/g, '\\\'');
+                    const title = taskTitle.length > 40 ? taskTitle.slice(0, 40) + '…' : taskTitle;
                     return `
-                        <div class="history-item" data-task-id="${r.task_id}" onclick="showTaskDetail('${r.task_id}')">
+                        <div class="history-item" data-task-id="${taskId}" onclick="showTaskDetail('${taskId}')">
                             <div class="history-item-header">
-                                <span class="history-item-title">${r.task || r.task_id}</span>
+                                <span class="history-item-title">${title}</span>
                                 <div style="display:flex;align-items:center;gap:8px;">
                                     ${statusBadge}
-                                    <button class="btn-delete-task" onclick="event.stopPropagation();deleteTask('${r.task_id}')" title="删除任务">🗑️</button>
+                                    <button class="btn-delete-task" onclick="event.stopPropagation();deleteTask('${taskId}')" title="删除任务">🗑️</button>
                                 </div>
                             </div>
                             <div class="history-item-meta">
-                                <span>🕐 ${r.started_at || '-'}</span>
-                                <span>⚡ ${r.workflow || '-'}</span>
-                                <span>🤖 ${r.model || '-'}</span>
+                                <span>🕐 ${ts}</span>
+                                <span>⚡ ${wf}</span>
+                                <span>🤖 ${model}</span>
                                 ${r.stats ? `<span>🪙 ${(r.stats.total_tokens || 0).toLocaleString()} tokens</span>` : ''}
                             </div>
                         </div>`;
@@ -284,32 +293,28 @@
 
                 modalTitle.textContent = task.task || '任务详情';
                 
-                // Build detail HTML
-                let html = `<div style="margin-bottom:16px;">\n                    <p><strong>状态：</strong>${task.status === 'completed' ? '✅ 成功' : '❌ 失败'}</p>\n                    <p><strong>工作流：</strong>${task.workflow || '-'}</p>\n                    <p><strong>模型：</strong>${task.model || '-'}</p>\n                    <p><strong>项目路径：</strong>${task.project_path || '-'}</p>\n                    <p><strong>开始时间：</strong>${task.started_at || '-'}</p>\n                    <p><strong>完成时间：</strong>${task.completed_at || '-'}</p>\n                </div>`;
+                let html = `<div style="margin-bottom:16px;">\n                    <p><strong>状态：</strong>${task.status === 'completed' ? '✅ 成功' : '❌ 失败'}</p>\n                    <p><strong>工作流：</strong>${esc(task.workflow || '-')}</p>\n                    <p><strong>模型：</strong>${esc(task.model || '-')}</p>\n                    <p><strong>项目路径：</strong>${esc(task.project_path || '-')}</p>\n                    <p><strong>开始时间：</strong>${esc(task.started_at || '-')}</p>\n                    <p><strong>完成时间：</strong>${esc(task.completed_at || '-')}</p>\n                </div>`;
 
-                // Stats
                 if (task.stats) {
-                    html += `<h3 style="margin:16px 0 8px;font-size:15px;">📊 统计</h3>\n                    <p>Tokens: ${(task.stats.total_tokens || 0).toLocaleString()}</p>\n                    <p>执行时间: ${task.stats.execution_time || 0}s</p>\n                    <p>完成步骤: ${(task.stats.steps_completed || []).join(', ') || '-'}</p>`;
+                    html += `<h3 style="margin:16px 0 8px;font-size:15px;">📊 统计</h3>\n                    <p>Tokens: ${(task.stats.total_tokens || 0).toLocaleString()}</p>\n                    <p>执行时间: ${task.stats.execution_time || 0}s</p>\n                    <p>完成步骤: ${esc((task.stats.steps_completed || []).join(', ') || '-')}</p>`;
                 }
 
-                // Result
                 if (task.result) {
                     html += `<h3 style="margin:16px 0 8px;font-size:15px;">📝 结果</h3>`;
                     if (typeof task.result === 'object') {
-                        html += `<pre>${JSON.stringify(task.result, null, 2)}</pre>`;
+                        html += `<pre>${esc(JSON.stringify(task.result, null, 2))}</pre>`;
                     } else {
-                        html += `<pre>${task.result}</pre>`;
+                        html += `<pre>${esc(task.result)}</pre>`;
                     }
                 }
 
-                // Error
                 if (task.error) {
-                    html += `<h3 style="margin:16px 0 8px;font-size:15px;color:var(--danger)">⚠️ 错误</h3>\n                    <pre style="color:var(--danger)">${task.error}</pre>`;
+                    html += `<h3 style="margin:16px 0 8px;font-size:15px;color:var(--danger)">⚠️ 错误</h3>\n                    <pre style="color:var(--danger)">${esc(task.error)}</pre>`;
                 }
 
                 modalBody.innerHTML = html;
             } catch (e) {
-                modalBody.innerHTML = `<div style="color:var(--danger)">加载失败: ${e.message}</div>`;
+                modalBody.innerHTML = `<div style="color:var(--danger)">加载失败: ${esc(e.message)}</div>`;
             }
         }
 

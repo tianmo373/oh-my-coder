@@ -166,6 +166,8 @@
     <footer class="footer"><p>Made with ❤️ by Oh My Coder</p></footer>
 
     <script>
+        // XSS escape helper
+        function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
         // Theme
         function loadTheme() {
             const t = localStorage.getItem('theme') || 'dark';
@@ -201,7 +203,7 @@
                 const data = await res.json();
                 if (data.files) {
                     document.getElementById('fileList').innerHTML = data.files.slice(0, 15).map(f =>
-                        `<div class="file-item" onclick="openFile('${f.path}')" style="cursor:pointer;" title="点击打开文件所在文件夹"><span class="file-icon">📄</span><span>${f.name}</span><span style="margin-left:auto;color:var(--text-muted)">${f.size || ''}</span></div>`
+                        `<div class="file-item" onclick="openFile('${escHtml(f.path)}')" style="cursor:pointer;" title="点击打开文件所在文件夹"><span class="file-icon">📄</span><span>${escHtml(f.name)}</span><span style="margin-left:auto;color:var(--text-muted)">${escHtml(f.size || '')}</span></div>`
                     ).join('');
                     // 设置"打开项目文件夹"按钮
                     if (data.project_path) {
