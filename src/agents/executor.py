@@ -28,8 +28,8 @@ import subprocess
 from pathlib import Path
 from typing import Any, Optional
 
-from ..core.router import TaskType
 from ..core.dependency_resolver import DependencyResolver
+from ..core.router import TaskType
 from .base import (
     AgentContext,
     AgentLane,
