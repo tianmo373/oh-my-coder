@@ -81,7 +81,6 @@ MODULE_TO_PACKAGE: dict[str, str] = {
     "autogen": "pyautogen",
     "crewai": "crewai",
     # 其他常用
-    "dotenv": "python-dotenv",
     "tiktoken": "tiktoken",
     "aiofiles": "aiofiles",
     "websockets": "websockets",
@@ -119,7 +118,7 @@ class DependencyResolver:
         "argparse", "getopt", "configparser", "optparse", "shutil", "tempfile",
         "pathlib", "glob", "fnmatch", "linecache", "tokenize", "keyword",
         "ast", "dis", "types", "copy", "pickle", "marshal", "gc",
-        "weakref", "types", "typing", "abc", "contextlib", "dataclasses",
+        "weakref", "typing", "abc", "contextlib", "dataclasses",
         "enum", "graphlib", "pprint", "textwrap", "unicodedata", "string",
         "struct", "codecs", "encoding", "formatter", "atexit", "traceback",
         "sysconfig", "builtins", "__future__",
@@ -161,10 +160,10 @@ class DependencyResolver:
                     # 去除 as 后面的别名
                     if ' as ' in module:
                         module = module.split(' as ')[0]
-                    
+
                     # 只取顶层模块名
                     root_module = module.split('.')[0]
-                    
+
                     if root_module and root_module not in seen:
                         seen.add(root_module)
                         pkg = self._map_to_package(root_module)
@@ -187,19 +186,19 @@ class DependencyResolver:
         # 直接检查
         if module_name in self.STANDARD_LIBS:
             return True
-        
+
         # 检查是否是标准库的子模块
         for submod in self.STANDARD_LIB_SUBMODULES:
             if module_name.startswith(submod.split('.')[0]):
                 return True
-        
+
         return False
 
     def check_installed(self, package_name: str) -> bool:
         """检查包是否已安装"""
         if package_name in self._package_cache:
             return self._package_cache[package_name] is True
-        
+
         try:
             result = subprocess.run(
                 ["pip", "show", package_name],
@@ -216,41 +215,41 @@ class DependencyResolver:
     def check_dependencies(self, dependencies: list[DependencyInfo]) -> ResolutionResult:
         """检查依赖是否已安装"""
         result = ResolutionResult()
-        
+
         for dep in dependencies:
             if dep.is_standard_lib:
                 continue
-            
+
             result.needed.append(dep)
-            
+
             if self.check_installed(dep.package_name):
                 result.installed.append(dep)
             else:
                 result.missing.append(dep)
-        
+
         return result
 
     def install_missing(
-        self, 
-        missing: list[DependencyInfo], 
+        self,
+        missing: list[DependencyInfo],
         quiet: bool = True
     ) -> ResolutionResult:
         """安装缺失的依赖"""
         result = ResolutionResult()
         result.missing = missing
-        
+
         for dep in missing:
             try:
                 cmd = ["pip", "install", dep.package_name]
                 if quiet:
                     cmd.append("-q")
-                
+
                 proc = subprocess.run(
                     cmd,
                     capture_output=True,
                     timeout=120,
                 )
-                
+
                 if proc.returncode == 0:
                     result.installed.append(dep)
                     self._package_cache[dep.package_name] = True
@@ -261,28 +260,28 @@ class DependencyResolver:
                 result.failed.append((dep.package_name, "Installation timeout"))
             except Exception as e:
                 result.failed.append((dep.package_name, str(e)))
-        
+
         # 更新 missing 列表
         result.needed = missing
         result.missing = [d for d in missing if d not in result.installed]
-        
+
         return result
 
     def resolve(self, code: str, auto_install: bool = True) -> ResolutionResult:
         """解析代码依赖并可选安装"""
         # 提取依赖
         deps = self.extract_from_code(code)
-        
+
         # 检查哪些缺失
         result = self.check_dependencies(deps)
-        
+
         # 安装缺失的
         if auto_install and result.missing:
             install_result = self.install_missing(result.missing)
             result.installed.extend(install_result.installed)
             result.failed.extend(install_result.failed)
             result.missing = install_result.missing
-        
+
         return result
 
 
