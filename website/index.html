@@ -622,9 +622,180 @@
                 transform: rotate(90deg);
             }
         }
+
+    /* Navigation Bar */
+    .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: rgba(10, 14, 26, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+        transition: all 0.3s ease;
+    }
+
+    .navbar.scrolled {
+        background: rgba(10, 14, 26, 0.95);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .navbar-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 2rem;
+        height: 64px;
+    }
+
+    .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: var(--text-primary);
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .navbar-brand .logo-icon {
+        font-size: 1.5rem;
+    }
+
+    .navbar-brand .brand-highlight {
+        background: linear-gradient(135deg, var(--accent-amber), var(--accent-cyan));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .navbar-links {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .navbar-links a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .navbar-links a:hover {
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .navbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .btn-github {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .btn-github:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--accent-cyan);
+    }
+
+    .mobile-toggle {
+        display: none;
+        background: none;
+        border: none;
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0.5rem;
+    }
+
+    html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 80px;
+    }
+
+    body {
+        padding-top: 64px;
+    }
+
+    @media (max-width: 768px) {
+        .navbar-links {
+            display: none;
+            position: absolute;
+            top: 64px;
+            left: 0;
+            right: 0;
+            background: rgba(10, 14, 26, 0.98);
+            border-bottom: 1px solid var(--border);
+            flex-direction: column;
+            padding: 1rem;
+        }
+
+        .navbar-links.active {
+            display: flex;
+        }
+
+        .navbar-links a {
+            padding: 0.75rem 1rem;
+            width: 100%;
+        }
+
+        .mobile-toggle {
+            display: block;
+        }
+
+        .navbar-actions .btn-github {
+            display: none;
+        }
+    }
+
     </style>
 </head>
 <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="#" class="navbar-brand">
+                <span class="logo-icon">🐾</span>
+                <span>Oh My <span class="brand-highlight">Coder</span></span>
+            </a>
+            <div class="navbar-links">
+                <a href="#security">安全合规</a>
+                <a href="#features">核心特性</a>
+                <a href="#agents">Agent 工作流</a>
+                <a href="#quickstart">快速开始</a>
+                <a href="#faq">常见问题</a>
+            </div>
+            <div class="navbar-actions">
+                <a href="https://github.com/VOBC/oh-my-coder" target="_blank" class="btn-github">
+                    <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                    GitHub
+                </a>
+                <button class="mobile-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('active')">☰</button>
+            </div>
+        </div>
+    </nav>
+
     <!-- Hero -->
     <section class="hero">
         <div class="hero-badge">🛡️ 国产替代方案 · 本地运行 · 数据不出境</div>
@@ -715,7 +886,7 @@
     </section>
 
     <!-- Trust Banner -->
-    <section class="trust-banner">
+    <section class="trust-banner" id="security">
         <div class="trust-container">
             <h2 class="trust-title">🔒 企业级安全合规</h2>
             <div class="trust-grid">
@@ -754,7 +925,7 @@
     </section>
 
     <!-- Features -->
-    <section class="features">
+    <section class="features" id="features">
         <h2 class="section-title">核心特性</h2>
         <p class="section-subtitle">31 个专业 Agent，覆盖完整开发流程</p>
         
@@ -793,7 +964,7 @@
     </section>
 
     <!-- Agents -->
-    <section class="agents-section">
+    <section class="agents-section" id="agents">
         <div class="agents-container">
             <h2 class="section-title">Agent 工作流</h2>
             <p class="section-subtitle">像团队一样协作，比一个人更高效</p>
