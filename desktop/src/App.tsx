@@ -372,6 +372,13 @@ export default function App() {
   const [tab, setTab] = useState<'chat' | 'models'>('chat');
   const [agentState, setAgentState] = useState<AgentState>({ name: 'Idle', status: '待机中', color: '#71717a', icon: '💤' });
   
+  // Track if current message is a task (for conditional TaskProgress display)
+  const [isTaskMode, setIsTaskMode] = useState(false);
+  const isTaskRequest = (text: string): boolean => {
+    const taskKeywords = ['写', '创建', '实现', '修复', '代码', 'bug', '功能', '改', '加', '添加', '删除', '重构', '优化', '测试', '部署', '配置', '创建', '编写', '生成', '帮我', 'build', 'fix', 'create', 'implement', 'add', 'remove', 'refactor', 'test', 'deploy', 'configure', 'write', 'generate'];
+    return taskKeywords.some(k => text.toLowerCase().includes(k));
+  };
+  
   // Task progress state
   const [taskStages, setTaskStages] = useState([
     { name: '需求分析', status: 'pending' as const },
@@ -680,6 +687,7 @@ export default function App() {
     };
     if (!activeId) { createSession(currentModel); }
     addMessage(userMsg);
+    setIsTaskMode(isTaskRequest(text));
     setLoading(true);
 
     try {
@@ -930,14 +938,22 @@ export default function App() {
         {/* Agent Status Bar */}
         <AgentStatusBar agent={agentState} loading={loading} />
 
-        {/* Task Progress */}
-        {loading && <TaskProgress stages={taskStages} currentStage={currentStage} />}
+        {/* Simple loading for non-task chat messages */}
+        {loading && !isTaskMode && (
+          <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8, color: '#a1a1aa', fontSize: 13 }}>
+            <span className="spinner" style={{ width: 14, height: 14, border: '2px solid #3f3f46', borderTopColor: '#f59e0b', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }}></span>
+            思考中...
+          </div>
+        )}
 
-        {/* Agent Steps */}
-        {loading && <AgentSteps steps={agentSteps} />}
+        {/* Task Progress - only show for task-like messages */}
+        {loading && isTaskMode && <TaskProgress stages={taskStages} currentStage={currentStage} />}
 
-        {/* Live Log */}
-        {loading && <LiveLog logs={liveLogs} />}
+        {/* Agent Steps - only show for task-like messages */}
+        {loading && isTaskMode && <AgentSteps steps={agentSteps} />}
+
+        {/* Live Log - only show for task-like messages */}
+        {loading && isTaskMode && <LiveLog logs={liveLogs} />}
 
         {/* Messages */}
         <div className="messages">
