@@ -12,6 +12,7 @@ import { InlineInputPanel } from './components/InlineInputPanel';
 import SettingsPanel from './components/SettingsPanel';
 import { PRODUCTION_MODELS as FALLBACK_MODELS } from './models/productionModels';
 import WelcomeScreen from './components/WelcomeScreen';
+import { VoiceInput } from './components/VoiceInput';
 import { TaskProgress } from './components/TaskProgress';
 import { AgentSteps } from './components/AgentSteps';
 import { LiveLog } from './components/LiveLog';
@@ -970,6 +971,10 @@ export default function App() {
               onKeyDown={handleKeyDown}
               placeholder="Ask omc to do anything..."
               rows={1}
+              disabled={loading}
+            />
+            <VoiceInput
+              onResult={(text) => setInput(prev => prev ? prev + ' ' + text : text)}
               disabled={loading}
             />
             <button className="input-area__send" onClick={handleSend} disabled={loading || !input.trim()}>
