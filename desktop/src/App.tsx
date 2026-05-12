@@ -11,10 +11,30 @@ import { ShortcutsPanel } from './components/ShortcutsPanel';
 import { InlineInputPanel } from './components/InlineInputPanel';
 import SettingsPanel from './components/SettingsPanel';
 import { PRODUCTION_MODELS as FALLBACK_MODELS } from './models/productionModels';
+import WelcomeScreen from './components/WelcomeScreen';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Model { id: string; name: string; provider: string; tier: string; context?: number; endpoint?: string; pricing?: Record<string, number>; features?: string[]; }
 interface Message { id: string; role: 'user' | 'assistant' | 'system'; content: string; timestamp: number; }
+
+// ── Agent Status Types ────────────────────────────────────────────────────────
+type AgentName = 'Planner' | 'Coder' | 'Reviewer' | 'Executor' | 'Idle';
+type AgentStatus = '分析中' | '编码中' | '测试中' | '审查中' | '执行中' | '已完成' | '待机中';
+
+interface AgentState {
+  name: AgentName;
+  status: AgentStatus;
+  color: string;
+  icon: string;
+}
+
+const AGENT_CONFIG: Record<AgentName, { color: string; icon: string; statuses: AgentStatus[] }> = {
+  Planner:   { color: '#60a5fa', icon: '📋', statuses: ['分析中', '已完成'] },
+  Coder:     { color: '#4ade80', icon: '💻', statuses: ['编码中', '测试中', '已完成'] },
+  Reviewer:  { color: '#c084fc', icon: '👀', statuses: ['审查中', '已完成'] },
+  Executor:  { color: '#f59e0b', icon: '⚡', statuses: ['执行中', '已完成'] },
+  Idle:      { color: '#71717a', icon: '💤', statuses: ['待机中'] },
+};
 
 // ── Diff Parsing ──────────────────────────────────────────────────────────────
 /**
@@ -116,6 +136,42 @@ function ChatMessage({ msg, onDiffAccept, onDiffReject }: ChatMessageProps) {
           />
         )}
         <div className="message__time">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Component: AgentStatusBar ─────────────────────────────────────────────────
+function AgentStatusBar({ agent, loading }: { agent: AgentState; loading: boolean }) {
+  const config = AGENT_CONFIG[agent.name];
+  const isActive = loading && agent.name !== 'Idle';
+
+  return (
+    <div className="agent-status-bar">
+      <div className="agent-status-bar__label">
+        <span className="agent-status-bar__pulse" style={{ background: config.color }} />
+        多 Agent 协作
+      </div>
+      <div className="agent-status-bar__agents">
+        {(Object.keys(AGENT_CONFIG) as AgentName[]).filter(n => n !== 'Idle').map(name => {
+          const cfg = AGENT_CONFIG[name];
+          const isCurrent = agent.name === name;
+          return (
+            <div
+              key={name}
+              className={`agent-status-bar__item ${isCurrent ? 'active' : ''} ${isCurrent && isActive ? 'animating' : ''}`}
+              style={{ '--agent-color': cfg.color } as React.CSSProperties}
+            >
+              <span className="agent-status-bar__icon">{cfg.icon}</span>
+              <span className="agent-status-bar__name">{name}</span>
+              {isCurrent && (
+                <span className="agent-status-bar__badge" style={{ background: cfg.color }}>
+                  {agent.status}
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -310,6 +366,7 @@ export default function App() {
   const [showConfig, setShowConfig] = useState(false);
   const [serverStatus, setServerStatus] = useState<'stopped' | 'starting' | 'running'>('stopped');
   const [tab, setTab] = useState<'chat' | 'models'>('chat');
+  const [agentState, setAgentState] = useState<AgentState>({ name: 'Idle', status: '待机中', color: '#71717a', icon: '💤' });
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -475,6 +532,31 @@ export default function App() {
 
   // Scroll to bottom on new messages
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [activeMessages]);
+
+  // Agent status simulation — cycles through agents when loading
+  useEffect(() => {
+    if (!loading) {
+      setAgentState({ name: 'Idle', status: '待机中', color: '#71717a', icon: '💤' });
+      return;
+    }
+
+    const agents: AgentName[] = ['Planner', 'Coder', 'Reviewer', 'Executor'];
+    let idx = 0;
+
+    // Start with Planner
+    const startAgent = agents[0];
+    const startCfg = AGENT_CONFIG[startAgent];
+    setAgentState({ name: startAgent, status: startCfg.statuses[0], color: startCfg.color, icon: startCfg.icon });
+
+    const interval = setInterval(() => {
+      idx = (idx + 1) % agents.length;
+      const name = agents[idx];
+      const cfg = AGENT_CONFIG[name];
+      setAgentState({ name, status: cfg.statuses[0], color: cfg.color, icon: cfg.icon });
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [loading]);
 
   // Diff acceptance/rejection
   const [diffFiles, setDiffFiles] = useState<Map<string, { old: string; new_: string }>>(new Map());
@@ -771,15 +853,13 @@ export default function App() {
           />
         </div>
 
+        {/* Agent Status Bar */}
+        <AgentStatusBar agent={agentState} loading={loading} />
+
         {/* Messages */}
         <div className="messages">
           {activeMessages.length === 0 && (
-            <div className="messages__empty">
-              <div className="messages__empty-icon">⬡</div>
-              <div className="messages__empty-title">Oh My Coder Desktop</div>
-              <div className="messages__empty-sub">Ask anything — code, docs, tasks, automation</div>
-              <div className="messages__empty-hint">Press Enter to send · Shift+Enter for newline</div>
-            </div>
+            <WelcomeScreen onExampleClick={handleExampleClick} />
           )}
           {activeMessages.map(msg => (
             <ChatMessage
