@@ -36,7 +36,10 @@
       "electron/**/*"
     ],
     "mac": {
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+      "entitlements": "electron/entitlements.mac.plist",
+      "entitlementsInherit": "electron/entitlements.mac.plist",
+      "hardenedRuntime": false
     },
     "win": {
       "target": "nsis"
