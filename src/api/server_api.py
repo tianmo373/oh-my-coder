@@ -279,6 +279,8 @@ def create_app(
     store: Optional[TaskStore] = None,
 ) -> tuple[FastAPI, TaskStore]:
     """创建 FastAPI 应用"""
+    from src.api.openapi import custom_openapi
+
     app = FastAPI(
         title="Oh My Coder Server API",
         description=(
@@ -290,6 +292,9 @@ def create_app(
         ),
         version="0.2.0",
     )
+
+    # 应用自定义 OpenAPI schema（增强配置：安全定义、服务器、标签等）
+    app.openapi = custom_openapi(app)  # type: ignore[method-assign]
 
     _store = store or TaskStore()
     _auth = AuthContext(api_key)

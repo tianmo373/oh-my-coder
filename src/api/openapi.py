@@ -89,6 +89,10 @@ Oh My Coder 是一个强大的多智能体 AI 编程系统，支持：
             ],
         )
 
+        # 确保 components 存在
+        if "components" not in openapi_schema:
+            openapi_schema["components"] = {}
+
         # 添加安全定义
         openapi_schema["components"]["securitySchemes"] = {
             "ApiKeyAuth": {
@@ -127,7 +131,7 @@ Oh My Coder 是一个强大的多智能体 AI 编程系统，支持：
         app.openapi_schema = openapi_schema
         return app.openapi_schema
 
-    return generate()
+    return generate
 
 
 # API 响应模型
