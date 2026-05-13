@@ -31,7 +31,6 @@
 - [🧙 Quest Mode（异步自主编程）](#️-quest-mode异步自主编程)
 - [🧠 主动学习模块](#-主动学习模块)
 - [🧠 分层记忆系统](docs/guide/memory-system.md)
-- [🌐 多平台 Gateway](#-多平台-gateway)
 - [📂 工作目录上下文感知](#️-工作目录上下文感知)
 - [🧠 支持的模型](#-支持的模型)
 - [🔄 工作流](#-工作流)
@@ -165,7 +164,6 @@ Oh My Coder 是一个**多智能体协作编程系统**，通过多个专业 Age
 - 🇨🇳 **中文优先** - 本土化设计，支持国内主流大模型
 - ⚡ **成本优化** - 优先使用低成本/免费模型，支持 DeepSeek 等高性价比选项
 - 🧠 **自动 Skills 生成** - 任务完成后自动判断是否值得沉淀为 Skill，4种触发条件：工具调用≥5次、错误修复、用户纠正、非平凡工作流，自动生成符合 SKILL.md 规范的技能文件，学习曲线：越用越聪明
-- 🌐 **多平台 Gateway** - 支持 Telegram Bot / Discord Bot 双向消息，统一消息格式，跨平台协作，CLI 一键启动：`omc gateway start --telegram <token>`
 
 ---
 
@@ -268,9 +266,6 @@ omc quest-list
 
 # 查看 Quest 状态
 omc quest-status <quest-id>
-
-# 订阅桌面通知 + Webhook
-omc quest-notify --dingtalk https://oapi.dingtalk.com/robot/send?access_token=xxx
 
 # === 工作目录上下文感知 ===
 # 扫描项目文件
@@ -562,20 +557,6 @@ Oh My Coder 内置 **31 个专业 Agent**，覆盖代码生成、审查、测试
 
 ---
 
-| 平台 | 状态 | 环境变量 |
-|------|------|----------|
-| Telegram | ✅ | `TELEGRAM_BOT_TOKEN` |
-| Discord | ✅ | `DISCORD_BOT_TOKEN` |
-| WhatsApp | ✅ | `WHATSAPP_*` |
-| 飞书 / Lark | ✅ | `FEISHU_*` |
-| 企业微信 | ✅ | `WECOM_*` |
-| 钉钉 | ✅ | `DINGTALK_*` |
-| Slack | ✅ | `SLACK_*` |
-
-📖 详见 [Gateway 文档](docs/guide/gateway.md)
-
----
-
 ## 🔀 模型切换 CLI
 
 一键切换默认模型，无需重启：
@@ -672,10 +653,7 @@ omc context browser
 | `MIMOX_API_KEY` | 可选 | [小米 MiMo](https://platform.xiaomimimo.com/) |
 | `OMC_DEFAULT_MODEL` | 可选 | 覆盖默认模型，如 `deepseek-chat` |
 | `REQUEST_TIMEOUT` | 可选 | 请求超时（秒），默认 60 |
-| `TELEGRAM_BOT_TOKEN` | 可选 | Telegram Bot Token（Gateway 消息推送） |
-| `DISCORD_BOT_TOKEN` | 可选 | Discord Bot Token（Gateway 消息推送） |
-| `DINGTALK_ACCESS_TOKEN` | 可选 | 钉钉机器人 Access Token（通知） |
-| `WECOM_WEBHOOK_URL` | 可选 | 企业微信机器人 Webhook（通知） |
+
 
 ---
 
