@@ -185,58 +185,60 @@
             color: var(--accent-amber);
         }
 
-        /* Article Cards */
+        /* Article Cards - 三列网格布局 */
         .articles-grid {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem 2rem 6rem;
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
         }
 
         .article-card {
             display: flex;
-            gap: 1.5rem;
+            flex-direction: column;
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 1rem;
-            padding: 2rem;
+            padding: 1.5rem;
             text-decoration: none;
             color: var(--text-primary);
             transition: all 0.3s;
         }
 
         .article-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-4px);
             border-color: var(--accent-amber);
-            box-shadow: 0 10px 40px rgba(245, 158, 11, 0.1);
+            box-shadow: 0 10px 40px rgba(245, 158, 11, 0.15);
         }
 
         .article-icon {
-            flex-shrink: 0;
-            width: 56px;
-            height: 56px;
+            width: 48px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 0.75rem;
             font-size: 1.5rem;
             background: rgba(245, 158, 11, 0.15);
+            margin-bottom: 1rem;
         }
 
         .article-content {
             flex: 1;
-            min-width: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         .article-meta {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            margin-bottom: 0.5rem;
-            font-size: 0.8rem;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
+            flex-wrap: wrap;
         }
 
         .article-meta .tag {
@@ -244,32 +246,42 @@
             color: var(--accent-cyan);
             padding: 0.125rem 0.5rem;
             border-radius: 0.25rem;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
         }
 
         .article-title {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 600;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             line-height: 1.4;
+            flex: 1;
         }
 
         .article-brief {
             color: var(--text-secondary);
-            font-size: 0.9375rem;
+            font-size: 0.875rem;
             line-height: 1.6;
             display: -webkit-box;
-            -webkit-line-clamp: 2;
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .article-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
         }
 
         .article-stats {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            margin-top: 1rem;
-            font-size: 0.8rem;
+            gap: 0.75rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
         }
 
@@ -280,13 +292,24 @@
         }
 
         .read-more {
-            margin-left: auto;
             color: var(--accent-amber);
             font-weight: 600;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
+            font-size: 0.8rem;
+        }
+
+        .juejin-link {
+            display: block;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px dashed var(--border);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .juejin-link:hover {
+            color: var(--accent-cyan);
         }
 
         /* Footer */
@@ -324,9 +347,10 @@
             .navbar-actions .btn-github { display: none; }
 
             .blog-header h1 { font-size: 1.75rem; }
-            .article-card { flex-direction: column; gap: 1rem; padding: 1.5rem; }
+            .articles-grid { grid-template-columns: 1fr; }
+            .article-card { padding: 1.25rem; }
             .article-icon { width: 40px; height: 40px; font-size: 1.25rem; }
-            .article-title { font-size: 1.1rem; }
+            .article-title { font-size: 1rem; }
         }
     </style>
 </head>
@@ -359,16 +383,13 @@
     <!-- Blog Header -->
     <div class="blog-header">
         <h1>📝 <span class="highlight">技术博客</span></h1>
-        <p>来自稀土掘金的原创技术文章，分享 oh-my-coder 的开发心得与 AI 编程实践</p>
-        <a href="https://juejin.cn/user/4285265106965034/posts" target="_blank" class="source-link">
-            在稀土掘金上查看全部文章 →
-        </a>
+        <p>原创技术文章,分享 oh-my-coder 的开发心得与 AI 编程实践</p>
     </div>
 
     <!-- Articles -->
     <div class="articles-grid">
 
-        <a href="https://juejin.cn/post/7637447480440504374" target="_blank" class="article-card">
+        <div class="article-card">
             <div class="article-icon">💬</div>
             <div class="article-content">
                 <div class="article-meta">
@@ -376,35 +397,43 @@
                     <span>2026-05-09</span>
                 </div>
                 <h2 class="article-title">Claude Code 创始人说编程问题已解决，但他忘了一件事</h2>
-                <p class="article-brief">对于国内开发者，这不是"解决"，是"门槛"，真正的"解决"，不应该只是"AI 能写代码"，而是"人人都能用 AI 写代码"。</p>
-                <div class="article-stats">
-                    <span>👁 16 阅读</span>
-                    <span>👍 1 点赞</span>
-                    <span>💬 0 评论</span>
-                    <span class="read-more">阅读全文 →</span>
+                <p class="article-brief">对于国内开发者，这不是“解决”，是“门槛”，真正的“解决”，不应该只是“AI 能写代码”，而是“人人都能用 AI 写代码”。</p>
+                <div class="article-footer">
+                    <div class="article-stats">
+                        <span>👁 16</span>
+                        <span>👍 1</span>
+                    </div>
+                    <a href="https://blog.csdn.net/VOBCIO" target="_blank" class="read-more">阅读全文 →</a>
                 </div>
+                <a href="https://juejin.cn/post/7637447480440504374" target="_blank" class="juejin-link">
+                    查看在稀土掘金上的文章 →
+                </a>
             </div>
-        </a>
+        </div>
 
-        <a href="https://juejin.cn/post/7634383996971499556" target="_blank" class="article-card">
+        <div class="article-card">
             <div class="article-icon">🌏</div>
             <div class="article-content">
                 <div class="article-meta">
                     <span class="tag">AI编程</span>
                     <span>2026-05-02</span>
                 </div>
-                <h2 class="article-title">当美国 AI 说"不"的时候，我们怎么办？</h2>
+                <h2 class="article-title">当美国 AI 说“不”的时候，我们怎么办？</h2>
                 <p class="article-brief">这不只是换一个工具，这是在关键时刻，做一个对自己、对行业、对国家都有意义的选择。</p>
-                <div class="article-stats">
-                    <span>👁 21 阅读</span>
-                    <span>👍 1 点赞</span>
-                    <span>💬 0 评论</span>
-                    <span class="read-more">阅读全文 →</span>
+                <div class="article-footer">
+                    <div class="article-stats">
+                        <span>👁 21</span>
+                        <span>👍 1</span>
+                    </div>
+                    <a href="https://blog.csdn.net/VOBCIO" target="_blank" class="read-more">阅读全文 →</a>
                 </div>
+                <a href="https://juejin.cn/post/7634383996971499556" target="_blank" class="juejin-link">
+                    查看在稀土掘金上的文章 →
+                </a>
             </div>
-        </a>
+        </div>
 
-        <a href="https://juejin.cn/post/7632203098104152105" target="_blank" class="article-card">
+        <div class="article-card">
             <div class="article-icon">📊</div>
             <div class="article-content">
                 <div class="article-meta">
@@ -414,16 +443,20 @@
                 </div>
                 <h2 class="article-title">oh-my-coder 周报：这一周我们做了什么</h2>
                 <p class="article-brief">写给所有关注 oh-my-coder 的朋友，这一周，oh-my-coder 完成了有史以来最密集的一次迭代。</p>
-                <div class="article-stats">
-                    <span>👁 116 阅读</span>
-                    <span>👍 1 点赞</span>
-                    <span>💬 0 评论</span>
-                    <span class="read-more">阅读全文 →</span>
+                <div class="article-footer">
+                    <div class="article-stats">
+                        <span>👁 116</span>
+                        <span>👍 1</span>
+                    </div>
+                    <a href="https://blog.csdn.net/VOBCIO" target="_blank" class="read-more">阅读全文 →</a>
                 </div>
+                <a href="https://juejin.cn/post/7632203098104152105" target="_blank" class="juejin-link">
+                    查看在稀土掘金上的文章 →
+                </a>
             </div>
-        </a>
+        </div>
 
-        <a href="https://juejin.cn/post/7629652690436472874" target="_blank" class="article-card">
+        <div class="article-card">
             <div class="article-icon">🛡️</div>
             <div class="article-content">
                 <div class="article-meta">
@@ -432,16 +465,20 @@
                 </div>
                 <h2 class="article-title">当Claude、OpenAI开始封禁中国用户，国产开源多Agent编程框架 oh-my-coder 成为最佳替代方案</h2>
                 <p class="article-brief">开源免费 · 38 Stars · 8 Forks · 12 家国产大模型 · 31 个专业 Agent · 完全开源</p>
-                <div class="article-stats">
-                    <span>👁 99 阅读</span>
-                    <span>👍 1 点赞</span>
-                    <span>💬 0 评论</span>
-                    <span class="read-more">阅读全文 →</span>
+                <div class="article-footer">
+                    <div class="article-stats">
+                        <span>👁 99</span>
+                        <span>👍 1</span>
+                    </div>
+                    <a href="https://blog.csdn.net/VOBCIO" target="_blank" class="read-more">阅读全文 →</a>
                 </div>
+                <a href="https://juejin.cn/post/7629652690436472874" target="_blank" class="juejin-link">
+                    查看在稀土掘金上的文章 →
+                </a>
             </div>
-        </a>
+        </div>
 
-        <a href="https://juejin.cn/post/7628862714292650025" target="_blank" class="article-card">
+        <div class="article-card">
             <div class="article-icon">🚀</div>
             <div class="article-content">
                 <div class="article-meta">
@@ -450,16 +487,20 @@
                 </div>
                 <h2 class="article-title">Claude 封号了？国产开源多Agent编程框架 oh-my-coder 免费替代</h2>
                 <p class="article-brief">昨天，Claude 官方突然强制实名认证，中国大陆用户基本告别了 Claude Code。别慌，这里有更好的国产替代方案。</p>
-                <div class="article-stats">
-                    <span>👁 141 阅读</span>
-                    <span>👍 1 点赞</span>
-                    <span>💬 0 评论</span>
-                    <span class="read-more">阅读全文 →</span>
+                <div class="article-footer">
+                    <div class="article-stats">
+                        <span>👁 141</span>
+                        <span>👍 1</span>
+                    </div>
+                    <a href="https://blog.csdn.net/VOBCIO" target="_blank" class="read-more">阅读全文 →</a>
                 </div>
+                <a href="https://juejin.cn/post/7628862714292650025" target="_blank" class="juejin-link">
+                    查看在稀土掘金上的文章 →
+                </a>
             </div>
-        </a>
+        </div>
 
-        <a href="https://juejin.cn/post/7627041940022722614" target="_blank" class="article-card">
+        <div class="article-card">
             <div class="article-icon">👥</div>
             <div class="article-content">
                 <div class="article-meta">
@@ -468,16 +509,20 @@
                 </div>
                 <h2 class="article-title">Oh My Coder 又更新了！这次，它变得更像一个真正的开发团队了</h2>
                 <p class="article-brief">这篇文章不说技术细节，就说一件事：现在的 oh-my-coder，能帮你干什么，你需要做的，就是告诉它你要做什么。</p>
-                <div class="article-stats">
-                    <span>👁 93 阅读</span>
-                    <span>👍 1 点赞</span>
-                    <span>💬 0 评论</span>
-                    <span class="read-more">阅读全文 →</span>
+                <div class="article-footer">
+                    <div class="article-stats">
+                        <span>👁 93</span>
+                        <span>👍 1</span>
+                    </div>
+                    <a href="https://blog.csdn.net/VOBCIO" target="_blank" class="read-more">阅读全文 →</a>
                 </div>
+                <a href="https://juejin.cn/post/7627041940022722614" target="_blank" class="juejin-link">
+                    查看在稀土掘金上的文章 →
+                </a>
             </div>
-        </a>
+        </div>
 
-        <a href="https://juejin.cn/post/7624748926398283814" target="_blank" class="article-card">
+        <div class="article-card">
             <div class="article-icon">🎉</div>
             <div class="article-content">
                 <div class="article-meta">
@@ -486,20 +531,24 @@
                 </div>
                 <h2 class="article-title">Oh My Coder 中文版正式发布！支持国产大模型的多智能体编程助手</h2>
                 <p class="article-brief">Oh My Coder 是一个多智能体协作编程系统，通过多个专业 Agent 分工合作，像一个真实的开发团队一样完成复杂任务。</p>
-                <div class="article-stats">
-                    <span>👁 258 阅读</span>
-                    <span>👍 1 点赞</span>
-                    <span>💬 0 评论</span>
-                    <span class="read-more">阅读全文 →</span>
+                <div class="article-footer">
+                    <div class="article-stats">
+                        <span>👁 258</span>
+                        <span>👍 1</span>
+                    </div>
+                    <a href="https://blog.csdn.net/VOBCIO" target="_blank" class="read-more">阅读全文 →</a>
                 </div>
+                <a href="https://juejin.cn/post/7624748926398283814" target="_blank" class="juejin-link">
+                    查看在稀土掘金上的文章 →
+                </a>
             </div>
-        </a>
+        </div>
 
     </div>
 
     <!-- Footer -->
     <div class="footer">
-        <p>📄 文章来自 <a href="https://juejin.cn/user/4285265106965034/posts" target="_blank">稀土掘金</a> · Oh My Coder © 2026</p>
+        <p>📄 文章发布于 <a href="https://blog.csdn.net/VOBCIO" target="_blank">CSDN</a> · 亦可在 <a href="https://juejin.cn/user/4285265106965034/posts" target="_blank">稀土掘金</a> 查看 · Oh My Coder © 2026</p>
     </div>
 </body>
 </html>
