@@ -65,6 +65,7 @@ class SemanticSearch:
         """
         self.indexer = indexer
         self.config = config or SearchConfig()
+        self.embedding_client = None
 
     def search(
         self,
@@ -259,8 +260,10 @@ class SemanticSearch:
         return [self._element_to_result(e, s) for e, s in results[:max_results]]
 
     def _get_embedding(self, text: str) -> Optional[list[float]]:
-        """获取文本嵌入"""
-        # TODO: 调用嵌入 API
+        """获取文本嵌入。无 embedding_client 时返回 None，搜索降级为关键词匹配。"""
+        if self.embedding_client:
+            # TODO: 调用 embedding_client.embed(text) — 接口待定义
+            pass
         return None
 
     def _cosine_similarity(
