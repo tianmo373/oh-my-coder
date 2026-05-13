@@ -1053,6 +1053,183 @@
         </div>
     </section>
 
+    <!-- Screenshots Preview -->
+    <section class="screenshots-section" id="screenshots">
+        <h2 class="section-title">界面预览</h2>
+        <p class="section-subtitle">Web 界面、CLI 命令行、Desktop 桌面端三种使用方式</p>
+
+        <div class="screenshots-tabs">
+            <button class="tab-btn active" onclick="switchTab('web')">🌐 Web 界面</button>
+            <button class="tab-btn" onclick="switchTab('cli')">💻 CLI 命令行</button>
+            <button class="tab-btn" onclick="switchTab('desktop')">🖥️ Desktop 桌面端</button>
+        </div>
+
+        <div class="screenshots-content" id="tab-web">
+            <div class="screenshots-grid">
+                <div class="screenshot-card">
+                    <img src="https://raw.githubusercontent.com/vobc/oh-my-coder/main/docs/screenshots/screenshot-homepage.jpg" alt="Web 首页">
+                    <p>🏠 首页 — 模型选择与工作流</p>
+                </div>
+                <div class="screenshot-card">
+                    <img src="https://raw.githubusercontent.com/vobc/oh-my-coder/main/docs/screenshots/screenshot-task-create.jpg" alt="任务创建">
+                    <p>📝 任务创建 — 三种分析模式</p>
+                </div>
+                <div class="screenshot-card">
+                    <img src="https://raw.githubusercontent.com/vobc/oh-my-coder/main/docs/screenshots/screenshot-task-full.jpg" alt="完整任务创建">
+                    <p>🚀 完整任务创建页面</p>
+                </div>
+                <div class="screenshot-card">
+                    <img src="https://raw.githubusercontent.com/vobc/oh-my-coder/main/docs/screenshots/screenshot-api-keys.jpg" alt="API Keys">
+                    <p>🔑 API Keys 管理 — 多供应商配置</p>
+                </div>
+                <div class="screenshot-card">
+                    <img src="https://raw.githubusercontent.com/vobc/oh-my-coder/main/docs/screenshots/screenshot-history.jpg" alt="任务历史">
+                    <p>📋 任务历史 — 执行记录追踪</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="screenshots-content hidden" id="tab-cli">
+            <div class="screenshot-placeholder">
+                <div class="placeholder-icon">💻</div>
+                <h3>CLI 命令行截图</h3>
+                <p>终端界面截图即将添加</p>
+                <p class="placeholder-note">支持彩色输出、进度条、交互式确认</p>
+            </div>
+        </div>
+
+        <div class="screenshots-content hidden" id="tab-desktop">
+            <div class="screenshot-placeholder">
+                <div class="placeholder-icon">🖥️</div>
+                <h3>Desktop 桌面端截图</h3>
+                <p>桌面应用截图即将添加</p>
+                <p class="placeholder-note">基于 Electron，支持语音输入、多 Agent 状态指示器</p>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        .screenshots-section {
+            padding: 6rem 2rem;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        }
+
+        .screenshots-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            border-color: transparent;
+        }
+
+        .screenshots-content.hidden {
+            display: none;
+        }
+
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .screenshot-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .screenshot-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .screenshot-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .screenshot-card p {
+            padding: 1rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .screenshot-placeholder {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 2px dashed var(--border);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .placeholder-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .screenshot-placeholder h3 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .screenshot-placeholder p {
+            color: var(--text-secondary);
+        }
+
+        .placeholder-note {
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+
+    <script>
+        function switchTab(tab) {
+            // Hide all content
+            document.querySelectorAll('.screenshots-content').forEach(el => {
+                el.classList.add('hidden');
+            });
+            // Show selected content
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            // Update button states
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+
     <!-- FAQ Preview -->
     <section class="faq-preview" id="faq">
         <h2 class="section-title">常见问题</h2>

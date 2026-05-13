@@ -15,27 +15,9 @@
 
 **💡 灵感来源**: [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (28.9k ⭐) — 我们为国内开发者提供零门槛替代方案
 
-## 🖥️ Web 界面一览
+## 🤖 31 个专业 Agent 一览
 
-### 🏠 首页 — 模型选择与工作流
-
-![首页](docs/screenshots/screenshot-homepage.jpg)
-
-### 📝 任务创建 — 三种分析模式
-
-![任务创建](docs/screenshots/screenshot-task-create.jpg)
-
-### 🚀 完整任务创建页面
-
-![完整任务创建](docs/screenshots/screenshot-task-full.jpg)
-
-### 🔑 API Keys 管理 — 多供应商配置
-
-![API Keys](docs/screenshots/screenshot-api-keys.jpg)
-
-### 📋 任务历史 — 执行记录追踪
-
-![任务历史](docs/screenshots/screenshot-history.jpg)
+![31 Agents](docs/screenshots/demo-agents.png)
 - [🎯 为什么选择 Oh My Coder？](#-为什么选择-oh-my-coder)
 - [🚀 Claude Code 迁移指南](#-claude-code-迁移指南)
 - [💰 零成本起步](#️-零成本起步) **[NEW]**
