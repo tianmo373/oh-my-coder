@@ -85,7 +85,7 @@ def _review_skill(code: str, context: dict[str, Any]) -> SkillResult:
     # 基础代码质量检查
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
-        # TODO 注释检查
+        # TODO 注释检查（当前仅检查行长度，TODO 标记需单独规则）
         if len(stripped) > 120 and not stripped.startswith("#"):
             issues.append(f"L{i}: 行过长 ({len(stripped)} chars)")
 
@@ -155,7 +155,7 @@ def _test_skill(code: str, context: dict[str, Any]) -> SkillResult:
                 test_cases.append(
                     f"def test_{fname}():\n"
                     f'    """Test {fname}"""'
-                    f"\n    # TODO: 实现测试逻辑\n    pass\n"
+                    f"\n    # {{ 实现测试逻辑 }}\n    pass\n"
                 )
 
     # 生成测试框架

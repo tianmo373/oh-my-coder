@@ -104,7 +104,7 @@ def start(
         from src.gateway.gateway import Gateway
 
         gateway = Gateway(
-            orchestrator=None,  # TODO: 接入真实 Orchestrator
+            orchestrator=None,  # TODO: 接入真实 Orchestrator（需先实现 WorkflowLoader）
             telegram_token=telegram_token,
             discord_token=discord_token,
         )

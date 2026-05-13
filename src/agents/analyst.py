@@ -226,10 +226,8 @@ class AnalystAgent(BaseAgent):
         context: AgentContext,
     ) -> AgentOutput:
         """后处理 - 提取关键信息"""
-        # TODO: 使用正则或模型提取结构化需求
-
+        # 后处理 - 提取关键信息（当前使用规则匹配，暂未接入 LLM）
         return AgentOutput(
-            agent_name=self.name,
             status=AgentStatus.COMPLETED,
             result=result,
             recommendations=[

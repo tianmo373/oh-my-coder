@@ -152,7 +152,8 @@ def plan(
     console.print("\n[bold green]🚀 开始执行计划...[/bold green]")
     console.print("[dim]提示：实际执行逻辑待实现，当前仅展示计划[/dim]\n")
 
-    # TODO: 调用 Orchestrator 执行计划
+    # TODO: 接入真实 Orchestrator 执行计划
+    # 需先实现 WorkflowLoader 动态加载用户自定义 YAML
     # orchestrator = Orchestrator(router, state_dir=project_path / ".omc" / "state")
     # await orchestrator.run_workflow("build", task)
 

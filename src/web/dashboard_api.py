@@ -284,30 +284,14 @@ async def get_dashboard_stats(
     days: int = Query(7, ge=1, le=30, description="统计周期（天）"),
 ) -> DashboardStats:
     """
-    获取仪表板统计数据
-
-    Args:
-        days: 统计周期，默认 7 天
-
-    Returns:
-        统计数据
+    获取仪表板统计数据。数据从 .omc/state/ 读取，5分钟缓存。
     """
-    # TODO: 从数据库获取真实数据
     return _get_real_stats(days)
 
 
 @router.get("/activity", response_model=list[ActivityData])
 async def get_activity_data(days: int = Query(7, ge=1, le=30)) -> list[ActivityData]:
-    """
-    获取活动数据
-
-    Args:
-        days: 统计周期
-
-    Returns:
-        每日活动数据
-    """
-    # TODO: 从数据库获取真实数据
+    """获取活动数据。数据从 .omc/state/ 读取。"""
     return _get_real_activity(days)
 
 

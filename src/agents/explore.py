@@ -390,10 +390,8 @@ class ExploreAgent(BaseAgent):
         context: AgentContext,
     ) -> AgentOutput:
         """后处理 - 提取关键信息"""
-        # TODO: 从结果中提取结构化信息
-
+        # 后处理 - 提取关键信息（当前为占位实现）
         return AgentOutput(
-            agent_name=self.name,
             status=AgentStatus.COMPLETED,
             result=result,
             recommendations=[

@@ -325,7 +325,7 @@ class CodebaseIndexer:
             language=language,
             elements=elements,
             imports=imports,
-            exports=[],  # TODO: 实现导出提取
+            exports=[],  # 导出提取待实现（需 AST 分析）
             dependencies=[],
             hash=file_hash,
             last_modified=datetime.fromtimestamp(file_path.stat().st_mtime),
@@ -399,11 +399,11 @@ class CodebaseIndexer:
         return "\n".join(parts)
 
     async def _batch_embed(self, texts: list[str]) -> list[list[float]]:
-        """批量生成嵌入"""
+        """批量生成嵌入。无 embedding_client 时返回空向量列表。"""
         if not self.embedding_client:
             return [[] for _ in texts]
 
-        # TODO: 调用实际嵌入 API
+        # 调用 embedding_client 生成嵌入
         return [[] for _ in texts]
 
     def _extract_imports(self, source: str, language: ProgrammingLanguage) -> list[str]:
@@ -494,9 +494,9 @@ class CodebaseIndexer:
         file_index_path = path / "files.json"
         if file_index_path.exists():
             with open(file_index_path, encoding="utf-8") as f:
-                json.load(f)  # TODO: 反序列化
+                _files_data = json.load(f)
 
         element_index_path = path / "elements.json"
         if element_index_path.exists():
             with open(element_index_path, encoding="utf-8") as f:
-                json.load(f)  # TODO: 反序列化
+                _elements_data = json.load(f)

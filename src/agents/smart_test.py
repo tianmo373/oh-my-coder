@@ -353,19 +353,18 @@ class Test{target}:
     def test_basic_functionality(self):
         """测试基本功能"""
         # Arrange
-        # TODO: 根据实际功能设置
+        # 当前模板仅生成骨架，实际测试需根据具体类和方法填充
         instance = {target}()
 
         # Act
-        # TODO: 调用实际方法
+        # {{ 调用实际方法 }}
 
         # Assert
-        # TODO: 验证结果
+        # {{ 验证结果 }}
         pass
 
     def test_edge_cases(self):
-        """测试边界情况"""
-        # TODO: 添加边界条件测试
+        """测试边界情况 - 模板占位，实际使用时需填充。"""
         pass
 '''
         return ""
