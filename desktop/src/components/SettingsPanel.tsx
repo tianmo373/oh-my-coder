@@ -417,23 +417,26 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
   }, []);
 
   const handleConfigSave = useCallback(async (modelId: string, cfg: ModelConfigEntry) => {
-    // Try to save via IPC first (persistent storage in ~/.omc/config.json)
-    let savedViaIPC = false;
+    // Always write to BOTH IPC (persistent ~/.omc/config.json) AND localStorage
+    // IPC = main process write (survives app reinstall, cross-session)
+    // localStorage = renderer read (App.tsx reads from here for chat)
+    let savedIPC = false;
     try {
       const result = await (window.omc as any).modelConfigSet(modelId, cfg);
-      savedViaIPC = result?.ok;
+      savedIPC = result?.ok;
     } catch {
-      // IPC not available, will use localStorage fallback
+      // IPC not available
     }
     
     // Update local state
     const updatedConfigs = { ...configs, [modelId]: cfg };
     setConfigs(updatedConfigs);
     
-    // Fallback to localStorage if IPC failed
-    if (!savedViaIPC) {
-      saveEncryptedConfig(updatedConfigs);
-      console.warn('[Settings] IPC save failed, using localStorage fallback');
+    // Always write localStorage (needed for App.tsx chat to read)
+    saveEncryptedConfig(updatedConfigs);
+    
+    if (!savedIPC) {
+      console.warn('[Settings] IPC save failed, used localStorage fallback');
     }
   }, [configs]);
 
