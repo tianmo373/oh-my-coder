@@ -1278,7 +1278,8 @@
             white-space: nowrap;
         }
 
-        .contact-btn:hover .contact-popup {
+        .contact-btn:hover .contact-popup,
+        .contact-btn.active .contact-popup {
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
@@ -1390,6 +1391,24 @@
     </footer>
 
     <script>
+        // Contact buttons - mobile touch support
+        document.querySelectorAll('.contact-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Toggle active state
+                const wasActive = this.classList.contains('active');
+                // Close all other popups first
+                document.querySelectorAll('.contact-btn').forEach(b => b.classList.remove('active'));
+                if (!wasActive) {
+                    this.classList.add('active');
+                }
+            });
+        });
+        // Close popups when clicking elsewhere
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.contact-btn').forEach(b => b.classList.remove('active'));
+        });
+
         // Copy code
         function copyCode(btn) {
             const code = btn.closest('.code-block').querySelector('.code-content').innerText;
