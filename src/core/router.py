@@ -831,7 +831,6 @@ class ModelRouter:
     _MODEL_ID_TO_PROVIDER: dict[str, str] = {
         # DeepSeek
         "deepseek-chat": "deepseek",
-        "deepseek-reasoner": "deepseek",
         # 智谱 GLM
         "glm-4-flash": "glm",
         # MiniMax / MiMo

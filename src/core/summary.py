@@ -246,11 +246,11 @@ def _generate_recommendations(
 def _infer_models(workflow: str, agent_count: int) -> list[str]:
     """推断使用的模型"""
     if workflow == "build":
-        return ["deepseek-chat", "deepseek-chat", "deepseek-reasoner"]
+        return ["deepseek-chat", "deepseek-chat", "deepseek-chat"]
     if workflow == "review":
         return ["deepseek-chat"]
     if workflow == "debug":
-        return ["deepseek-reasoner"]
+        return ["deepseek-chat"]
     if workflow == "test":
         return ["deepseek-chat", "deepseek-chat"]
     return ["deepseek-chat"]

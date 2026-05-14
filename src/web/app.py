@@ -653,7 +653,6 @@ WORKFLOW_KEYWORDS = {
 # 模型关键词映射
 MODEL_KEYWORDS = {
     "deepseek": ["deepseek", "v4", "便宜", "低成本"],
-    "deepseek-reasoner": ["r1", "reasoner", "推理", "深度思考"],
     "glm-4-flash": ["glm", "flash", "免费", "智谱"],
     "MiniMax-Text-01": ["mimo", "小米", "minimax"],
     "moonshot-v1-128k": ["kimi", "月之暗面", "128k"],
@@ -720,9 +719,8 @@ def _generate_task_summary(task: dict) -> str:
     }
     model_names = {
         "deepseek": "DeepSeek V4",
-        "deepseek-reasoner": "DeepSeek R1",
         "glm-4-flash": "GLM-4.7-Flash",
-        "MiniMax-Text-01": "MiMo V2 Flash",
+        "MiniMax-Text-01": "MiMo Flash",
         "moonshot-v1-128k": "Kimi 128K",
         "doubao-pro-32k": "Doubao-Pro",
         "tiangong-3": "天工 3.0",
