@@ -834,7 +834,6 @@ class ModelRouter:
         "deepseek-reasoner": "deepseek",
         # 智谱 GLM
         "glm-4-flash": "glm",
-        "glm-4v-flash": "glm",
         # MiniMax / MiMo
         "MiniMax-Text-01": "minimax",
         # Kimi / Moonshot

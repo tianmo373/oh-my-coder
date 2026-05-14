@@ -30,7 +30,7 @@
 | **GitHub Copilot** | ❌ 无免费版 | $19/月 | ❌ 不需要 |
 | **Cursor** | ⚠️ 有限免费 | $20/月 | ❌ 不需要 |
 
-> 💡 OMC 的「免费」是指工具本身免费，API Key 大部分有免费额度（GLM-4-Flash 有免费额度）。
+> 💡 OMC 的「免费」是指工具本身免费，API Key 大部分有免费额度（GLM-4.7-Flash 有免费额度）。
 > 
 > 🎯 **OMC 优势**：免费 + 国产模型 + 中文 + 开源，vs Claude Code ($20/月) / Gemini CLI (仅 Google 模型)
 

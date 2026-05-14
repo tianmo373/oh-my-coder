@@ -655,7 +655,6 @@ MODEL_KEYWORDS = {
     "deepseek": ["deepseek", "v4", "便宜", "低成本"],
     "deepseek-reasoner": ["r1", "reasoner", "推理", "深度思考"],
     "glm-4-flash": ["glm", "flash", "免费", "智谱"],
-    "glm-4v-flash": ["glm-4v", "视觉", "image", "图片"],
     "MiniMax-Text-01": ["mimo", "小米", "minimax"],
     "moonshot-v1-128k": ["kimi", "月之暗面", "128k"],
     "doubao-pro-32k": ["doubao", "豆包", "字节"],
@@ -722,8 +721,7 @@ def _generate_task_summary(task: dict) -> str:
     model_names = {
         "deepseek": "DeepSeek V4",
         "deepseek-reasoner": "DeepSeek R1",
-        "glm-4-flash": "GLM-4-Flash",
-        "glm-4v-flash": "GLM-4V-Flash",
+        "glm-4-flash": "GLM-4.7-Flash",
         "MiniMax-Text-01": "MiMo V2 Flash",
         "moonshot-v1-128k": "Kimi 128K",
         "doubao-pro-32k": "Doubao-Pro",

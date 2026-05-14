@@ -6,7 +6,7 @@
 |------|-----------------|------|
 | **DeepSeek** | `DEEPSEEK_API_KEY` | ⭐ 免费额度，性价比最高，推荐 |
 | **MiMo** | `MIMOAPIKEY` | 小米 MiMo，mimo-v2-flash **免费**，1M 上下文 |
-| **智谱 GLM** | `GLM_API_KEY` | GLM-4-Flash **官方免费**，函数调用支持 |
+| **智谱 GLM** | `GLM_API_KEY` | GLM-4.7-Flash **官方免费**，函数调用支持 |
 | **Kimi** | `KIMI_API_KEY` | 月之暗面，128K 超长上下文 |
 | **豆包** | `DOUBAO_API_KEY` | 字节跳动，响应速度快 |
 | **天工** | `TIANGONG_API_KEY` | 昆仑万维，中文理解强 |
@@ -21,7 +21,7 @@
 
 | 层级 | 模型 | 用途 |
 |------|------|------|
-| **LOW** | DeepSeek-V4 / GLM-4-Flash / Qwen-Turbo | 快速任务、探索 |
+| **LOW** | DeepSeek-V4 / GLM-4.7-Flash / Qwen-Turbo | 快速任务、探索 |
 | **MEDIUM** | DeepSeek-R1 / Qwen-Max | 平衡性能和成本 |
 | **HIGH** | DeepSeek-R1-Reasoner / Qwen-Plus | 复杂推理、高质量输出 |
 

@@ -48,7 +48,7 @@ MODEL_CATEGORIES = {
         {
             "id": "glm",
             "name": "智谱 GLM",
-            "desc": "GLM-4-Flash 免费用",
+            "desc": "GLM-4.7-Flash 免费用",
             "api_key_env": "GLM_API_KEY",
             "register_url": "https://open.bigmodel.cn",
             "model_name": "glm-4-flash",

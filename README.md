@@ -620,7 +620,6 @@ omc context browser
 | `deepseek-chat` | DeepSeek V4 | DeepSeek | 64K | ✅ production |
 | `deepseek-reasoner` | DeepSeek R1 | DeepSeek | 64K | ✅ production |
 | `glm-4-flash` | GLM-4.7-Flash | 智谱 | 128K | ✅ production |
-| `glm-4v-flash` | GLM-4V-Flash（视觉） | 智谱 | 128K | ✅ production |
 | `MiniMax-Text-01` | MiMo V2 Flash | 小米 | 200K | ✅ production |
 | `moonshot-v1-128k` | Kimi 128K | Moonshot | 128K | ✅ production |
 | `doubao-pro-32k` | Doubao-Pro | 字节跳动 | 32K | ✅ production |

@@ -51,7 +51,7 @@ SUPPORTED_MODELS = {
     "glm": {
         "name": "智谱 GLM",
         "tier": "low",
-        "note": "GLM-4-Flash 免费使用",
+        "note": "GLM-4.7-Flash 免费使用",
         "api_key_env": "ZHIPU_API_KEY",
     },
     "wenxin": {

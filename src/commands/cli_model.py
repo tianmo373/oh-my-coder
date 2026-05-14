@@ -59,7 +59,7 @@ USER_MODELS_DIR = Path.home() / ".omc" / "models"
 SUPPORTED_MODELS = {
     # 低成本/免费模型
     "deepseek": {"name": "DeepSeek", "tier": "low", "note": "高性价比，推荐"},
-    "glm": {"name": "智谱 GLM", "tier": "low", "note": "GLM-4-Flash 免费使用"},
+    "glm": {"name": "智谱 GLM", "tier": "low", "note": "GLM-4.7-Flash 免费使用"},
     # 主流模型
     "wenxin": {"name": "文心一言", "tier": "medium", "note": "百度"},
     "tongyi": {"name": "通义千问", "tier": "medium", "note": "阿里"},
@@ -247,7 +247,7 @@ BUILTIN_CATWALK_MODELS: list[dict[str, Any]] = [
         "features": ["reasoning", "function_call", "streaming"],
     },
     {
-        "name": "GLM-4-Flash",
+        "name": "GLM-4.7-Flash",
         "provider": "glm",
         "api_key_env": "ZHIPU_API_KEY",
         "endpoint": "https://open.bigmodel.cn/api/paas/v4",
@@ -256,17 +256,6 @@ BUILTIN_CATWALK_MODELS: list[dict[str, Any]] = [
         "pricing": {"input": 0, "output": 0},
         "context": 128000,
         "features": ["function_call", "vision", "streaming"],
-    },
-    {
-        "name": "GLM-4V-Flash",
-        "provider": "glm",
-        "api_key_env": "ZHIPU_API_KEY",
-        "endpoint": "https://open.bigmodel.cn/api/paas/v4",
-        "model": "glm-4v-flash",
-        "tier": "free",
-        "pricing": {"input": 0, "output": 0},
-        "context": 128000,
-        "features": ["vision", "streaming"],
     },
     {
         "name": "MiMo V2 Flash",

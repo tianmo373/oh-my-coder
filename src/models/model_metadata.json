@@ -35,19 +35,11 @@
   },
   "glm-4-flash": {
     "status": "production",
-    "name": "GLM-4-Flash",
+    "name": "GLM-4.7-Flash",
     "provider": "Zhipu",
     "tier": "free",
     "context": 128000,
     "description": "免费高性能，支持函数调用、视觉"
-  },
-  "glm-4v-flash": {
-    "status": "production",
-    "name": "GLM-4V-Flash",
-    "provider": "Zhipu",
-    "tier": "free",
-    "context": 128000,
-    "description": "免费视觉模型，支持图像理解"
   },
   "MiniMax-Text-01": {
     "status": "production",
