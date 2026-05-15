@@ -1,12 +1,10 @@
 'use strict';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { loadWhisper, transcribeAudio } from '../whisper-loader.js';
 
 // ---------------------------------------------------------------------------
 // VoiceInput Component
-// Uses whisper-loader.js for WASM-based speech recognition.
-// Works in: Electron renderer, Chrome, Safari, Firefox — Windows + Mac + Linux.
+// Uses Electron IPC for Whisper speech recognition via @napi-rs/whisper in main process.
 // ---------------------------------------------------------------------------
 
 interface VoiceInputProps {
@@ -25,23 +23,11 @@ export const VoiceInput = ({
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const whisperLoadedRef = useRef(false);
-  const whisperLoadErrorRef = useRef<string | null>(null);
 
   const isSupported =
     typeof window !== 'undefined' &&
     navigator.mediaDevices &&
     typeof navigator.mediaDevices.getUserMedia === 'function';
-
-  // Pre-load whisper model once on mount so first recording is instant.
-  useEffect(() => {
-    loadWhisper()
-      .then(() => { whisperLoadedRef.current = true; })
-      .catch((err: unknown) => {
-        console.warn('[VoiceInput] Whisper WASM load failed:', err);
-        whisperLoadErrorRef.current = err instanceof Error ? err.message : String(err);
-      });
-  }, []);
 
   // Clean up on unmount.
   useEffect(() => {
@@ -58,6 +44,19 @@ export const VoiceInput = ({
     const t = setTimeout(() => setErrorMsg(''), 3000);
     return () => clearTimeout(t);
   }, [errorMsg]);
+
+  // Convert audio Blob to Float32Array (16kHz mono)
+  const blobToPCM = async (blob: Blob): Promise<Float32Array> => {
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)({
+      sampleRate: 16000,
+    });
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    
+    // Convert to mono Float32Array
+    const channelData = audioBuffer.getChannelData(0);
+    return new Float32Array(channelData);
+  };
 
   const toggleListening = useCallback(() => {
     if (!isSupported) {
@@ -106,11 +105,14 @@ export const VoiceInput = ({
           setInterimText('识别中...');
 
           try {
-            const text = await transcribeAudio(blob);
-            if (text) {
-              onResult(text);
+            // Convert to PCM and send to main process via IPC
+            const pcmData = await blobToPCM(blob);
+            const result = await window.omc.whisper.transcribe(Array.from(pcmData));
+            
+            if (result.ok && result.text) {
+              onResult(result.text);
             } else {
-              setErrorMsg('未能识别到语音内容');
+              setErrorMsg(result.error || '语音识别失败');
             }
           } catch (err: unknown) {
             console.error('[VoiceInput] Transcribe error:', err);
@@ -140,23 +142,19 @@ export const VoiceInput = ({
       });
   }, [isListening, isSupported, onResult]);
 
-  // Compute button status label.
+  // Compute button status label (simplified, no pre-loading needed)
   const btnTitle = isListening
     ? '点击停止'
     : isTranscribing
     ? '识别中...'
-    : whisperLoadErrorRef.current
-    ? '语音模型加载失败'
-    : whisperLoadedRef.current
-    ? '语音输入'
-    : '加载语音模型...';
+    : '语音输入';
 
   return (
     <div className="voice-input">
       <button
         className={`voice-input__btn ${isListening ? 'voice-input__btn--active' : ''} ${isTranscribing ? 'voice-input__btn--transcribing' : ''}`}
         onClick={toggleListening}
-        disabled={disabled || !!whisperLoadErrorRef.current}
+        disabled={disabled}
         title={btnTitle}
         type="button"
       >
@@ -189,5 +187,3 @@ export const VoiceInput = ({
     </div>
   );
 };
-
-// No module.exports needed — already exported via `export const VoiceInput` above

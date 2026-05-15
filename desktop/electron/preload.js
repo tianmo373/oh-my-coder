@@ -57,4 +57,9 @@ contextBridge.exposeInMainWorld('omc', {
   modelConfigDelete: (modelId) => ipcRenderer.invoke('omc:model:config:delete', modelId),
   modelConfigTest: (modelId, config) => ipcRenderer.invoke('omc:model:config:test', { modelId, config }),
 
+  // Whisper
+  whisper: {
+    transcribe: (audioBuffer) => ipcRenderer.invoke('omc:whisper:transcribe', audioBuffer),
+  },
+
 });

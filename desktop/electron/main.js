@@ -5,6 +5,7 @@ const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const { ApiBridge } = require('./api-bridge');
+const { transcribeAudio } = require('./voice');
 
 // ── Paths ────────────────────────────────────────────────────────────────────
 const isDev = !app.isPackaged;
@@ -389,6 +390,19 @@ function setupIpc() {
       return { ok: true, msg: 'Key format looks valid (live test not implemented)' };
     } catch (e) {
       return { ok: false, msg: e.message || 'Test failed' };
+    }
+  });
+
+  // Whisper voice transcription
+  ipcMain.handle('omc:whisper:transcribe', async (_, audioBuffer) => {
+    try {
+      // audioBuffer comes as array from renderer (Transferable)
+      const float32Array = new Float32Array(audioBuffer);
+      const text = await transcribeAudio(float32Array);
+      return { ok: true, text };
+    } catch (e) {
+      log('Whisper transcribe error:', e.message);
+      return { ok: false, error: e.message };
     }
   });
 }
