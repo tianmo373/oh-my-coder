@@ -69,8 +69,7 @@ def _fetch_pr_diff(pr_url: str) -> tuple[bool, str]:
     # 解析 PR URL
     # 格式: https://github.com/{owner}/{repo}/pull/{number}
     match = re.match(
-        r"https?://github\.com/([^/]+)/([^/]+)/pull/(\d+)",
-        pr_url.strip("/")
+        r"https?://github\.com/([^/]+)/([^/]+)/pull/(\d+)", pr_url.strip("/")
     )
     if not match:
         return False, f"无效的 GitHub PR URL: {pr_url}"
@@ -90,6 +89,7 @@ def _fetch_pr_diff(pr_url: str) -> tuple[bool, str]:
         # 如果 gh 失败，尝试用 curl
         diff_url = f"https://github.com/{owner}/{repo}/pull/{pr_number}.diff"
         import httpx
+
         resp = httpx.get(diff_url, timeout=15.0)
         if resp.status_code == 200:
             return True, resp.text
@@ -98,6 +98,7 @@ def _fetch_pr_diff(pr_url: str) -> tuple[bool, str]:
         # gh 未安装，直接用 HTTP
         diff_url = f"https://github.com/{owner}/{repo}/pull/{pr_number}.diff"
         import httpx
+
         try:
             resp = httpx.get(diff_url, timeout=15.0)
             if resp.status_code == 200:
@@ -164,7 +165,10 @@ async def _review_with_llm(diff_content: str, model_name: str = "deepseek") -> s
     # 构造消息
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"请审查以下代码变更：\n\n```\n{diff_content}\n```"},
+        {
+            "role": "user",
+            "content": f"请审查以下代码变更：\n\n```\n{diff_content}\n```",
+        },
     ]
 
     # 调用模型
@@ -183,7 +187,9 @@ async def _review_with_llm(diff_content: str, model_name: str = "deepseek") -> s
 def review_pr(
     pr_url: str = typer.Argument(..., help="GitHub PR URL"),
     model: str = typer.Option("deepseek", "--model", "-m", help="使用的模型"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="保存报告到文件"),
+    output: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="保存报告到文件"
+    ),
 ) -> None:
     """
     审查 GitHub PR 内容
@@ -241,7 +247,9 @@ def review_pr(
 def review_diff(
     diff_file: str = typer.Argument(..., help="diff 文件路径或 git diff 参数"),
     model: str = typer.Option("deepseek", "--model", "-m", help="使用的模型"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="保存报告到文件"),
+    output: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="保存报告到文件"
+    ),
 ) -> None:
     """
     审查本地代码 diff

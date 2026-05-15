@@ -63,7 +63,9 @@ class AgentContext:
     previous_outputs: dict[str, Any] = field(default_factory=dict)  # 前序 Agent 输出
     metadata: dict[str, Any] = field(default_factory=dict)  # 其他元数据
     skill_context: str = ""  # Tier 0 自动注入：Skill 经验清单（由 Orchestrator 填充）
-    override_model: Optional[str] = None  # 用户指定的模型 ID（如 "glm-4-flash"），来自前端选择
+    override_model: Optional[str] = (
+        None  # 用户指定的模型 ID（如 "glm-4-flash"），来自前端选择
+    )
 
 
 @dataclass
@@ -124,7 +126,9 @@ class BaseAgent(ABC):
         self.config = config or {}
         self.status = AgentStatus.IDLE
         self._output_history: list[AgentOutput] = []
-        self._last_model_response: Optional[Any] = None  # 缓存最后一次 ModelResponse，用于 token 统计
+        self._last_model_response: Optional[Any] = (
+            None  # 缓存最后一次 ModelResponse，用于 token 统计
+        )
 
         # 初始化工作目录上下文扫描器
         try:

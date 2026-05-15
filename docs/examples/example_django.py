@@ -250,7 +250,7 @@ class ArticleListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        cache_key = f'articles_list_{self.kwargs.get("category_slug", "all")}'
+        cache_key = f"articles_list_{self.kwargs.get('category_slug', 'all')}"
         queryset = cache.get(cache_key)
 
         if queryset is None:

@@ -41,9 +41,7 @@ class TestDetectMonorepo:
     def test_detect_lerna(self, tmp_path: Path):
         """Detect lerna monorepo from lerna.json."""
         lerna_config = {"packages": ["packages/*"], "version": "1.0.0"}
-        (tmp_path / "lerna.json").write_text(
-            json.dumps(lerna_config), encoding="utf-8"
-        )
+        (tmp_path / "lerna.json").write_text(json.dumps(lerna_config), encoding="utf-8")
         (tmp_path / "packages" / "lib1").mkdir(parents=True)
 
         info = detect_monorepo(tmp_path)

@@ -124,21 +124,27 @@ class TestModelRecommendation:
 class TestCostOptimizerBoundaryCases:
     """边界情况测试"""
 
-    @pytest.mark.parametrize("task_desc,expected_complexity", [
-        ("", Complexity.LOW),  # 空输入 -> LOW
-        ("   ", Complexity.LOW),  # 仅空格 -> LOW
-    ])
+    @pytest.mark.parametrize(
+        "task_desc,expected_complexity",
+        [
+            ("", Complexity.LOW),  # 空输入 -> LOW
+            ("   ", Complexity.LOW),  # 仅空格 -> LOW
+        ],
+    )
     def test_empty_and_extreme_inputs(self, task_desc, expected_complexity):
         """测试空输入和极端值"""
         optimizer = CostOptimizer()
         result = optimizer.recommend(task_desc if task_desc else "")
         assert result.complexity == expected_complexity
 
-    @pytest.mark.parametrize("file_count,expected_complexity", [
-        (0, None),  # 零文件
-        (-1, None),  # 负数
-        (9999, Complexity.HIGH),  # 超大文件数 -> HIGH
-    ])
+    @pytest.mark.parametrize(
+        "file_count,expected_complexity",
+        [
+            (0, None),  # 零文件
+            (-1, None),  # 负数
+            (9999, Complexity.HIGH),  # 超大文件数 -> HIGH
+        ],
+    )
     def test_file_count_boundary(self, file_count, expected_complexity):
         """测试文件数量边界值"""
         optimizer = CostOptimizer()
@@ -148,10 +154,13 @@ class TestCostOptimizerBoundaryCases:
         else:
             assert result.complexity in [Complexity.LOW, Complexity.MEDIUM]
 
-    @pytest.mark.parametrize("new_files_desc,expected_in", [
-        ([f"src/file{i}.py" for i in range(100)], None),  # 纯数字名，无关键词
-        (["src/app_main.py", "src/server.py"], Complexity.HIGH),  # 含HIGH关键词
-    ])
+    @pytest.mark.parametrize(
+        "new_files_desc,expected_in",
+        [
+            ([f"src/file{i}.py" for i in range(100)], None),  # 纯数字名，无关键词
+            (["src/app_main.py", "src/server.py"], Complexity.HIGH),  # 含HIGH关键词
+        ],
+    )
     def test_new_files_edge_cases(self, new_files_desc, expected_in):
         """测试新增文件边界情况"""
         optimizer = CostOptimizer()
@@ -165,10 +174,13 @@ class TestCostOptimizerBoundaryCases:
 class TestCostOptimizerEdgeModels:
     """模型选择边界情况"""
 
-    @pytest.mark.parametrize("prefer_local,expected_provider", [
-        (True, "ollama"),  # 本地优先
-        (False, None),  # 云端优先
-    ])
+    @pytest.mark.parametrize(
+        "prefer_local,expected_provider",
+        [
+            (True, "ollama"),  # 本地优先
+            (False, None),  # 云端优先
+        ],
+    )
     def test_provider_preference(self, prefer_local, expected_provider):
         """测试提供商偏好"""
         optimizer = CostOptimizer(prefer_local=prefer_local)

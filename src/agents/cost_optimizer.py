@@ -364,7 +364,6 @@ MODEL_PRICING = {
     "claude-3.5-opus": {"input": 18.00, "output": 90.00},
     # DeepSeek
     "deepseek-chat": {"input": 0.14, "output": 0.28},
-
     # Qwen
     "qwen-turbo": {"input": 0.30, "output": 0.60},
     "qwen-plus": {"input": 0.80, "output": 2.00},
@@ -411,7 +410,9 @@ def calculate_cost(
         ValueError: 模型不在定价表中
     """
     if model not in MODEL_PRICING:
-        raise ValueError(f"模型 {model} 不在定价表中，可用模型: {list(MODEL_PRICING.keys())}")
+        raise ValueError(
+            f"模型 {model} 不在定价表中，可用模型: {list(MODEL_PRICING.keys())}"
+        )
 
     pricing = MODEL_PRICING[model]
     input_cost = (input_tokens / 1_000_000) * pricing["input"]

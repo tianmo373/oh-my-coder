@@ -19,6 +19,7 @@ SKILL_PROPOSALS_DIR = Path.home() / ".omc" / "skill-proposals"
 @dataclass
 class SkillProposal:
     """Skill 提议"""
+
     id: str
     title: str
     description: str
@@ -137,6 +138,7 @@ def reject_proposal(proposal_id: str) -> bool:
 
 # ===== 内部函数 =====
 
+
 def _is_worth_extracting(
     task_description: str,
     execution_steps: list[str],
@@ -149,9 +151,22 @@ def _is_worth_extracting(
 
     # 检查是否有通用性关键词
     generic_keywords = [
-        "创建", "生成", "配置", "设置", "安装", "部署",
-        "检查", "修复", "优化", "重构", "测试", "文档",
-        "初始化", "同步", "更新", "清理",
+        "创建",
+        "生成",
+        "配置",
+        "设置",
+        "安装",
+        "部署",
+        "检查",
+        "修复",
+        "优化",
+        "重构",
+        "测试",
+        "文档",
+        "初始化",
+        "同步",
+        "更新",
+        "清理",
     ]
 
     task_lower = task_description.lower()
@@ -160,8 +175,7 @@ def _is_worth_extracting(
     # 检查反思中是否有正面评价
     positive_indicators = ["成功", "完成", "有效", "正确", "顺利", "✅"]
     has_positive = any(
-        any(ind in ref for ind in positive_indicators)
-        for ref in reflections
+        any(ind in ref for ind in positive_indicators) for ref in reflections
     )
 
     return has_generic and has_positive
@@ -191,9 +205,22 @@ def _generate_trigger(task_description: str) -> str:
     # 提取关键词作为触发条件
     keywords = []
     trigger_keywords = [
-        "创建", "生成", "配置", "设置", "安装", "部署",
-        "检查", "修复", "优化", "重构", "测试", "文档",
-        "初始化", "同步", "更新", "清理",
+        "创建",
+        "生成",
+        "配置",
+        "设置",
+        "安装",
+        "部署",
+        "检查",
+        "修复",
+        "优化",
+        "重构",
+        "测试",
+        "文档",
+        "初始化",
+        "同步",
+        "更新",
+        "清理",
     ]
 
     for kw in trigger_keywords:
@@ -263,7 +290,7 @@ def _find_proposal(proposal_id: str) -> Optional[SkillProposal]:
 
 def _generate_skill_md(proposal: SkillProposal) -> str:
     """生成 SKILL.md 内容"""
-    steps_md = "\n".join(f"{i+1}. {step}" for i, step in enumerate(proposal.steps))
+    steps_md = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(proposal.steps))
 
     return f"""# {proposal.title}
 

@@ -327,7 +327,9 @@ class TaskSync:
         task_ids: set[Any] = set(_smembers_result)
         tasks = []
         for tid in task_ids:
-            task = await self.get_task(tid.decode() if isinstance(tid, bytes) else str(tid))
+            task = await self.get_task(
+                tid.decode() if isinstance(tid, bytes) else str(tid)
+            )
             if task:
                 tasks.append(task)
         return tasks
@@ -447,6 +449,7 @@ class TaskSync:
                 except Exception as e:
                     print(f"处理消息失败: {e}")
         return None
+
 
 # 全局实例
 task_sync = TaskSync()

@@ -81,9 +81,7 @@ def demo_multi_model_routing():
         tier=ModelTier.HIGH,
     )
     kimi_model = KimiModel(kimi_config, ModelTier.HIGH)
-    print(
-        f"  强制使用 Kimi: {kimi_model.model_name} " f"(适合 128K 上下文的大代码库分析)"
-    )
+    print(f"  强制使用 Kimi: {kimi_model.model_name} (适合 128K 上下文的大代码库分析)")
 
     # 强制使用 DeepSeek（低成本任务）
     deepseek_config = ModelConfig(
@@ -92,9 +90,7 @@ def demo_multi_model_routing():
         tier=ModelTier.LOW,
     )
     deepseek_model = DeepSeekModel(deepseek_config, ModelTier.LOW)
-    print(
-        f"  强制使用 DeepSeek: {deepseek_model.model_name} " f"(性价比最高，免费额度)"
-    )
+    print(f"  强制使用 DeepSeek: {deepseek_model.model_name} (性价比最高，免费额度)")
 
     # 强制使用 GLM（快速响应）
     glm_config = ModelConfig(
@@ -103,7 +99,7 @@ def demo_multi_model_routing():
         tier=ModelTier.MEDIUM,
     )
     glm_model = GLMModel(glm_config, ModelTier.MEDIUM)
-    print(f"  强制使用 GLM: {glm_model.model_name} " f"(函数调用支持好)")
+    print(f"  强制使用 GLM: {glm_model.model_name} (函数调用支持好)")
 
     return router
 

@@ -80,7 +80,9 @@ class Calculator:
     def test_keyword_search_with_filters(self, indexer_with_elements):
         """测试带过滤的关键词搜索"""
         search = SemanticSearch(indexer_with_elements)
-        results = search.search("add", search_type="keyword", filters={"type": "function"})
+        results = search.search(
+            "add", search_type="keyword", filters={"type": "function"}
+        )
 
         assert all(r.type == "function" for r in results)
 
@@ -262,9 +264,7 @@ class DataHandler:
         builder, indexer, search = setup_search
 
         context = builder.build_context(
-            "process data",
-            relevant_files=["main.py"],
-            max_tokens=2000
+            "process data", relevant_files=["main.py"], max_tokens=2000
         )
 
         assert "项目概述" in context
@@ -302,11 +302,34 @@ class DataHandler:
 class TestSearchConfig:
     """SearchConfig 测试"""
 
-    @pytest.mark.parametrize("config_kwargs,expected_values", [
-        ({}, {"max_results": 10, "min_score": 0.3, "hybrid_alpha": 0.5, "context_lines": 3}),
-        ({"max_results": 20, "min_score": 0.6, "hybrid_alpha": 0.7, "context_lines": 5},
-         {"max_results": 20, "min_score": 0.6, "hybrid_alpha": 0.7, "context_lines": 5}),
-    ])
+    @pytest.mark.parametrize(
+        "config_kwargs,expected_values",
+        [
+            (
+                {},
+                {
+                    "max_results": 10,
+                    "min_score": 0.3,
+                    "hybrid_alpha": 0.5,
+                    "context_lines": 3,
+                },
+            ),
+            (
+                {
+                    "max_results": 20,
+                    "min_score": 0.6,
+                    "hybrid_alpha": 0.7,
+                    "context_lines": 5,
+                },
+                {
+                    "max_results": 20,
+                    "min_score": 0.6,
+                    "hybrid_alpha": 0.7,
+                    "context_lines": 5,
+                },
+            ),
+        ],
+    )
     def test_search_config(self, config_kwargs, expected_values):
         """测试默认和自定义配置"""
         config = SearchConfig(**config_kwargs)
@@ -320,11 +343,14 @@ class TestSearchConfig:
 class TestSearchResult:
     """SearchResult 测试"""
 
-    @pytest.mark.parametrize("highlights,expected_count", [
-        ([], 0),
-        (["important line"], 1),
-        (["line1", "line2"], 2),
-    ])
+    @pytest.mark.parametrize(
+        "highlights,expected_count",
+        [
+            ([], 0),
+            (["important line"], 1),
+            (["line1", "line2"], 2),
+        ],
+    )
     def test_search_result_creation(self, highlights, expected_count):
         """测试搜索结果创建（含高亮）"""
         result = SearchResult(
@@ -363,11 +389,14 @@ class TestEdgeCases:
 
         assert results == []
 
-    @pytest.mark.parametrize("embeddings,expected", [
-        ([], []),
-        ([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [2.5, 3.5, 4.5]),
-        ([[1.0, 0.0], [0.0, 1.0]], [0.5, 0.5]),
-    ])
+    @pytest.mark.parametrize(
+        "embeddings,expected",
+        [
+            ([], []),
+            ([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [2.5, 3.5, 4.5]),
+            ([[1.0, 0.0], [0.0, 1.0]], [0.5, 0.5]),
+        ],
+    )
     def test_average_embeddings(self, tmp_path, embeddings, expected):
         """测试平均嵌入计算（含空输入）"""
         project = tmp_path / "test"

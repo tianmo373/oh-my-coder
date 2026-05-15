@@ -330,15 +330,25 @@ def _init_router() -> ModelRouter:
     config = RouterConfig()
 
     # 获取用户配置的默认模型，用于提示缺失的 API Key
-    default_model = os.getenv("OMC_DEFAULT_MODEL") or os.getenv("DEFAULT_MODEL", "deepseek")
+    default_model = os.getenv("OMC_DEFAULT_MODEL") or os.getenv(
+        "DEFAULT_MODEL", "deepseek"
+    )
     # 将 provider 名映射到对应的 API Key 环境变量
     api_key_hint_map = {
-        "deepseek": ("DEEPSEEK_API_KEY", "https://platform.deepseek.com/", "性价比最高，推荐配置"),
+        "deepseek": (
+            "DEEPSEEK_API_KEY",
+            "https://platform.deepseek.com/",
+            "性价比最高，推荐配置",
+        ),
         "glm": ("GLM_API_KEY", "https://www.zhipuai.cn/", "智谱 GLM 模型"),
         "kimi": ("KIMI_API_KEY", "https://platform.moonshot.cn/", "月之暗面 Kimi"),
         "doubao": ("DOUBAO_API_KEY", "https://console.volcengine.com/", "字节豆包"),
         "minimax": ("MINIMAX_API_KEY", "https://www.minimax.io/", "MiniMax"),
-        "tongyi": ("DASHSCOPE_API_KEY", "https://dashscope.console.aliyun.com/", "通义千问"),
+        "tongyi": (
+            "DASHSCOPE_API_KEY",
+            "https://dashscope.console.aliyun.com/",
+            "通义千问",
+        ),
         "wenxin": ("ERNIE_API_KEY", "https://cloud.baidu.com/", "文心一言"),
         "hunyuan": ("HUNYUAN_API_KEY", "https://cloud.tencent.com/", "腾讯混元"),
         "ollama": None,  # 本地模型不需要 API Key
@@ -350,7 +360,11 @@ def _init_router() -> ModelRouter:
     else:
         # DeepSeek 默认检查（用户没有配置默认模型时）
         if not os.getenv("DEEPSEEK_API_KEY"):
-            _print_missing_key_hint("DEEPSEEK_API_KEY", "性价比最高，推荐配置", url="https://platform.deepseek.com/")
+            _print_missing_key_hint(
+                "DEEPSEEK_API_KEY",
+                "性价比最高，推荐配置",
+                url="https://platform.deepseek.com/",
+            )
 
     try:
         return ModelRouter(config)
@@ -362,7 +376,9 @@ def _print_missing_key_hint(key: str, reason: str = "", url: str = ""):
     """打印缺失 API Key 的友好提示"""
 
     console.print()
-    hint_lines = f"[dim]推荐:[/dim] {key.split('_')[0].title()} — {reason}\n\n" if reason else ""
+    hint_lines = (
+        f"[dim]推荐:[/dim] {key.split('_')[0].title()} — {reason}\n\n" if reason else ""
+    )
     url_line = f"[dim]获取地址:[/dim] {url}" if url else ""
     console.print(
         Panel(

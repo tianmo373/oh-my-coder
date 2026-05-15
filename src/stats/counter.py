@@ -1,4 +1,3 @@
-
 # mypy: disable-error-code="abstract, arg-type, assignment, attr-defined, call-arg, call-overload, dict-item, func-returns-value, import-untyped, index, misc, no-any-return, no-redef, operator, override, return, return-value, syntax, union-attr, var-annotated"
 """
 
@@ -245,7 +244,9 @@ def count_files(
     # 合并排除列表（默认 + 自定义）
     final_exclude_dirs = default_exclude_dirs | (exclude_dirs or set())
     final_exclude_files = default_exclude_files | (exclude_files or set())
-    final_exclude_extensions = default_exclude_extensions | (exclude_extensions or set())
+    final_exclude_extensions = default_exclude_extensions | (
+        exclude_extensions or set()
+    )
 
     # 统计结果
     total_files = 0
@@ -291,12 +292,12 @@ def count_files(
                         # 按文件类型统计
                         file_type = _get_file_type(entry_path)
                         if file_type not in by_type:
-                            by_type[file_type] = FileStats(
-                                count=0, size=0, files=[]
-                            )
+                            by_type[file_type] = FileStats(count=0, size=0, files=[])
                         by_type[file_type].count += 1
                         by_type[file_type].size += file_size
-                        by_type[file_type].files.append(str(entry_path.relative_to(root)))
+                        by_type[file_type].files.append(
+                            str(entry_path.relative_to(root))
+                        )
 
                         # 按目录统计
                         parent_dir = str(entry_path.parent.relative_to(root))

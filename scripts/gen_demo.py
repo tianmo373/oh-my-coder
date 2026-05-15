@@ -56,7 +56,7 @@ def make_terminal(title: str, lines: list, height: int) -> Image.Image:
 
 def gen_demo_workflow():
     lines = [
-        (DIM, "$ omc run \"实现一个 REST API\""),
+        (DIM, '$ omc run "实现一个 REST API"'),
         (DIM, ""),
         (GREEN, "  🤖 [Explorer]   扫描项目结构..."),
         (GREEN, "             ✅   找到 12 个文件，3 个目录"),
@@ -67,16 +67,16 @@ def gen_demo_workflow():
         (GREEN, "  🤖 [Planner]    制定执行计划..."),
         (GREEN, "             ✅   8 步计划，预计 45s"),
         (DIM, ""),
-        (BLUE,  "  🤖 [Architect]  设计 API 架构..."),
-        (BLUE,  "             ✅   RESTful，Flask + SQLAlchemy"),
+        (BLUE, "  🤖 [Architect]  设计 API 架构..."),
+        (BLUE, "             ✅   RESTful，Flask + SQLAlchemy"),
         (DIM, ""),
-        (ORANGE,"  🤖 [Executor]   生成代码..."),
-        (ORANGE,"             ✅   src/api/rest.py (42 行)"),
-        (ORANGE,"             ✅   src/models/user.py (28 行)"),
-        (ORANGE,"             ✅   src/models/order.py (35 行)"),
+        (ORANGE, "  🤖 [Executor]   生成代码..."),
+        (ORANGE, "             ✅   src/api/rest.py (42 行)"),
+        (ORANGE, "             ✅   src/models/user.py (28 行)"),
+        (ORANGE, "             ✅   src/models/order.py (35 行)"),
         (DIM, ""),
-        (PURPLE,"  🤖 [Verifier]   运行测试..."),
-        (PURPLE,"             ✅   pytest 18/18 passed"),
+        (PURPLE, "  🤖 [Verifier]   运行测试..."),
+        (PURPLE, "             ✅   pytest 18/18 passed"),
         (DIM, ""),
         (CYAN, "  ✨ 完成！        生成 6 个文件，耗时 38.2s"),
         (CYAN, "  💰 成本: ¥0.03  ·  🔢 Token: 24,500"),
@@ -100,18 +100,18 @@ def gen_demo_agents():
         (GREEN, "  ├── DebuggerAgent       调试和修复错误"),
         (GREEN, "  └── TracerAgent         追踪执行流程，定位根因"),
         (DIM, ""),
-        (BLUE,  "  审查通道"),
-        (BLUE,  "  ├── CodeReviewerAgent       代码质量审查"),
-        (BLUE,  "  └── SecurityReviewerAgent  安全漏洞扫描"),
+        (BLUE, "  审查通道"),
+        (BLUE, "  ├── CodeReviewerAgent       代码质量审查"),
+        (BLUE, "  └── SecurityReviewerAgent  安全漏洞扫描"),
         (DIM, ""),
-        (ORANGE,"  领域通道（14 个）"),
-        (ORANGE,"  TestEngineer | Designer | Vision | Document | Writer"),
-        (ORANGE,"  Scientist | GitMaster | Database | API | DevOps"),
-        (ORANGE,"  UML | Performance | Migration | Prompt | Auth | Data"),
+        (ORANGE, "  领域通道（14 个）"),
+        (ORANGE, "  TestEngineer | Designer | Vision | Document | Writer"),
+        (ORANGE, "  Scientist | GitMaster | Database | API | DevOps"),
+        (ORANGE, "  UML | Performance | Migration | Prompt | Auth | Data"),
         (DIM, ""),
-        (YELLOW,"  协调通道"),
-        (YELLOW,"  ├── CriticAgent          审查计划和设计"),
-        (YELLOW,"  └── SelfImprovingAgent   主动学习，优化路由"),
+        (YELLOW, "  协调通道"),
+        (YELLOW, "  ├── CriticAgent          审查计划和设计"),
+        (YELLOW, "  └── SelfImprovingAgent   主动学习，优化路由"),
     ]
     return make_terminal("oh-my-coder — omc agents", lines, height=680)
 
@@ -125,22 +125,22 @@ def gen_demo_web():
         (GREEN, '    "workflow_id": "wf_a1b2c3",'),
         (GREEN, '    "status": "running",'),
         (GREEN, '    "active_agents": ['),
-        (BLUE,  '      {'),
-        (BLUE,  '        "name": "ExplorerAgent",'),
-        (BLUE,  '        "state": "completed",'),
-        (BLUE,  '        "progress": 1.0,'),
-        (BLUE,  '        "duration": 2.3'),
-        (BLUE,  '      }, {'),
-        (ORANGE,'        "name": "AnalystAgent",'),
-        (ORANGE,'        "state": "running",'),
-        (ORANGE,'        "progress": 0.65,'),
-        (ORANGE,'        "duration": 4.1'),
-        (ORANGE,'      },'),
+        (BLUE, "      {"),
+        (BLUE, '        "name": "ExplorerAgent",'),
+        (BLUE, '        "state": "completed",'),
+        (BLUE, '        "progress": 1.0,'),
+        (BLUE, '        "duration": 2.3'),
+        (BLUE, "      }, {"),
+        (ORANGE, '        "name": "AnalystAgent",'),
+        (ORANGE, '        "state": "running",'),
+        (ORANGE, '        "progress": 0.65,'),
+        (ORANGE, '        "duration": 4.1'),
+        (ORANGE, "      },"),
         (GREEN, '      { "name": "PlannerAgent", "state": "pending" }'),
-        (GREEN, '    ]'),
-        (GREEN, '  }'),
+        (GREEN, "    ]"),
+        (GREEN, "  }"),
         (DIM, ""),
-        (YELLOW,"  data: { ... }  ← 每 2 秒推送一次"),
+        (YELLOW, "  data: { ... }  ← 每 2 秒推送一次"),
     ]
     return make_terminal("oh-my-coder — /api/agent/live SSE Stream", lines, height=560)
 
@@ -236,7 +236,9 @@ def gen_flowchart_svg(out_path: str):
 
 
 def main():
-    out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs", "screenshots")
+    out_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "docs", "screenshots"
+    )
     os.makedirs(out_dir, exist_ok=True)
 
     for name, img_fn in [

@@ -7,6 +7,7 @@ CLI 使用示例
 运行方式：
     python examples/cli_demo.py
 """
+
 import subprocess
 import sys
 

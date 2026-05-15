@@ -3,6 +3,7 @@
 Oh My Coder Demo Video Generator
 生成 3 分钟演示 GIF（~180秒播放时间，约60帧/6秒 = 30帧总）
 """
+
 import math
 import textwrap
 from pathlib import Path
@@ -577,7 +578,9 @@ def generate_demo_video():
         total_scene_frames = scene_frames + trans_frames
 
         next_fn = SCENES[scene_idx + 1][0] if scene_idx < len(SCENES) - 1 else None
-        print(f"场景 {scene_idx+1}: {scene_fn.__name__} ({duration}s + {trans}s 过渡)")
+        print(
+            f"场景 {scene_idx + 1}: {scene_fn.__name__} ({duration}s + {trans}s 过渡)"
+        )
 
         for f in range(total_scene_frames):
             t = f / total_scene_frames  # 0→1 场景进度

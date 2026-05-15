@@ -1,4 +1,3 @@
-
 # mypy: disable-error-code="abstract, arg-type, assignment, attr-defined, call-arg, call-overload, dict-item, func-returns-value, import-untyped, index, misc, no-any-return, no-redef, operator, override, return, return-value, syntax, union-attr, var-annotated"
 """
 
@@ -207,9 +206,7 @@ def init_wizard(
     # 步骤 2: 选择模型
     # ============================================================
     console.print("[bold]📋 步骤 1/4: 选择默认模型[/bold]")
-    console.print(
-        "[dim]请选择您要使用的 AI 模型作为默认模型[/dim]"
-    )
+    console.print("[dim]请选择您要使用的 AI 模型作为默认模型[/dim]")
     console.print()
 
     # 显示模型列表
@@ -259,7 +256,9 @@ def init_wizard(
             selected_model_info = sorted_models[idx][1]
             break
         else:
-            console.print(f"[red]无效选择: {choice}，请输入 1-{len(sorted_models)}[/red]")
+            console.print(
+                f"[red]无效选择: {choice}，请输入 1-{len(sorted_models)}[/red]"
+            )
 
     console.print()
     console.print(
@@ -277,28 +276,24 @@ def init_wizard(
     existing_key = os.getenv(api_key_env)
 
     if existing_key:
-        console.print(
-            f"[dim]检测到环境变量 {api_key_env} 已设置[/dim]"
-        )
+        console.print(f"[dim]检测到环境变量 {api_key_env} 已设置[/dim]")
         use_existing = Confirm.ask(
             "是否使用现有的 API Key？",
             default=True,
         )
         if use_existing:
             api_key = existing_key
-            console.print(f"[green]✓ 使用现有 API Key: {_mask_api_key(api_key)}[/green]")
+            console.print(
+                f"[green]✓ 使用现有 API Key: {_mask_api_key(api_key)}[/green]"
+            )
         else:
             api_key = Prompt.ask(
                 f"请输入新的 {selected_model_info['name']} API Key",
                 password=True,
             )
     else:
-        console.print(
-            f"[dim]请输入 {selected_model_info['name']} 的 API Key[/dim]"
-        )
-        console.print(
-            "[dim]提示: API Key 不会显示在屏幕上[/dim]"
-        )
+        console.print(f"[dim]请输入 {selected_model_info['name']} 的 API Key[/dim]")
+        console.print("[dim]提示: API Key 不会显示在屏幕上[/dim]")
         api_key = Prompt.ask(
             "API Key",
             password=True,
@@ -314,9 +309,7 @@ def init_wizard(
     # 步骤 4: 设置工作目录
     # ============================================================
     console.print("[bold]📁 步骤 3/4: 设置工作目录[/bold]")
-    console.print(
-        "[dim]工作目录是 Oh My Coder 默认的项目路径[/dim]"
-    )
+    console.print("[dim]工作目录是 Oh My Coder 默认的项目路径[/dim]")
 
     current_dir = str(Path.cwd())
     work_dir = Prompt.ask(
@@ -355,8 +348,12 @@ def init_wizard(
     summary_table.add_column("项目", style="cyan")
     summary_table.add_column("值", style="green")
 
-    summary_table.add_row("默认模型", f"{selected_model_info['name']} ({selected_model_id})")
-    summary_table.add_row("API Key", _mask_api_key(api_key) if api_key else "[yellow]未设置[/yellow]")
+    summary_table.add_row(
+        "默认模型", f"{selected_model_info['name']} ({selected_model_id})"
+    )
+    summary_table.add_row(
+        "API Key", _mask_api_key(api_key) if api_key else "[yellow]未设置[/yellow]"
+    )
     summary_table.add_row("工作目录", str(work_path))
     summary_table.add_row("配置文件", str(CONFIG_FILE))
 
@@ -403,7 +400,7 @@ def init_wizard(
             "[bold]🚀 下一步:[/bold]\n"
             "  [cyan]omc agent list[/cyan]     查看可用 Agent\n"
             "  [cyan]omc model list[/cyan]      查看所有模型\n"
-            "  [cyan]omc run \"<task>\"[/cyan]   执行任务\n"
+            '  [cyan]omc run "<task>"[/cyan]   执行任务\n'
             "  [cyan]omc --help[/cyan]          查看所有命令\n\n"
             "[dim]提示: 使用 [cyan]omc model switch <name>[/cyan] 可随时切换模型[/dim]",
             title="🎉 初始化完成",

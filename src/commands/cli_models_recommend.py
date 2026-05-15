@@ -42,7 +42,6 @@ RECOMMENDATIONS: dict[str, list[dict]] = {
         },
     ],
     "reasoning": [
-
         {
             "model": "qwen3-235b-a22b",
             "provider": "通义千问",

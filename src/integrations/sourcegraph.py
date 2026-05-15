@@ -1,4 +1,3 @@
-
 # mypy: disable-error-code="abstract, arg-type, assignment, attr-defined, call-arg, call-overload, dict-item, func-returns-value, import-untyped, index, misc, no-any-return, no-redef, operator, override, return, return-value, syntax, union-attr, var-annotated"
 """
 
@@ -319,7 +318,8 @@ class SourcegraphClient:
                 return SearchMatch(
                     repo=repo_info.get("name", ""),
                     file_path=file_info.get("path", ""),
-                    line_number=first_line.get("lineNumber", 0) + 1,  # 0-indexed to 1-indexed
+                    line_number=first_line.get("lineNumber", 0)
+                    + 1,  # 0-indexed to 1-indexed
                     line_content=first_line.get("preview", ""),
                     language=file_info.get("language", ""),
                     repository_stars=repo_info.get("stars", {}).get("totalCount", 0)

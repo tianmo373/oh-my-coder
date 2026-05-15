@@ -160,7 +160,9 @@ def _parse_pnpm_workspace(root: Path) -> list[Path]:
                     pkg_pattern = stripped.lstrip("- ").strip()
                     # Handle glob patterns like "packages/*"
                     if "*" in pkg_pattern:
-                        base_dir = root / pkg_pattern.replace("/*", "").replace("/**", "")
+                        base_dir = root / pkg_pattern.replace("/*", "").replace(
+                            "/**", ""
+                        )
                         if base_dir.is_dir():
                             for sub in base_dir.iterdir():
                                 if sub.is_dir():

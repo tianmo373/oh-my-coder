@@ -16,6 +16,7 @@ from typing import Any
 @dataclass
 class FileCoverage:
     """单个文件的覆盖率数据"""
+
     path: str
     statements: int = 0
     missing: int = 0
@@ -28,6 +29,7 @@ class FileCoverage:
 @dataclass
 class CoverageSummary:
     """覆盖率汇总数据"""
+
     total_files: int = 0
     total_statements: int = 0
     total_missing: int = 0
@@ -44,7 +46,9 @@ def run_coverage_analysis(project_root: Path) -> CoverageSummary:
 
     # 运行 pytest with coverage
     cmd = [
-        sys.executable, "-m", "pytest",
+        sys.executable,
+        "-m",
+        "pytest",
         "--cov=src",
         "--cov-report=json",
         "--cov-report=term-missing",
@@ -102,7 +106,11 @@ def _parse_coverage_json(data: dict[str, Any], project_root: Path) -> CoverageSu
 
     for file_path, file_data in files_data.items():
         # 只显示 src 目录下的文件
-        rel_path = Path(file_path).relative_to(project_root) if file_path.startswith(str(project_root)) else Path(file_path)
+        rel_path = (
+            Path(file_path).relative_to(project_root)
+            if file_path.startswith(str(project_root))
+            else Path(file_path)
+        )
         if not str(rel_path).startswith("src/"):
             continue
 

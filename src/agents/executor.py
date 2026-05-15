@@ -320,9 +320,7 @@ def test_add():
         # 3. 尝试安装依赖（Python 包）
         dep_result = None
         if saved_files:
-            dep_result = self._resolve_dependencies(
-                context.project_path, saved_files
-            )
+            dep_result = self._resolve_dependencies(context.project_path, saved_files)
 
         # 4. 尝试格式化代码（如果可用）
         self._try_format_code(context.project_path, saved_files)
@@ -432,9 +430,7 @@ def test_add():
         """解析并安装 Python 依赖"""
         try:
             resolver = DependencyResolver()
-            python_files = [
-                project_path / f for f in saved_files if f.endswith(".py")
-            ]
+            python_files = [project_path / f for f in saved_files if f.endswith(".py")]
             if not python_files:
                 return None
 

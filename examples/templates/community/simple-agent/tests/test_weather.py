@@ -16,10 +16,13 @@ class TestGetWeather:
         result = get_weather("Beijing")
         assert "Beijing" in result
         # Should contain weather data or error message
-        assert any(
-            keyword in result.lower()
-            for keyword in ["weather", "temperature", "cloudy", "sunny", "rain"]
-        ) or "unable" in result.lower()
+        assert (
+            any(
+                keyword in result.lower()
+                for keyword in ["weather", "temperature", "cloudy", "sunny", "rain"]
+            )
+            or "unable" in result.lower()
+        )
 
     def test_get_weather_empty_city(self):
         """Test with empty city name."""
@@ -48,8 +51,9 @@ class TestWeatherAgent:
 
     def test_init_without_key_raises(self):
         """Test that initialization fails without API key."""
-        with patch.dict(os.environ, {}, clear=True), pytest.raises(
-            ValueError, match="API key required"
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            pytest.raises(ValueError, match="API key required"),
         ):
             WeatherAgent()
 

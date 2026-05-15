@@ -27,7 +27,9 @@ def create_profile(
     agent_id: str = typer.Argument(..., help="Agent 唯一标识"),
     name: str = typer.Option(..., "--name", "-n", help="Agent 名称"),
     template: str = typer.Option(
-        None, "--template", "-t",
+        None,
+        "--template",
+        "-t",
         help=f"使用预定义模板: {', '.join(PREDEFINED_PROFILES.keys())}",
     ),
 ):
@@ -105,19 +107,21 @@ def show_context(agent_id: str):
         console.print(f"[red]Profile 不存在: {agent_id}[/red]")
         raise typer.Exit(1)
 
-    console.print(Panel(
-        f"[bold]{context['agent_name']}[/bold]\n\n"
-        f"[dim]最近记忆 ({len(context['memories'])}):[/dim]\n"
-        + "\n".join(f"  • {m[:80]}" for m in context['memories'][-5:])
-        + f"\n\n[dim]最近任务 ({len(context['recent_tasks'])}):[/dim]\n"
-        + "\n".join(
-            f"  • {t['task'][:60]}... [{t['status']}]"
-            for t in context['recent_tasks'][-5:]
+    console.print(
+        Panel(
+            f"[bold]{context['agent_name']}[/bold]\n\n"
+            f"[dim]最近记忆 ({len(context['memories'])}):[/dim]\n"
+            + "\n".join(f"  • {m[:80]}" for m in context["memories"][-5:])
+            + f"\n\n[dim]最近任务 ({len(context['recent_tasks'])}):[/dim]\n"
+            + "\n".join(
+                f"  • {t['task'][:60]}... [{t['status']}]"
+                for t in context["recent_tasks"][-5:]
+            )
+            + "\n\n[dim]偏好设置:[/dim]\n"
+            + "\n".join(f"  {k}: {v}" for k, v in context["preferences"].items()),
+            title="Agent Context (Isolated)",
         )
-        + "\n\n[dim]偏好设置:[/dim]\n"
-        + "\n".join(f"  {k}: {v}" for k, v in context['preferences'].items()),
-        title="Agent Context (Isolated)",
-    ))
+    )
 
 
 @app.command("add-memory")
@@ -170,16 +174,24 @@ def list_templates():
         suitable = prefs.get("suitable_for", [])
         not_suitable = prefs.get("not_suitable_for", [])
 
-        console.print(Panel(
-            f"[bold]{config['name']}[/bold] ({key})\n"
-            f"技能: {', '.join(config['skills'])}\n"
-            + ("\n[green]✓ 适合:[/green]\n  "
-               + "\n  ".join(suitable) if suitable else "")
-            + ("\n[red]✗ 不适合:[/red]\n  "
-               + "\n  ".join(not_suitable) if not_suitable else "")
-            + f"\n\n[dim]使用: omc profile create <id> -n <name> -t {key}[/dim]",
-            expand=False,
-        ))
+        console.print(
+            Panel(
+                f"[bold]{config['name']}[/bold] ({key})\n"
+                f"技能: {', '.join(config['skills'])}\n"
+                + (
+                    "\n[green]✓ 适合:[/green]\n  " + "\n  ".join(suitable)
+                    if suitable
+                    else ""
+                )
+                + (
+                    "\n[red]✗ 不适合:[/red]\n  " + "\n  ".join(not_suitable)
+                    if not_suitable
+                    else ""
+                )
+                + f"\n\n[dim]使用: omc profile create <id> -n <name> -t {key}[/dim]",
+                expand=False,
+            )
+        )
 
 
 if __name__ == "__main__":

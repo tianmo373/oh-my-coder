@@ -29,7 +29,7 @@ def main():
   python todo.py list
   python todo.py done 1
   python todo.py delete 1
-        """
+        """,
     )
 
     subparsers = parser.add_subparsers(dest="command", help="可用命令")

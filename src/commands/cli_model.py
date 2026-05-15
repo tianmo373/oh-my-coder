@@ -235,7 +235,6 @@ BUILTIN_CATWALK_MODELS: list[dict[str, Any]] = [
         "context": 64000,
         "features": ["function_call", "streaming"],
     },
-
     {
         "name": "GLM-4.7-Flash",
         "provider": "glm",

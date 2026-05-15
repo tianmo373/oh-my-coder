@@ -27,7 +27,9 @@ def generate_summary(result: ClassificationResult) -> str:
 
     # 统计各类别帖子数量
     category_counts = {cat: len(posts) for cat, posts in categories.items()}
-    top_categories = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+    top_categories = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)[
+        :3
+    ]
 
     # 构建总结
     summary_parts = []
@@ -57,18 +59,24 @@ def generate_summary(result: ClassificationResult) -> str:
     # 类别分布
     if top_categories:
         cat_names = {
-            "hardware": "硬件", "ai_ml": "AI/机器学习", "open_source": "开源",
-            "programming": "编程开发", "security": "安全", "web_dev": "Web开发",
-            "startup_business": "创业/商业", "science": "科学", "culture_life": "文化/生活",
-            "gaming": "游戏", "cloud_infra": "云基础设施", "transportation": "交通"
+            "hardware": "硬件",
+            "ai_ml": "AI/机器学习",
+            "open_source": "开源",
+            "programming": "编程开发",
+            "security": "安全",
+            "web_dev": "Web开发",
+            "startup_business": "创业/商业",
+            "science": "科学",
+            "culture_life": "文化/生活",
+            "gaming": "游戏",
+            "cloud_infra": "云基础设施",
+            "transportation": "交通",
         }
         category_text = "、".join(
             f"{cat_names.get(cat, cat)}（{count}条）"
             for cat, count in top_categories[:3]
         )
-        summary_parts.append(
-            f"从主题分布看，{category_text}是今日讨论最活跃的领域。"
-        )
+        summary_parts.append(f"从主题分布看，{category_text}是今日讨论最活跃的领域。")
 
     # 有趣发现
     unique_posts = [p for p in result.posts if p not in hot_posts and p.points > 100]
@@ -91,6 +99,7 @@ def generate_summary(result: ClassificationResult) -> str:
 
     return "".join(summary_parts)
 
+
 def main(raw_content: str) -> str:
     """
     主函数：提取、分类、总结。
@@ -105,6 +114,7 @@ def main(raw_content: str) -> str:
     result = classify_all_posts(posts)
     summary = generate_summary(result)
     return summary
+
 
 if __name__ == "__main__":
     # 使用提供的网页内容进行测试

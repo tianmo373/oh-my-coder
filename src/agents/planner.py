@@ -41,16 +41,31 @@ from .base import (
 
 # 中文 → 英文映射表，用于模型返回中文值时的容错
 _PRIORITY_CN_MAP: dict[str, str] = {
-    "紧急": "critical", "极高": "critical", "阻塞": "critical",
-    "高": "high", "重要": "high",
-    "中": "medium", "中等": "medium", "普通": "medium", "常规": "medium",
-    "低": "low", "次要": "low", "可延后": "low",
+    "紧急": "critical",
+    "极高": "critical",
+    "阻塞": "critical",
+    "高": "high",
+    "重要": "high",
+    "中": "medium",
+    "中等": "medium",
+    "普通": "medium",
+    "常规": "medium",
+    "低": "low",
+    "次要": "low",
+    "可延后": "low",
 }
 
 _COMPLEXITY_CN_MAP: dict[str, str] = {
-    "简单": "simple", "低": "simple", "容易": "simple",
-    "中等": "moderate", "中": "moderate", "普通": "moderate",
-    "高": "complex", "复杂": "complex", "困难": "complex", "难": "complex",
+    "简单": "simple",
+    "低": "simple",
+    "容易": "simple",
+    "中等": "moderate",
+    "中": "moderate",
+    "普通": "moderate",
+    "高": "complex",
+    "复杂": "complex",
+    "困难": "complex",
+    "难": "complex",
 }
 
 

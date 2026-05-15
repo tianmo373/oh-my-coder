@@ -44,7 +44,9 @@ def get_font(size=14):
     return ImageFont.load_default()
 
 
-def make_terminal(title: str, lines: list, width: int = 800, height: int = 480) -> Image.Image:
+def make_terminal(
+    title: str, lines: list, width: int = 800, height: int = 480
+) -> Image.Image:
     """Render a terminal-like image."""
     img = Image.new("RGB", (width, height), BG)
     draw = ImageDraw.Draw(img)
@@ -154,10 +156,16 @@ def main():
 
     # Generate frames for each step
     frames = []
-    step_generators = [gen_step1_list_agents, gen_step2_ask_question, gen_step3_code_generated]
+    step_generators = [
+        gen_step1_list_agents,
+        gen_step2_ask_question,
+        gen_step3_code_generated,
+    ]
 
-    for i, (gen_fn, repeat) in enumerate(zip(step_generators, REPEAT_COUNTS, strict=True)):
-        print(f"  Step {i+1}: {repeat} frames")
+    for i, (gen_fn, repeat) in enumerate(
+        zip(step_generators, REPEAT_COUNTS, strict=True)
+    ):
+        print(f"  Step {i + 1}: {repeat} frames")
         img = gen_fn()
         for _ in range(repeat):
             frames.append(img)

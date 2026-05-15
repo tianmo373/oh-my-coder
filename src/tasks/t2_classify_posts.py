@@ -11,18 +11,52 @@ from .t1_extract_posts import Post
 # 定义分类类别
 CATEGORIES = {
     "hardware": ["steam controller", "hardware", "chip", "gpu", "cpu", "console"],
-    "ai_ml": ["llm", "ai", "machine learning", "deep learning", "model", "agent", "gpt", "neural"],
+    "ai_ml": [
+        "llm",
+        "ai",
+        "machine learning",
+        "deep learning",
+        "model",
+        "agent",
+        "gpt",
+        "neural",
+    ],
     "open_source": ["open source", "github", "creative commons", "license", "release"],
-    "programming": ["programming", "coding", "software", "developer", "code", "api", "framework"],
+    "programming": [
+        "programming",
+        "coding",
+        "software",
+        "developer",
+        "code",
+        "api",
+        "framework",
+    ],
     "security": ["security", "privacy", "hack", "vulnerability", "fraud", "defense"],
     "web_dev": ["web", "css", "html", "javascript", "frontend", "backend", "http"],
     "startup_business": ["startup", "yc", "hiring", "business", "company", "funding"],
     "science": ["science", "research", "biology", "physics", "math", "cell"],
-    "culture_life": ["culture", "life", "workplace", "productivity", "british", "sorry", "pen pal"],
+    "culture_life": [
+        "culture",
+        "life",
+        "workplace",
+        "productivity",
+        "british",
+        "sorry",
+        "pen pal",
+    ],
     "gaming": ["game", "gaming", "steam", "controller"],
-    "cloud_infra": ["cloud", "infrastructure", "diskless", "pxe", "zfs", "iscsi", "server"],
+    "cloud_infra": [
+        "cloud",
+        "infrastructure",
+        "diskless",
+        "pxe",
+        "zfs",
+        "iscsi",
+        "server",
+    ],
     "transportation": ["car", "camper", "van", "subway", "nyc", "transport"],
 }
+
 
 def classify_post(post: Post) -> list[str]:
     """
@@ -54,9 +88,11 @@ def classify_post(post: Post) -> list[str]:
 @dataclass
 class ClassificationResult:
     """分类结果"""
+
     posts: list[Post]
     categories: dict[str, list[Post]]
     hot_posts: list[Post]  # 点赞数 > 500 或评论数 > 200
+
 
 def classify_all_posts(posts: list[Post]) -> ClassificationResult:
     """
@@ -83,11 +119,8 @@ def classify_all_posts(posts: list[Post]) -> ClassificationResult:
         if post.points > 500 or post.comments > 200:
             hot_posts.append(post)
 
-    return ClassificationResult(
-        posts=posts,
-        categories=categories,
-        hot_posts=hot_posts
-    )
+    return ClassificationResult(posts=posts, categories=categories, hot_posts=hot_posts)
+
 
 def print_classification(result: ClassificationResult) -> None:
     """打印分类结果"""
@@ -100,7 +133,10 @@ def print_classification(result: ClassificationResult) -> None:
 
     print("\n\n=== 热门话题 (点赞 > 500 或评论 > 200) ===\n")
     for post in result.hot_posts:
-        print(f"  {post.rank}. {post.title} (点赞: {post.points}, 评论: {post.comments})")
+        print(
+            f"  {post.rank}. {post.title} (点赞: {post.points}, 评论: {post.comments})"
+        )
+
 
 if __name__ == "__main__":
     # 测试分类

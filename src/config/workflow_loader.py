@@ -15,6 +15,7 @@ from src.core.orchestrator import WORKFLOW_TEMPLATES, WorkflowStep
 # Dataclasses
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class StepConfig:
     """单个工作流步骤的配置（对应 YAML 中的 step）"""
@@ -57,6 +58,7 @@ class WorkflowConfig:
 # ---------------------------------------------------------------------------
 # WorkflowLoader
 # ---------------------------------------------------------------------------
+
 
 class WorkflowLoader:
     """
@@ -141,7 +143,9 @@ class WorkflowLoader:
         """判断是否为内置工作流"""
         return name in self.list_builtins()
 
-    def parse_yaml_string(self, yaml_str: str, name: str = "") -> Optional[WorkflowConfig]:
+    def parse_yaml_string(
+        self, yaml_str: str, name: str = ""
+    ) -> Optional[WorkflowConfig]:
         """
         将 YAML 字符串解析为 WorkflowConfig。
 
@@ -316,5 +320,3 @@ class WorkflowLoader:
             self._cache.pop(name, None)
             return True
         return False
-
-

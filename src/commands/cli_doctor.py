@@ -73,10 +73,14 @@ def _check_python_version() -> tuple[bool, str, str]:
     major, minor = sys.version_info[:2]
     if major >= 3 and minor >= 9:
         return True, f"Python {major}.{minor}.{sys.version_info[2]}", ""
-    return False, f"Python {major}.{minor}.{sys.version_info[2]}", (
-        "oh-my-coder 需要 Python >= 3.9\n"
-        f"  当前版本: {sys.version}\n"
-        "  请升级 Python: https://www.python.org/downloads/"
+    return (
+        False,
+        f"Python {major}.{minor}.{sys.version_info[2]}",
+        (
+            "oh-my-coder 需要 Python >= 3.9\n"
+            f"  当前版本: {sys.version}\n"
+            "  请升级 Python: https://www.python.org/downloads/"
+        ),
     )
 
 
@@ -89,9 +93,13 @@ def _check_package(
         ver = getattr(mod, "__version__", getattr(mod, "version", "unknown"))
         return True, f"{package_name} {ver}", ""
     except ImportError:
-        return False, f"{package_name} {version_req}", (
-            f"缺少依赖: {package_name} {version_req}\n"
-            f"  安装: pip install '{package_name}{version_req}'"
+        return (
+            False,
+            f"{package_name} {version_req}",
+            (
+                f"缺少依赖: {package_name} {version_req}\n"
+                f"  安装: pip install '{package_name}{version_req}'"
+            ),
         )
 
 
@@ -115,10 +123,14 @@ def _check_config_file() -> tuple[bool, str, str]:
 
     if paths:
         return True, " / ".join(paths), ""
-    return False, "未找到配置文件", (
-        "未找到任何配置文件\n"
-        "  创建项目配置: omc config set -k DEEPSEEK_API_KEY -v <your-key>\n"
-        "  或手动创建 ~/.omc/.env 文件"
+    return (
+        False,
+        "未找到配置文件",
+        (
+            "未找到任何配置文件\n"
+            "  创建项目配置: omc config set -k DEEPSEEK_API_KEY -v <your-key>\n"
+            "  或手动创建 ~/.omc/.env 文件"
+        ),
     )
 
 

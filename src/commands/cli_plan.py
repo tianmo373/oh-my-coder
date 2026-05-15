@@ -227,10 +227,10 @@ def _save_plan(
     content = f"""# 执行计划
 
 ## 摘要
-{plan_data.get('summary', '无')}
+{plan_data.get("summary", "无")}
 
 ## 执行顺序
-{' → '.join(execution_order)}
+{" → ".join(execution_order)}
 
 ## 详细计划
 

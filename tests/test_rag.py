@@ -164,8 +164,12 @@ def helper():
         indexer = CodebaseIndexer(config)
 
         assert indexer.detect_language(Path("test.py")) == ProgrammingLanguage.PYTHON
-        assert indexer.detect_language(Path("test.js")) == ProgrammingLanguage.JAVASCRIPT
-        assert indexer.detect_language(Path("test.ts")) == ProgrammingLanguage.TYPESCRIPT
+        assert (
+            indexer.detect_language(Path("test.js")) == ProgrammingLanguage.JAVASCRIPT
+        )
+        assert (
+            indexer.detect_language(Path("test.ts")) == ProgrammingLanguage.TYPESCRIPT
+        )
         assert indexer.detect_language(Path("test.go")) == ProgrammingLanguage.GO
 
     def test_get_stats(self, temp_project: Path) -> None:

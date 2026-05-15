@@ -19,21 +19,27 @@ runner = CliRunner()
 class TestMainCallback:
     """测试主回调函数"""
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types"
+    )
     def test_version_flag(self):
         """测试 --version 选项"""
         result = runner.invoke(app, ["--version"])
         assert result.exit_code == 0
         assert __version__ in result.stdout
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types"
+    )
     def test_help_flag(self):
         """测试 --help 选项"""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
         assert "Oh My Coder" in result.stdout
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types"
+    )
     def test_no_args_shows_info(self):
         """测试无参数时的行为（输出包含 Oh My Coder）"""
         result = runner.invoke(app, [])
@@ -45,7 +51,9 @@ class TestMainCallback:
 class TestAgentsCommand:
     """测试 agents 命令"""
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types"
+    )
     def test_agents_list(self):
         """测试列出所有 Agent"""
         result = runner.invoke(app, ["agents"])
@@ -54,7 +62,9 @@ class TestAgentsCommand:
         assert "analyst" in result.stdout
         assert "planner" in result.stdout
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types"
+    )
     def test_agents_count(self):
         """测试 Agent 数量显示"""
         result = runner.invoke(app, ["agents"])
@@ -65,7 +75,9 @@ class TestAgentsCommand:
 class TestStatusCommand:
     """测试 status 命令"""
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types"
+    )
     def test_status_without_api_key(self):
         """测试无 API Key 时的状态"""
         # 临时清空环境变量
@@ -74,7 +86,9 @@ class TestStatusCommand:
             assert result.exit_code == 0
             assert "未配置" in result.stdout or "路由器" in result.stdout
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types"
+    )
     def test_status_with_api_key(self):
         """测试有 API Key 时的状态"""
         with patch.dict(
@@ -89,7 +103,9 @@ class TestStatusCommand:
 class TestExploreCommand:
     """测试 explore 命令"""
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types"
+    )
     def test_explore_without_api_key(self):
         """测试无 API Key 时探索"""
         with patch.dict(os.environ, {"DEEPSEEK_API_KEY": ""}, clear=False):
@@ -101,7 +117,9 @@ class TestExploreCommand:
 class TestRunCommand:
     """测试 run 命令"""
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types"
+    )
     def test_run_without_api_key(self):
         """测试无 API Key 时运行任务"""
         with patch.dict(os.environ, {"DEEPSEEK_API_KEY": ""}, clear=False):
@@ -109,7 +127,9 @@ class TestRunCommand:
             # 应该失败或显示错误提示
             assert result.exit_code != 0 or "API Key" in result.stdout
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types"
+    )
     def test_run_missing_task(self):
         """测试缺少任务参数"""
         result = runner.invoke(app, ["run"])
@@ -120,7 +140,9 @@ class TestRunCommand:
 class TestHelperFunctions:
     """测试辅助函数"""
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 10), reason="CLI uses Python 3.10+ union types"
+    )
     def test_print_version(self):
         """测试版本打印"""
         # 捕获输出

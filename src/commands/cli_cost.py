@@ -45,7 +45,6 @@ PRICES_FILE = CONFIG_DIR / "model_prices.json"
 DEFAULT_PRICES = {
     "deepseek-chat": {"prompt": 0.001, "completion": 0.002},
     "deepseek-coder": {"prompt": 0.001, "completion": 0.002},
-
     "gpt-4o": {"prompt": 0.036, "completion": 0.108},
     "gpt-4o-mini": {"prompt": 0.003, "completion": 0.012},
     "claude-3-opus": {"prompt": 0.105, "completion": 0.525},
@@ -106,18 +105,16 @@ def _calculate_cost(model: str, prompt_tokens: int, completion_tokens: int) -> f
     # 尝试精确匹配
     if model_lower in prices:
         p = prices[model_lower]
-        return (
-            (prompt_tokens / 1000) * p["prompt"]
-            + (completion_tokens / 1000) * p["completion"]
-        )
+        return (prompt_tokens / 1000) * p["prompt"] + (completion_tokens / 1000) * p[
+            "completion"
+        ]
 
     # 尝试前缀匹配
     for key, p in prices.items():
         if model_lower.startswith(key) or key in model_lower:
-            return (
-                (prompt_tokens / 1000) * p["prompt"]
-                + (completion_tokens / 1000) * p["completion"]
-            )
+            return (prompt_tokens / 1000) * p["prompt"] + (
+                completion_tokens / 1000
+            ) * p["completion"]
 
     # 默认价格
     return (prompt_tokens + completion_tokens) / 1000 * 0.01
@@ -151,7 +148,9 @@ def _format_cost(cost: float) -> str:
 def suggest(
     task: str = typer.Argument("", help="Task description"),
     files: int = typer.Option(0, "--files", "-f", help="Number of files involved"),
-    list_models: bool = typer.Option(False, "--list", "-l", help="List all available models"),
+    list_models: bool = typer.Option(
+        False, "--list", "-l", help="List all available models"
+    ),
     prefer_local: bool = typer.Option(
         True, "--prefer-local/--no-local", help="Prefer local models"
     ),
@@ -553,10 +552,18 @@ def main(ctx: typer.Context) -> None:
         console.print(ctx.get_help())
         console.print()
         console.print("[bold]Examples:[/bold]")
-        console.print("  [cyan]omc cost suggest 'fix login bug'[/cyan]      # Get model recommendation")
-        console.print("  [cyan]omc cost report[/cyan]                        # View usage summary")
-        console.print("  [cyan]omc cost model[/cyan]                         # Usage by model")
-        console.print("  [cyan]omc cost history --limit 10[/cyan]            # Recent calls")
+        console.print(
+            "  [cyan]omc cost suggest 'fix login bug'[/cyan]      # Get model recommendation"
+        )
+        console.print(
+            "  [cyan]omc cost report[/cyan]                        # View usage summary"
+        )
+        console.print(
+            "  [cyan]omc cost model[/cyan]                         # Usage by model"
+        )
+        console.print(
+            "  [cyan]omc cost history --limit 10[/cyan]            # Recent calls"
+        )
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ PROFILES_DIR = Path.home() / ".omc" / "profiles"
 @dataclass
 class AgentProfile:
     """Agent Profile — 隔离的上下文容器"""
+
     agent_id: str
     agent_name: str
     created_at: str
@@ -94,11 +95,13 @@ class ProfileManager:
         if not profile:
             return False
 
-        profile.task_history.append({
-            "task": task[:200],
-            "status": status,
-            "timestamp": datetime.now().isoformat(),
-        })
+        profile.task_history.append(
+            {
+                "task": task[:200],
+                "status": status,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
         # 限制历史数量
         if len(profile.task_history) > 50:
             profile.task_history = profile.task_history[-50:]

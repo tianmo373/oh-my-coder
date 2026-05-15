@@ -21,33 +21,36 @@ from typing import Any, Optional
 
 class ReasoningStepType(Enum):
     """推理步骤类型"""
-    ANALYSIS = "analysis"           # 分析问题
-    PLANNING = "planning"           # 制定计划
-    DECISION = "decision"           # 做出决策
-    EXECUTION = "execution"         # 执行操作
-    OBSERVATION = "observation"     # 观察结果
-    REFLECTION = "reflection"       # 反思总结
-    CORRECTION = "correction"       # 错误修正
+
+    ANALYSIS = "analysis"  # 分析问题
+    PLANNING = "planning"  # 制定计划
+    DECISION = "decision"  # 做出决策
+    EXECUTION = "execution"  # 执行操作
+    OBSERVATION = "observation"  # 观察结果
+    REFLECTION = "reflection"  # 反思总结
+    CORRECTION = "correction"  # 错误修正
 
 
 class ConfidenceLevel(Enum):
     """置信度级别"""
-    HIGH = "high"       # 高置信度
-    MEDIUM = "medium"   # 中等置信度
-    LOW = "low"         # 低置信度
+
+    HIGH = "high"  # 高置信度
+    MEDIUM = "medium"  # 中等置信度
+    LOW = "low"  # 低置信度
     UNCERTAIN = "uncertain"  # 不确定
 
 
 @dataclass
 class ReasoningStep:
     """推理步骤"""
+
     step_id: str
     step_type: ReasoningStepType
     agent_name: str
     description: str
-    reasoning: str                    # 推理过程
-    evidence: list[str]               # 支持证据
-    conclusion: str                   # 结论
+    reasoning: str  # 推理过程
+    evidence: list[str]  # 支持证据
+    conclusion: str  # 结论
     confidence: ConfidenceLevel
     timestamp: str
     duration_ms: int = 0
@@ -74,6 +77,7 @@ class ReasoningStep:
 @dataclass
 class ChainOfThought:
     """思维链"""
+
     chain_id: str
     task_description: str
     agent_name: str
@@ -156,7 +160,7 @@ class ChainOfThoughtRecorder:
             return None
 
         step = ReasoningStep(
-            step_id=f"step-{len(chain.steps)+1:03d}",
+            step_id=f"step-{len(chain.steps) + 1:03d}",
             step_type=step_type,
             agent_name=chain.agent_name,
             description=description,
@@ -239,11 +243,15 @@ class ChainVisualizer:
                 ConfidenceLevel.UNCERTAIN: "!",
             }.get(step.confidence, "")
 
-            lines.extend([
-                f"{icon} [{step.step_id}] {step.step_type.value.upper()}",
-                f"   描述: {step.description}",
-                f"   推理: {step.reasoning[:100]}..." if len(step.reasoning) > 100 else f"   推理: {step.reasoning}",
-            ])
+            lines.extend(
+                [
+                    f"{icon} [{step.step_id}] {step.step_type.value.upper()}",
+                    f"   描述: {step.description}",
+                    f"   推理: {step.reasoning[:100]}..."
+                    if len(step.reasoning) > 100
+                    else f"   推理: {step.reasoning}",
+                ]
+            )
 
             if step.evidence:
                 lines.append(f"   证据: {', '.join(step.evidence[:3])}")
@@ -254,10 +262,12 @@ class ChainVisualizer:
             lines.append("")
 
         if chain.final_conclusion:
-            lines.extend([
-                "-" * 60,
-                f"最终结论: {chain.final_conclusion}",
-            ])
+            lines.extend(
+                [
+                    "-" * 60,
+                    f"最终结论: {chain.final_conclusion}",
+                ]
+            )
 
         lines.append("=" * 60)
         return "\n".join(lines)
@@ -284,7 +294,7 @@ class ChainVisualizer:
                 </div>
                 <div style="margin: 4px 0;"><b>描述:</b> {step.description}</div>
                 <div style="margin: 4px 0; color: #666;"><b>推理:</b> {step.reasoning[:200]}</div>
-                {f'<div style="margin: 4px 0;"><b>结论:</b> {step.conclusion}</div>' if step.conclusion else ''}
+                {f'<div style="margin: 4px 0;"><b>结论:</b> {step.conclusion}</div>' if step.conclusion else ""}
                 <div style="font-size: 0.9em; color: #999;">
                     置信度: {step.confidence.value} | {step.timestamp}
                 </div>
@@ -308,8 +318,8 @@ class ChainVisualizer:
         <p><b>任务:</b> {chain.task_description}</p>
         <p><b>Agent:</b> {chain.agent_name} | <b>状态:</b> {chain.status}</p>
     </div>
-    {''.join(steps_html)}
-    {f'<div style="margin-top: 20px; padding: 16px; background: #e0f2fe; border-radius: 8px;"><b>最终结论:</b> {chain.final_conclusion}</div>' if chain.final_conclusion else ''}
+    {"".join(steps_html)}
+    {f'<div style="margin-top: 20px; padding: 16px; background: #e0f2fe; border-radius: 8px;"><b>最终结论:</b> {chain.final_conclusion}</div>' if chain.final_conclusion else ""}
 </body>
 </html>"""
 
@@ -331,6 +341,7 @@ class ChainVisualizer:
 
 
 # ===== 便捷函数 =====
+
 
 def create_recorder() -> ChainOfThoughtRecorder:
     """创建思维链记录器"""

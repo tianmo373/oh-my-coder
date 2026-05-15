@@ -1,4 +1,3 @@
-
 # mypy: disable-error-code="abstract, arg-type, assignment, attr-defined, call-arg, call-overload, dict-item, func-returns-value, import-untyped, index, misc, no-any-return, no-redef, operator, override, return, return-value, syntax, union-attr, var-annotated"
 """
 
@@ -111,7 +110,9 @@ def stats_command(
                 reverse=True,
             )
             for ext, stats in sorted_types:
-                click.echo(f"  {ext or '(无扩展名)'}: {stats.count} 个文件, {stats.total_size:,} 字节")
+                click.echo(
+                    f"  {ext or '(无扩展名)'}: {stats.count} 个文件, {stats.total_size:,} 字节"
+                )
         if result.errors:
             click.echo(f"\n⚠️ {len(result.errors)} 个错误:", err=True)
             for error in result.errors:

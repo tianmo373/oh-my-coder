@@ -19,6 +19,7 @@ try:
         OutgoingMessage,
         Platform,
     )
+
     print("   ✅ 模块导入成功")
 except Exception as e:
     print(f"   ❌ 模块导入失败: {e}")
@@ -66,7 +67,9 @@ try:
     assert incoming.user_id == "12345"
     assert incoming.text == "/start"
     assert incoming.timestamp is not None
-    print(f"   ✅ IncomingMessage: {incoming.platform.value} | {incoming.user_id} | {incoming.text}")
+    print(
+        f"   ✅ IncomingMessage: {incoming.platform.value} | {incoming.user_id} | {incoming.text}"
+    )
 
     # OutgoingMessage
     outgoing = OutgoingMessage(
@@ -85,7 +88,13 @@ except Exception as e:
 # 5. 测试平台枚举
 print("\n5. 测试 Platform 枚举...")
 try:
-    platforms = [Platform.TELEGRAM, Platform.DISCORD, Platform.WHATSAPP, Platform.SLACK, Platform.WECHAT]
+    platforms = [
+        Platform.TELEGRAM,
+        Platform.DISCORD,
+        Platform.WHATSAPP,
+        Platform.SLACK,
+        Platform.WECHAT,
+    ]
     for p in platforms:
         assert p.value in ["telegram", "discord", "whatsapp", "slack", "wechat"]
     print(f"   ✅ Platform 枚举: {[p.value for p in platforms]}")

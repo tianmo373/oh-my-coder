@@ -214,7 +214,9 @@ class RouterConfig:
                     "hunyuan-pro": "hunyuan",
                 }
                 # 如果 default_model 是模型 ID，转换为 provider 名
-                default_provider = _MODEL_ID_TO_PROVIDER.get(default_model, default_model)
+                default_provider = _MODEL_ID_TO_PROVIDER.get(
+                    default_model, default_model
+                )
                 # 用户配置的默认模型（如 glm、kimi 等）插入到第一位
                 if default_provider in cloud_fallback:
                     cloud_fallback.remove(default_provider)
@@ -232,6 +234,7 @@ class RouterConfig:
             return
         try:
             import json
+
             with open(config_path, encoding="utf-8") as f:
                 data = json.load(f)
             models = data.get("models", {})
@@ -240,16 +243,16 @@ class RouterConfig:
             # provider name → RouterConfig field 映射
             _key_map = {
                 "deepseek": "deepseek_api_key",
-                "glm":      "glm_api_key",
-                "minimax":  "minimax_api_key",   # mimo 也映射到 minimax
-                "mimo":     "minimax_api_key",
-                "kimi":     "kimi_api_key",
-                "doubao":   "doubao_api_key",
-                "tongyi":   "tongyi_api_key",
-                "wenxin":   "wenxin_api_key",
-                "hunyuan":  "hunyuan_api_key",
-                "tiangong": None,    # 暂无对应字段
-                "baichuan": None,    # 暂无对应字段
+                "glm": "glm_api_key",
+                "minimax": "minimax_api_key",  # mimo 也映射到 minimax
+                "mimo": "minimax_api_key",
+                "kimi": "kimi_api_key",
+                "doubao": "doubao_api_key",
+                "tongyi": "tongyi_api_key",
+                "wenxin": "wenxin_api_key",
+                "hunyuan": "hunyuan_api_key",
+                "tiangong": None,  # 暂无对应字段
+                "baichuan": None,  # 暂无对应字段
             }
             for provider, field_name in _key_map.items():
                 if not field_name:
@@ -739,10 +742,16 @@ class ModelRouter:
         # 3. 故障转移：按 fallback 顺序尝试（仅已初始化的 provider）
         # 用户指定模型时，优先使用该模型，失败后自动降级到默认 fallback
         if forced_provider:
-            fallback_order = [forced_provider] if forced_provider in self._models else []
+            fallback_order = (
+                [forced_provider] if forced_provider in self._models else []
+            )
             # 添加默认 fallback 作为降级选项（排除已添加的）
             for p in self.config.fallback_order:
-                if p not in fallback_order and p in self._models and decision.selected_tier in self._models[p]:
+                if (
+                    p not in fallback_order
+                    and p in self._models
+                    and decision.selected_tier in self._models[p]
+                ):
                     fallback_order.append(p)
         else:
             fallback_order = [
@@ -857,7 +866,6 @@ class ModelRouter:
         self._decision_history.clear()
         self._total_cost = 0.0
 
-
     # 模型 ID → 路由器内部 provider 名称的映射
     # 前端下拉菜单传的是模型 ID（如 "glm-4-flash"），需要映射到 provider（如 "glm"）
     _MODEL_ID_TO_PROVIDER: dict[str, str] = {
@@ -882,6 +890,7 @@ class ModelRouter:
         # 混元
         "hunyuan-turbo": "hunyuan",
     }
+
 
 class RateLimitError(Exception):
     """429 限流错误，不重试"""

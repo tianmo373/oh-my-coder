@@ -17,26 +17,29 @@ from typing import Any, Optional
 
 class MessageType(Enum):
     """消息类型分类"""
-    STATIC_KNOWLEDGE = "static"      # 静态知识：文件内容、文档、配置
-    DYNAMIC_REASONING = "dynamic"    # 动态推理：思维链、分析过程
-    TOOL_EXECUTION = "tool"          # 工具执行：命令输出、搜索结果
-    ERROR = "error"                  # 错误信息
-    SYSTEM = "system"                # 系统消息
-    USER = "user"                    # 用户输入
-    ASSISTANT = "assistant"          # 助手回复
+
+    STATIC_KNOWLEDGE = "static"  # 静态知识：文件内容、文档、配置
+    DYNAMIC_REASONING = "dynamic"  # 动态推理：思维链、分析过程
+    TOOL_EXECUTION = "tool"  # 工具执行：命令输出、搜索结果
+    ERROR = "error"  # 错误信息
+    SYSTEM = "system"  # 系统消息
+    USER = "user"  # 用户输入
+    ASSISTANT = "assistant"  # 助手回复
 
 
 class CompressionLevel(Enum):
     """压缩级别"""
-    NONE = 0         # 不压缩（保留完整）
-    LIGHT = 1        # 轻度压缩（保留关键信息）
-    MEDIUM = 2       # 中度压缩（生成摘要）
-    HEAVY = 3        # 重度压缩（仅保留元数据）
+
+    NONE = 0  # 不压缩（保留完整）
+    LIGHT = 1  # 轻度压缩（保留关键信息）
+    MEDIUM = 2  # 中度压缩（生成摘要）
+    HEAVY = 3  # 重度压缩（仅保留元数据）
 
 
 @dataclass
 class CompressionRule:
     """压缩规则"""
+
     message_type: MessageType
     level: CompressionLevel
     priority: int  # 优先级，数字越小越重要
@@ -45,12 +48,20 @@ class CompressionRule:
 
 # 默认压缩规则：动态推理 > 用户输入 > 系统消息 > 工具执行 > 静态知识 > 错误
 DEFAULT_RULES = [
-    CompressionRule(MessageType.DYNAMIC_REASONING, CompressionLevel.NONE, 1, "保留完整推理过程"),
+    CompressionRule(
+        MessageType.DYNAMIC_REASONING, CompressionLevel.NONE, 1, "保留完整推理过程"
+    ),
     CompressionRule(MessageType.USER, CompressionLevel.NONE, 2, "保留用户输入"),
     CompressionRule(MessageType.SYSTEM, CompressionLevel.LIGHT, 3, "轻度压缩系统消息"),
-    CompressionRule(MessageType.ASSISTANT, CompressionLevel.LIGHT, 4, "轻度压缩助手回复"),
-    CompressionRule(MessageType.TOOL_EXECUTION, CompressionLevel.MEDIUM, 5, "中度压缩工具输出"),
-    CompressionRule(MessageType.STATIC_KNOWLEDGE, CompressionLevel.HEAVY, 6, "重度压缩静态知识"),
+    CompressionRule(
+        MessageType.ASSISTANT, CompressionLevel.LIGHT, 4, "轻度压缩助手回复"
+    ),
+    CompressionRule(
+        MessageType.TOOL_EXECUTION, CompressionLevel.MEDIUM, 5, "中度压缩工具输出"
+    ),
+    CompressionRule(
+        MessageType.STATIC_KNOWLEDGE, CompressionLevel.HEAVY, 6, "重度压缩静态知识"
+    ),
     CompressionRule(MessageType.ERROR, CompressionLevel.MEDIUM, 7, "中度压缩历史错误"),
 ]
 
@@ -58,6 +69,7 @@ DEFAULT_RULES = [
 @dataclass
 class CompressedMessage:
     """压缩后的消息"""
+
     original_role: str
     original_content: str
     compressed_content: str
@@ -109,7 +121,9 @@ class ContextCompressor:
         # 默认
         return MessageType.ASSISTANT
 
-    def compress(self, role: str, content: str, tokens_before: int) -> CompressedMessage:
+    def compress(
+        self, role: str, content: str, tokens_before: int
+    ) -> CompressedMessage:
         """压缩单条消息"""
         msg_type = self.classify_message(role, content)
         rule = self.rules_map.get(msg_type, DEFAULT_RULES[-1])
@@ -158,16 +172,20 @@ class ContextCompressor:
             content = msg.get("content", "")
 
             # 估算 token 数
-            tokens_before = len(content) // 4 if token_counter is None else token_counter(content)
+            tokens_before = (
+                len(content) // 4 if token_counter is None else token_counter(content)
+            )
 
             result = self.compress(role, content, tokens_before)
 
-            compressed_messages.append({
-                "role": role,
-                "content": result.compressed_content,
-                "_compressed": result.compression_level != CompressionLevel.NONE,
-                "_original_type": result.message_type.value,
-            })
+            compressed_messages.append(
+                {
+                    "role": role,
+                    "content": result.compressed_content,
+                    "_compressed": result.compression_level != CompressionLevel.NONE,
+                    "_original_type": result.message_type.value,
+                }
+            )
 
             total_saved += result.tokens_saved
             type_stats[result.message_type] += 1
@@ -185,8 +203,12 @@ class ContextCompressor:
     def _is_error(self, content: str) -> bool:
         """判断是否为错误消息"""
         error_patterns = [
-            r"error:", r"exception:", r"traceback", r"failed:",
-            r"^\s*error\s", r"^\s*exception\s",
+            r"error:",
+            r"exception:",
+            r"traceback",
+            r"failed:",
+            r"^\s*error\s",
+            r"^\s*exception\s",
         ]
         content_lower = content.lower()
         return any(re.search(p, content_lower) for p in error_patterns)
@@ -211,21 +233,21 @@ class ContextCompressor:
         """判断是否为静态知识"""
         static_patterns = [
             r"^\s*```\w+",  # 代码块
-            r"^\s*#+\s+",   # Markdown 标题
-            r"^\s*[-*]\s+", # 列表
+            r"^\s*#+\s+",  # Markdown 标题
+            r"^\s*[-*]\s+",  # 列表
             r"文件内容",
             r"文档说明",
             r"配置参数",
-            r"^\s*\{",       # JSON
-            r"^\s*<",        # XML/HTML
+            r"^\s*\{",  # JSON
+            r"^\s*<",  # XML/HTML
         ]
         return any(re.search(p, content) for p in static_patterns)
 
     def _is_tool_execution(self, content: str) -> bool:
         """判断是否为工具执行结果"""
         tool_patterns = [
-            r"^\s*\$\s+",    # 命令行
-            r"^\s*>",        # 命令输出
+            r"^\s*\$\s+",  # 命令行
+            r"^\s*>",  # 命令输出
             r"执行结果",
             r"输出内容",
             r"^\s*\[\d{4}-\d{2}-\d{2}",  # 时间戳日志
@@ -267,11 +289,25 @@ class ContextCompressor:
 
         for line in lines:
             # 保留包含关键信息的行
-            if any(kw in line.lower() for kw in [
-                "结果", "成功", "失败", "错误", "警告",
-                "result", "success", "fail", "error", "warning",
-                "总结", "结论", "summary", "conclusion",
-            ]):
+            if any(
+                kw in line.lower()
+                for kw in [
+                    "结果",
+                    "成功",
+                    "失败",
+                    "错误",
+                    "警告",
+                    "result",
+                    "success",
+                    "fail",
+                    "error",
+                    "warning",
+                    "总结",
+                    "结论",
+                    "summary",
+                    "conclusion",
+                ]
+            ):
                 key_lines.append(line)
 
         if key_lines:
@@ -300,6 +336,7 @@ class ContextCompressor:
 @dataclass
 class CompressionSummary:
     """压缩摘要"""
+
     total_messages: int
     total_tokens_saved: int
     type_distribution: dict[MessageType, int]

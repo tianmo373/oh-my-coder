@@ -59,13 +59,14 @@ except ImportError as e:
 # URL / 目标预处理
 # ========================================
 
+
 def _detect_target_type(target: str) -> str:
     """自动检测输入类型：github / url / local"""
     target = target.strip()
     if not target:
         return "local"
     # GitHub URL
-    if re.match(r'https?://(www\.)?github\.com/[^/]+/[^/]+', target):
+    if re.match(r"https?://(www\.)?github\.com/[^/]+/[^/]+", target):
         return "github"
     # Git URL (git@...)
     if target.startswith("git@"):
@@ -99,12 +100,16 @@ def _preprocess_target(target: str, target_type: str, task_id: str) -> tuple:
         try:
             result = subprocess.run(
                 ["git", "clone", "--depth", "1", clone_url, str(tmp_dir)],
-                capture_output=True, text=True, timeout=120,
+                capture_output=True,
+                text=True,
+                timeout=120,
             )
             if result.returncode != 0:
                 shutil.rmtree(tmp_dir, ignore_errors=True)
                 raise RuntimeError(f"git clone 失败: {result.stderr.strip()[:200]}")
-            return str(tmp_dir), f"\n\n## 源代码来源\nGitHub 仓库: {target}\n已克隆到: {tmp_dir}"
+            return str(
+                tmp_dir
+            ), f"\n\n## 源代码来源\nGitHub 仓库: {target}\n已克隆到: {tmp_dir}"
         except Exception as e:
             print(f"[ERROR] Git clone failed: {e}")
             shutil.rmtree(tmp_dir, ignore_errors=True)
@@ -114,9 +119,13 @@ def _preprocess_target(target: str, target_type: str, task_id: str) -> tuple:
         # Fetch 网页内容
         try:
             import urllib.request
-            req = urllib.request.Request(target, headers={
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-            })
+
+            req = urllib.request.Request(
+                target,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+                },
+            )
             with urllib.request.urlopen(req, timeout=30) as resp:
                 raw = resp.read()
                 # 尝试 utf-8，失败用 latin-1
@@ -125,10 +134,10 @@ def _preprocess_target(target: str, target_type: str, task_id: str) -> tuple:
                 except UnicodeDecodeError:
                     content = raw.decode("latin-1")
             # 简单 HTML → 文本：去标签
-            text = re.sub(r'<script[^>]*>[\s\S]*?</script>', '', content, flags=re.I)
-            text = re.sub(r'<style[^>]*>[\s\S]*?</style>', '', text, flags=re.I)
-            text = re.sub(r'<[^>]+>', ' ', text)
-            text = re.sub(r'\s+', ' ', text).strip()
+            text = re.sub(r"<script[^>]*>[\s\S]*?</script>", "", content, flags=re.I)
+            text = re.sub(r"<style[^>]*>[\s\S]*?</style>", "", text, flags=re.I)
+            text = re.sub(r"<[^>]+>", " ", text)
+            text = re.sub(r"\s+", " ", text).strip()
             # 截断到 8000 字符避免 token 爆炸
             if len(text) > 8000:
                 text = text[:8000] + "\n\n... (内容已截断)"
@@ -180,7 +189,13 @@ class TaskManager:
         self._tasks: dict[str, dict[str, Any]] = {}
         self._queues: dict[str, asyncio.Queue] = {}
 
-    def create_task(self, task_desc: str = "", model: str = "", workflow: str = "", project_path: str = "") -> str:
+    def create_task(
+        self,
+        task_desc: str = "",
+        model: str = "",
+        workflow: str = "",
+        project_path: str = "",
+    ) -> str:
         task_id = str(uuid.uuid4())[:8]
         queue = asyncio.Queue()
         self._tasks[task_id] = {
@@ -229,7 +244,9 @@ class TaskManager:
             except Exception as e:
                 print(f"[WARNING] Queue full, skipping step event: {e}")
 
-    def complete_task(self, task_id: str, result: Any = None, error: Optional[str] = None):
+    def complete_task(
+        self, task_id: str, result: Any = None, error: Optional[str] = None
+    ):
         if task_id not in self._tasks:
             return
         task = self._tasks[task_id]
@@ -497,10 +514,12 @@ async def dashboard_files():
     try:
         p = Path(project_path)
         if p.exists() and p.is_dir():
-            for f in sorted(p.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True)[:30]:
+            for f in sorted(p.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True)[
+                :30
+            ]:
                 if f.is_file() and not f.name.startswith("."):
                     size = f.stat().st_size
-                    size_str = f"{size//1024}KB" if size >= 1024 else f"{size}B"
+                    size_str = f"{size // 1024}KB" if size >= 1024 else f"{size}B"
                     files.append({"name": f.name, "size": size_str, "path": str(f)})
     except Exception as e:
         print(f"[WARNING] Failed to list project files: {e}")
@@ -588,13 +607,21 @@ async def save_report(payload: Optional[dict] = None):
                 lines.append(output)
             elif isinstance(output, dict):
                 # 如果字典中有 result 字段，直接使用 result 字符串
-                result = output.get("result") or output.get("output") or output.get("content")
+                result = (
+                    output.get("result")
+                    or output.get("output")
+                    or output.get("content")
+                )
                 if isinstance(result, str):
                     lines.append(result)
                 else:
                     lines.append(_json.dumps(output, ensure_ascii=False, indent=2))
             else:
-                lines.append(_json.dumps(output, ensure_ascii=False, indent=2) if output else "无输出")
+                lines.append(
+                    _json.dumps(output, ensure_ascii=False, indent=2)
+                    if output
+                    else "无输出"
+                )
             lines.append("")
 
     # 最终结果
@@ -627,13 +654,16 @@ async def save_report(payload: Optional[dict] = None):
 # Chat API - 对话式任务创建
 # ========================================
 
+
 class ChatMessage(BaseModel):
     role: str
     content: str
 
+
 class ChatRequest(BaseModel):
     message: str
     history: list[ChatMessage] = []
+
 
 class ChatResponse(BaseModel):
     reply: str
@@ -647,7 +677,7 @@ WORKFLOW_KEYWORDS = {
     "review": ["审查", "review", "检查", "代码质量", "安全漏洞", "security", "quality"],
     "debug": ["调试", "debug", "修复", "fix", "bug", "错误", "error", "问题"],
     "test": ["测试", "test", "单元测试", "unittest", "coverage", "覆盖率"],
-    "build": ["开发", "实现", "build", "create", "写", "添加", "开发"]
+    "build": ["开发", "实现", "build", "create", "写", "添加", "开发"],
 }
 
 # 模型关键词映射
@@ -658,7 +688,7 @@ MODEL_KEYWORDS = {
     "moonshot-v1-128k": ["kimi", "月之暗面", "128k"],
     "doubao-pro-32k": ["doubao", "豆包", "字节"],
     "tiangong-3": ["tiangong", "天工"],
-    "Baichuan4": ["baichuan", "百川"]
+    "Baichuan4": ["baichuan", "百川"],
 }
 
 
@@ -687,7 +717,7 @@ def _detect_model(message: str) -> str:
 def _detect_target_type_from_message(message: str) -> tuple[str, str]:
     """检测目标类型和路径"""
     # GitHub URL
-    github_match = re.search(r'github\.com/[^/\s]+/[^/\s]+', message)
+    github_match = re.search(r"github\.com/[^/\s]+/[^/\s]+", message)
     if github_match:
         return "github", f"https://{github_match.group(0)}"
 
@@ -715,7 +745,7 @@ def _generate_task_summary(task: dict) -> str:
         "build": "完整开发",
         "review": "代码审查",
         "debug": "调试修复",
-        "test": "测试用例"
+        "test": "测试用例",
     }
     model_names = {
         "deepseek": "DeepSeek V4",
@@ -724,7 +754,7 @@ def _generate_task_summary(task: dict) -> str:
         "moonshot-v1-128k": "Kimi 128K",
         "doubao-pro-32k": "Doubao-Pro",
         "tiangong-3": "天工 3.0",
-        "Baichuan4": "百川 4"
+        "Baichuan4": "百川 4",
     }
 
     wf_name = workflow_names.get(task["workflow"], task["workflow"])
@@ -759,7 +789,7 @@ async def chat_endpoint(request: ChatRequest):
     if len(message) < 10 and len(history) < 2:
         return ChatResponse(
             reply="请详细描述你的需求，比如：\n• 你想实现什么功能？\n• 需要审查/修复什么代码？\n• 目标代码在哪里（本地路径/GitHub链接）？",
-            ready_to_execute=False
+            ready_to_execute=False,
         )
 
     # 构建任务配置
@@ -768,7 +798,7 @@ async def chat_endpoint(request: ChatRequest):
         "workflow": workflow,
         "model": model,
         "target_type": target_type,
-        "project_path": target_path
+        "project_path": target_path,
     }
 
     summary = _generate_task_summary(task_config)
@@ -778,7 +808,7 @@ async def chat_endpoint(request: ChatRequest):
         "build": "开发新功能",
         "review": "审查代码质量",
         "debug": "调试修复问题",
-        "test": "生成测试用例"
+        "test": "生成测试用例",
     }
 
     reply = "好的，我理解了！让我确认一下：\n\n"
@@ -788,15 +818,13 @@ async def chat_endpoint(request: ChatRequest):
     reply += "确认无误后，我将启动 AI 团队开始执行。"
 
     return ChatResponse(
-        reply=reply,
-        ready_to_execute=True,
-        summary=summary,
-        task=task_config
+        reply=reply, ready_to_execute=True, summary=summary, task=task_config
     )
 
 
 class ChatCompletionRequest(BaseModel):
     """AI 聊天补全请求"""
+
     messages: list[dict]  # [{role: "user"|"assistant", content: "..."}]
     model: str = "deepseek"  # 模型 ID
     stream: bool = False  # 是否流式返回
@@ -804,6 +832,7 @@ class ChatCompletionRequest(BaseModel):
 
 class ChatCompletionResponse(BaseModel):
     """AI 聊天补全响应"""
+
     content: str
     model: str
     usage: dict = {}
@@ -821,9 +850,9 @@ async def chat_completion_endpoint(request: ChatCompletionRequest):
 
     # 构建消息列表
     from src.models.base import Message as BaseMessage
+
     base_messages = [
-        BaseMessage(role=m["role"], content=m["content"])
-        for m in request.messages
+        BaseMessage(role=m["role"], content=m["content"]) for m in request.messages
     ]
 
     if request.stream:
@@ -841,24 +870,32 @@ async def chat_completion_endpoint(request: ChatCompletionRequest):
                 # 分块发送（模拟流式）
                 chunk_size = max(1, len(content) // 20)
                 for i in range(0, len(content), chunk_size):
-                    chunk = content[i:i + chunk_size]
+                    chunk = content[i : i + chunk_size]
                     data = _json.dumps({"content": chunk, "done": False})
                     yield f"data: {data}\n\n"
                     await asyncio.sleep(0.02)
                 # 发送完成信号
-                done_data = _json.dumps({
-                    "content": "",
-                    "done": True,
-                    "usage": {
-                        "prompt_tokens": response.usage.prompt_tokens,
-                        "completion_tokens": response.usage.completion_tokens,
-                        "total_tokens": response.usage.total_tokens,
-                    },
-                    "model": response.model,
-                })
+                done_data = _json.dumps(
+                    {
+                        "content": "",
+                        "done": True,
+                        "usage": {
+                            "prompt_tokens": response.usage.prompt_tokens,
+                            "completion_tokens": response.usage.completion_tokens,
+                            "total_tokens": response.usage.total_tokens,
+                        },
+                        "model": response.model,
+                    }
+                )
                 yield f"data: {done_data}\n\n"
             except Exception as e:
-                err_data = _json.dumps({"content": f"\n\n❌ 模型调用失败: {type(e).__name__}", "done": True, "error": True})
+                err_data = _json.dumps(
+                    {
+                        "content": f"\n\n❌ 模型调用失败: {type(e).__name__}",
+                        "done": True,
+                        "error": True,
+                    }
+                )
                 yield f"data: {err_data}\n\n"
 
         return StreamingResponse(
@@ -927,7 +964,9 @@ async def execute_task(background: BackgroundTasks, payload: Optional[dict] = No
     task_manager._tasks[task_id]["target_type"] = target_type
 
     # 后台执行
-    background.add_task(run_task, task_id, task, project_path, model, workflow_name, target_type)
+    background.add_task(
+        run_task, task_id, task, project_path, model, workflow_name, target_type
+    )
 
     return JSONResponse(
         {
@@ -940,7 +979,11 @@ async def execute_task(background: BackgroundTasks, payload: Optional[dict] = No
 
 
 async def run_task(
-    task_id: str, task: str, project_path: str, model: str, workflow_name: str,
+    task_id: str,
+    task: str,
+    project_path: str,
+    model: str,
+    workflow_name: str,
     target_type: str = "local",
 ):
     """后台执行任务"""
@@ -952,14 +995,22 @@ async def run_task(
 
     # 预处理目标（clone GitHub / fetch URL）
     try:
-        project_path, extra_context = _preprocess_target(project_path, target_type, task_id)
+        project_path, extra_context = _preprocess_target(
+            project_path, target_type, task_id
+        )
     except Exception as e:
         err_type = type(e).__name__
         task_manager.complete_task(task_id, error=f"目标预处理失败 ({err_type})")
-        history_store.save(task_id, {
-            "task_id": task_id, "task": task, "status": "failed",
-            "error_type": err_type, "started_at": datetime.now().isoformat(),
-        })
+        history_store.save(
+            task_id,
+            {
+                "task_id": task_id,
+                "task": task,
+                "status": "failed",
+                "error_type": err_type,
+                "started_at": datetime.now().isoformat(),
+            },
+        )
         return
 
     try:
@@ -1027,9 +1078,9 @@ async def run_task(
                     task_manager._tasks[task_id]["stats"]["steps_completed"].append(
                         agent_name
                     )
-                    task_manager._tasks[task_id]["stats"][
-                        "total_tokens"
-                    ] += output.usage.get("total_tokens", 0)
+                    task_manager._tasks[task_id]["stats"]["total_tokens"] += (
+                        output.usage.get("total_tokens", 0)
+                    )
                 else:
                     wf_result.steps_failed.append(agent_name)
                     task_manager.update_step(
@@ -1059,9 +1110,7 @@ async def run_task(
                     error_msg = f"所有模型均不可用: {err_str[:150]}"
                 else:
                     error_msg = f"{type(e).__name__}: {err_str[:200]}"
-                task_manager.update_step(
-                    task_id, agent_name, "failed", error_msg
-                )
+                task_manager.update_step(task_id, agent_name, "failed", error_msg)
                 task_manager._tasks[task_id]["stats"]["steps_failed"].append(agent_name)
 
         # 标记工作流完成
@@ -1413,30 +1462,73 @@ async def test_connection(payload: dict):
         # 构造最小请求体（不实际发 token 消耗）
         try:
             if provider == "glm":
-                url = (base_url or "https://open.bigmodel.cn/api/paas/v4") + "/chat/completions"
-                body = {"model": "glm-4-flash", "messages": [{"role": "user", "content": "Hi"}], "max_tokens": 5}
+                url = (
+                    base_url or "https://open.bigmodel.cn/api/paas/v4"
+                ) + "/chat/completions"
+                body = {
+                    "model": "glm-4-flash",
+                    "messages": [{"role": "user", "content": "Hi"}],
+                    "max_tokens": 5,
+                }
             elif provider == "deepseek":
                 url = (base_url or "https://api.deepseek.com/v1") + "/chat/completions"
-                body = {"model": "deepseek-chat", "messages": [{"role": "user", "content": "Hi"}], "max_tokens": 5}
+                body = {
+                    "model": "deepseek-chat",
+                    "messages": [{"role": "user", "content": "Hi"}],
+                    "max_tokens": 5,
+                }
             elif provider == "kimi":
                 url = (base_url or "https://api.moonshot.cn/v1") + "/chat/completions"
-                body = {"model": "moonshot-v1-8k", "messages": [{"role": "user", "content": "Hi"}], "max_tokens": 5}
+                body = {
+                    "model": "moonshot-v1-8k",
+                    "messages": [{"role": "user", "content": "Hi"}],
+                    "max_tokens": 5,
+                }
             elif provider == "doubao":
-                url = (base_url or "https://ark.cn-beijing.volces.com/api/v3") + "/chat/completions"
-                body = {"model": "doubao-pro-32k", "messages": [{"role": "user", "content": "Hi"}], "max_tokens": 5}
+                url = (
+                    base_url or "https://ark.cn-beijing.volces.com/api/v3"
+                ) + "/chat/completions"
+                body = {
+                    "model": "doubao-pro-32k",
+                    "messages": [{"role": "user", "content": "Hi"}],
+                    "max_tokens": 5,
+                }
             elif provider == "mimo":
-                url = (base_url or "https://api.xiaomimimo.com/v1") + "/chat/completions"
-                body = {"model": "MiMo-V2-Flash", "messages": [{"role": "user", "content": "Hi"}], "max_tokens": 5}
+                url = (
+                    base_url or "https://api.xiaomimimo.com/v1"
+                ) + "/chat/completions"
+                body = {
+                    "model": "MiMo-V2-Flash",
+                    "messages": [{"role": "user", "content": "Hi"}],
+                    "max_tokens": 5,
+                }
             elif provider == "tiangong":
-                url = (base_url or "https://model-platform.tiangong.cn/v1") + "/chat/completions"
-                body = {"model": "tiangong", "messages": [{"role": "user", "content": "Hi"}], "max_tokens": 5}
+                url = (
+                    base_url or "https://model-platform.tiangong.cn/v1"
+                ) + "/chat/completions"
+                body = {
+                    "model": "tiangong",
+                    "messages": [{"role": "user", "content": "Hi"}],
+                    "max_tokens": 5,
+                }
             elif provider == "baichuan":
-                url = (base_url or "https://api.baichuan-ai.com/v1") + "/chat/completions"
-                body = {"model": "Baichuan4", "messages": [{"role": "user", "content": "Hi"}], "max_tokens": 5}
+                url = (
+                    base_url or "https://api.baichuan-ai.com/v1"
+                ) + "/chat/completions"
+                body = {
+                    "model": "Baichuan4",
+                    "messages": [{"role": "user", "content": "Hi"}],
+                    "max_tokens": 5,
+                }
             else:
-                return JSONResponse({"ok": False, "msg": f"未知供应商: {provider}"}, status_code=400)
+                return JSONResponse(
+                    {"ok": False, "msg": f"未知供应商: {provider}"}, status_code=400
+                )
 
-            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            }
             start = time.time()
             with httpx.Client(timeout=15.0) as client:
                 resp = client.post(url, json=body, headers=headers)
@@ -1446,22 +1538,42 @@ async def test_connection(payload: dict):
                 # Check if response is actually JSON (not an HTML page)
                 ct = resp.headers.get("content-type", "")
                 if "html" in ct.lower():
-                    return JSONResponse({"ok": False, "msg": "返回了网页而非 API 响应——请检查 Base URL 是否为 API 接口地址（非网页地址）"})
-                return JSONResponse({"ok": True, "msg": f"连接成功 ({latency_ms}ms)", "latency_ms": latency_ms})
+                    return JSONResponse(
+                        {
+                            "ok": False,
+                            "msg": "返回了网页而非 API 响应——请检查 Base URL 是否为 API 接口地址（非网页地址）",
+                        }
+                    )
+                return JSONResponse(
+                    {
+                        "ok": True,
+                        "msg": f"连接成功 ({latency_ms}ms)",
+                        "latency_ms": latency_ms,
+                    }
+                )
             elif resp.status_code == 401:
-                return JSONResponse({"ok": False, "msg": "API Key 无效（401 Unauthorized）"})
+                return JSONResponse(
+                    {"ok": False, "msg": "API Key 无效（401 Unauthorized）"}
+                )
             elif resp.status_code == 403:
-                return JSONResponse({"ok": False, "msg": "API Key 被拒绝（403 Forbidden）"})
+                return JSONResponse(
+                    {"ok": False, "msg": "API Key 被拒绝（403 Forbidden）"}
+                )
             else:
                 try:
                     err = resp.json().get("error", {}).get("message", resp.text[:100])
                 except Exception as e:
                     print(f"[WARNING] Failed to parse error JSON: {e}")
                     err = resp.text[:100]
-                return JSONResponse({"ok": False, "msg": f"API 错误 {resp.status_code}: {err}"}, status_code=502)
+                return JSONResponse(
+                    {"ok": False, "msg": f"API 错误 {resp.status_code}: {err}"},
+                    status_code=502,
+                )
 
         except httpx.TimeoutException:
-            return JSONResponse({"ok": False, "msg": "连接超时（15s），请检查 Base URL 或网络"})
+            return JSONResponse(
+                {"ok": False, "msg": "连接超时（15s），请检查 Base URL 或网络"}
+            )
         except httpx.ConnectError as e:
             return JSONResponse({"ok": False, "msg": f"连接失败：{e}"}, status_code=502)
         except Exception as e:
@@ -1470,24 +1582,43 @@ async def test_connection(payload: dict):
     # ── Custom 模式 ──────────────────────────────────
     if base_url and model_id:
         if not api_key:
-            return JSONResponse({"ok": False, "msg": "API Key 为空（自定义模型通常需要 Key）"}, status_code=400)
+            return JSONResponse(
+                {"ok": False, "msg": "API Key 为空（自定义模型通常需要 Key）"},
+                status_code=400,
+            )
         try:
             url = base_url.rstrip("/") + "/chat/completions"
-            body = {"model": model_id, "messages": [{"role": "user", "content": "Hi"}], "max_tokens": 5}
-            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            body = {
+                "model": model_id,
+                "messages": [{"role": "user", "content": "Hi"}],
+                "max_tokens": 5,
+            }
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            }
             start = time.time()
             with httpx.Client(timeout=15.0) as client:
                 resp = client.post(url, json=body, headers=headers)
             latency_ms = round((time.time() - start) * 1000)
             if resp.status_code == 200:
-                return JSONResponse({"ok": True, "msg": f"连接成功 ({latency_ms}ms)", "latency_ms": latency_ms})
+                return JSONResponse(
+                    {
+                        "ok": True,
+                        "msg": f"连接成功 ({latency_ms}ms)",
+                        "latency_ms": latency_ms,
+                    }
+                )
             else:
                 try:
                     err = resp.json().get("error", {}).get("message", resp.text[:100])
                 except Exception as e:
                     print(f"[WARNING] Failed to parse error JSON: {e}")
                     err = resp.text[:100]
-                return JSONResponse({"ok": False, "msg": f"API 错误 {resp.status_code}: {err}"}, status_code=502)
+                return JSONResponse(
+                    {"ok": False, "msg": f"API 错误 {resp.status_code}: {err}"},
+                    status_code=502,
+                )
         except httpx.TimeoutException:
             return JSONResponse({"ok": False, "msg": "连接超时（15s）"})
         except httpx.ConnectError as e:
@@ -1495,8 +1626,10 @@ async def test_connection(payload: dict):
         except Exception as e:
             return JSONResponse({"ok": False, "msg": f"测试失败: {e}"}, status_code=500)
 
-    return JSONResponse({"ok": False, "msg": "参数不完整（需 provider 或 base_url+model_id）"}, status_code=400)
-
+    return JSONResponse(
+        {"ok": False, "msg": "参数不完整（需 provider 或 base_url+model_id）"},
+        status_code=400,
+    )
 
 
 # ===== 工作流管理 API（P1-6 Agent 子系统重构 Phase 1）=====
@@ -1508,11 +1641,13 @@ async def list_workflows():
     loader = WorkflowLoader()
     names = loader.list_workflows()
     builtin = set(loader.list_builtins())
-    return JSONResponse({
-        "workflows": names,
-        "builtin_count": len(builtin),
-        "user_count": len(names) - len(builtin),
-    })
+    return JSONResponse(
+        {
+            "workflows": names,
+            "builtin_count": len(builtin),
+            "user_count": len(names) - len(builtin),
+        }
+    )
 
 
 @app.get("/api/workflows/{name}")
@@ -1524,12 +1659,16 @@ async def get_workflow(name: str):
         # Fallback: 尝试从 WORKFLOW_TEMPLATES
         steps = WORKFLOW_TEMPLATES.get(name, [])
         if steps:
-            return JSONResponse({
-                "name": name,
-                "description": "",
-                "source": "builtin",
-                "steps": [s.model_dump() if hasattr(s, "model_dump") else s for s in steps],
-            })
+            return JSONResponse(
+                {
+                    "name": name,
+                    "description": "",
+                    "source": "builtin",
+                    "steps": [
+                        s.model_dump() if hasattr(s, "model_dump") else s for s in steps
+                    ],
+                }
+            )
         return JSONResponse({"error": f"工作流 '{name}' 不存在"}, status_code=404)
     d = config.model_dump() if hasattr(config, "model_dump") else asdict(config)
     return JSONResponse({"name": name, **d})
@@ -1553,7 +1692,9 @@ async def save_workflow(name: str, payload: dict):
         loader.save_workflow(name, config)
         return JSONResponse({"status": "ok", "message": f"工作流 '{name}' 已保存"})
     except Exception as e:
-        return JSONResponse({"error": f"工作流 '{name}' 保存失败: {e}"}, status_code=400)
+        return JSONResponse(
+            {"error": f"工作流 '{name}' 保存失败: {e}"}, status_code=400
+        )
 
 
 @app.delete("/api/workflows/{name}")
@@ -1570,7 +1711,6 @@ async def delete_workflow(name: str):
     except Exception as e:
         print(f"[ERROR] Failed to delete workflow '{name}': {e}")
         return JSONResponse({"error": f"工作流 '{name}' 删除失败"}, status_code=400)
-
 
 
 # ========================================
@@ -1594,16 +1734,20 @@ class SessionUpdate(BaseModel):
 async def list_sessions():
     """获取所有会话列表"""
     sessions = []
-    for f in sorted(SESSIONS_DIR.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True):
+    for f in sorted(
+        SESSIONS_DIR.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True
+    ):
         try:
             data = _json.loads(f.read_text(encoding="utf-8"))
-            sessions.append({
-                "id": data.get("id", f.stem),
-                "title": data.get("title", "新会话"),
-                "created_at": data.get("created_at", ""),
-                "updated_at": data.get("updated_at", ""),
-                "message_count": len(data.get("messages", [])),
-            })
+            sessions.append(
+                {
+                    "id": data.get("id", f.stem),
+                    "title": data.get("title", "新会话"),
+                    "created_at": data.get("created_at", ""),
+                    "updated_at": data.get("updated_at", ""),
+                    "message_count": len(data.get("messages", [])),
+                }
+            )
         except Exception as e:
             print(f"[WARNING] Failed to load session {f.name}: {e}")
     return JSONResponse({"sessions": sessions})
@@ -1622,14 +1766,21 @@ async def create_session(req: SessionCreate):
         "updated_at": now,
     }
     filepath = SESSIONS_DIR / f"{session_id}.json"
-    filepath.write_text(_json.dumps(session_data, ensure_ascii=False, indent=2), encoding="utf-8")
-    return JSONResponse({"status": "ok", "session": {
-        "id": session_id,
-        "title": req.title,
-        "created_at": now,
-        "updated_at": now,
-        "message_count": 0,
-    }})
+    filepath.write_text(
+        _json.dumps(session_data, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return JSONResponse(
+        {
+            "status": "ok",
+            "session": {
+                "id": session_id,
+                "title": req.title,
+                "created_at": now,
+                "updated_at": now,
+                "message_count": 0,
+            },
+        }
+    )
 
 
 @app.get("/api/sessions/{session_id}")
@@ -1659,7 +1810,9 @@ async def update_session(session_id: str, req: SessionUpdate):
         if req.messages is not None:
             data["messages"] = req.messages
         data["updated_at"] = datetime.now().isoformat()
-        filepath.write_text(_json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        filepath.write_text(
+            _json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         return JSONResponse({"status": "ok", "updated_at": data["updated_at"]})
     except Exception as e:
         print(f"[WARNING] Failed to update session {session_id}: {e}")
@@ -1690,7 +1843,10 @@ async def get_coverage():
         return JSONResponse(report)
     except Exception as e:
         return JSONResponse(
-            {"error": f"覆盖率分析失败: {type(e).__name__}", "overall": {"coverage": 0, "color": "#ef4444"}},
+            {
+                "error": f"覆盖率分析失败: {type(e).__name__}",
+                "overall": {"coverage": 0, "color": "#ef4444"},
+            },
             status_code=500,
         )
 
@@ -1704,7 +1860,10 @@ async def run_coverage():
         return JSONResponse(report)
     except Exception as e:
         return JSONResponse(
-            {"error": f"覆盖率分析失败: {type(e).__name__}", "overall": {"coverage": 0, "color": "#ef4444"}},
+            {
+                "error": f"覆盖率分析失败: {type(e).__name__}",
+                "overall": {"coverage": 0, "color": "#ef4444"},
+            },
             status_code=500,
         )
 

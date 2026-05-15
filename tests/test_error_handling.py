@@ -283,7 +283,9 @@ class TestRouterHTTPErrorFailover:
                     with pytest.raises(NoModelAvailableError) as exc_info:
                         await router.route_and_call(TaskType.EXPLORE, messages)
 
-                    assert "不可用" in str(exc_info.value) or "401" in str(exc_info.value)
+                    assert "不可用" in str(exc_info.value) or "401" in str(
+                        exc_info.value
+                    )
 
     @pytest.mark.asyncio
     async def test_all_providers_500_raises_no_model_available(self):
@@ -548,10 +550,18 @@ class TestEdgeCases:
                     calls_500_glm = mock_glm_500.call_count
 
             # 429 每个 provider 只调用 1 次，500 每个 provider 调用 3 次
-            assert calls_429_ds == 1, f"429 should call deepseek 1 time, got {calls_429_ds}"
-            assert calls_429_glm == 1, f"429 should call glm 1 time, got {calls_429_glm}"
-            assert calls_500_ds == 3, f"500 should call deepseek 3 times, got {calls_500_ds}"
-            assert calls_500_glm == 3, f"500 should call glm 3 times, got {calls_500_glm}"
+            assert calls_429_ds == 1, (
+                f"429 should call deepseek 1 time, got {calls_429_ds}"
+            )
+            assert calls_429_glm == 1, (
+                f"429 should call glm 1 time, got {calls_429_glm}"
+            )
+            assert calls_500_ds == 3, (
+                f"500 should call deepseek 3 times, got {calls_500_ds}"
+            )
+            assert calls_500_glm == 3, (
+                f"500 should call glm 3 times, got {calls_500_glm}"
+            )
 
     @pytest.mark.asyncio
     async def test_empty_messages_still_routes(self):

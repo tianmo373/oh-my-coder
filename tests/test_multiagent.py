@@ -257,14 +257,15 @@ class TestMultiAgentCollaboration:
         """测试三阶段级联"""
         coordinator = MultiAgentCoordinator()
 
-
         async def mock_runner(agent: SubAgent, task: str) -> str:
             return f"{agent.role} done"
 
         coordinator.set_runner(mock_runner)
 
-        agents = [coordinator.spawn(role, f"{role}-bot")
-                for role in ["explorer", "coder", "reviewer"]]
+        agents = [
+            coordinator.spawn(role, f"{role}-bot")
+            for role in ["explorer", "coder", "reviewer"]
+        ]
 
         result = await coordinator.dispatch("build feature", agents)
 

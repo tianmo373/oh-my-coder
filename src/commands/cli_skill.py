@@ -174,6 +174,7 @@ SKILL = Skill(
 
 # ===== Skill 沉淀闭环 =====
 
+
 @app.command("propose")
 def propose_skill(
     task: str = typer.Argument(..., help="任务描述"),
@@ -194,9 +195,7 @@ def propose_skill(
     proposal = extract_skill_from_task(task, steps_list, reflections_list)
 
     if not proposal:
-        console.print(
-            "[yellow]⚠️ 不值得提取（步骤太少或不够通用）[/yellow]"
-        )
+        console.print("[yellow]⚠️ 不值得提取（步骤太少或不够通用）[/yellow]")
         raise typer.Exit(0)
 
     filepath = save_proposal(proposal)

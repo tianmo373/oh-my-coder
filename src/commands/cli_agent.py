@@ -65,9 +65,7 @@ def list_agents(
 
         info = detect_monorepo()
         if info is None:
-            console.print(
-                "\n[yellow]⚠[/yellow] 当前目录不是 Monorepo 根目录"
-            )
+            console.print("\n[yellow]⚠[/yellow] 当前目录不是 Monorepo 根目录")
             return
 
         console.print()
@@ -629,7 +627,9 @@ def save_agent(
     name: str = typer.Argument(..., help="Agent 名称"),
     model: str = typer.Option("deepseek", "--model", "-m", help="模型"),
     description: str = typer.Option("", "--description", "-d", help="描述"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="导出 JSON 文件"),
+    output: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="导出 JSON 文件"
+    ),
 ):
     """
     保存 Agent 配置到 ~/.oh-my-coder/agents/<name>/

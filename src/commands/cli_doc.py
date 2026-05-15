@@ -26,9 +26,7 @@ README_PATH = Path("README.md")
 
 @app.command("generate")
 def generate_docs(
-    output: Path = typer.Option(
-        Path("docs/api"), "--output", "-o", help="输出目录"
-    ),
+    output: Path = typer.Option(Path("docs/api"), "--output", "-o", help="输出目录"),
     format: str = typer.Option(
         "markdown", "--format", "-f", help="输出格式: markdown, json"
     ),
@@ -79,11 +77,9 @@ def check_docs():
     # 检查未引用的文档文件（TODO: 实现完整检查）
 
     if issues:
-        console.print(Panel(
-            "\n".join(issues[:10]),
-            title="发现的问题",
-            border_style="yellow"
-        ))
+        console.print(
+            Panel("\n".join(issues[:10]), title="发现的问题", border_style="yellow")
+        )
         if len(issues) > 10:
             console.print(f"... 还有 {len(issues) - 10} 个问题")
     else:
@@ -140,6 +136,7 @@ def generate_index():
 
 # ===== 内部函数 =====
 
+
 def _collect_cli_commands() -> list[dict]:
     """收集 CLI 命令信息"""
     commands = []
@@ -164,11 +161,13 @@ def _collect_cli_commands() -> list[dict]:
         except Exception:
             pass
 
-        commands.append({
-            "name": cmd_name,
-            "file": py_file.name,
-            "help": help_text or f"{cmd_name} 命令",
-        })
+        commands.append(
+            {
+                "name": cmd_name,
+                "file": py_file.name,
+                "help": help_text or f"{cmd_name} 命令",
+            }
+        )
 
     return sorted(commands, key=lambda x: x["name"])
 
@@ -190,10 +189,12 @@ def _collect_web_api() -> list[dict]:
         for match in re.finditer(pattern, content):
             method = match.group(1).upper()
             path = match.group(2)
-            endpoints.append({
-                "method": method,
-                "path": path,
-            })
+            endpoints.append(
+                {
+                    "method": method,
+                    "path": path,
+                }
+            )
     except Exception:
         pass
 

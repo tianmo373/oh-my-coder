@@ -4,6 +4,7 @@ Oh My Coder v0.2.0 Demo Video Generator
 生成 60-90 秒演示视频 (1080p MP4)
 使用 OpenCV 直接编码
 """
+
 from pathlib import Path
 
 import cv2
@@ -331,7 +332,7 @@ def main():
     print("  7/7 结尾...")
     scene_outro(frames, 5)
 
-    print(f"总帧数: {len(frames)}, 时长: {len(frames)/FPS:.1f}秒")
+    print(f"总帧数: {len(frames)}, 时长: {len(frames) / FPS:.1f}秒")
 
     # 保存视频
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)

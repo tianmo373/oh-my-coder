@@ -308,9 +308,7 @@ class Orchestrator:
         tier0 = self.memory_manager.get_tier0_summary()
         if not tier0 or not tier0.strip():
             return ""
-        return (
-            f"\n\n{'=' * 50}\n" f"## 🧠 核心记忆（Tier 0）\n" f"{tier0}\n" f"{'=' * 50}"
-        )
+        return f"\n\n{'=' * 50}\n## 🧠 核心记忆（Tier 0）\n{tier0}\n{'=' * 50}"
 
     def get_skill_inventory(self, max_tokens: int = 500) -> str:
         """
@@ -677,6 +675,7 @@ class Orchestrator:
         except Exception as e:
             result.status = WorkflowStatus.FAILED
             import traceback as _tb
+
             _detail = f"{type(e).__name__}: {e}"
             if os.environ.get("OMC_DEBUG", "").lower() in ("1", "true", "yes"):
                 _detail += f"\n\n{_tb.format_exc()}"
@@ -730,7 +729,9 @@ class Orchestrator:
                 )
 
                 try:
-                    agent = self.get_agent(agent_name, **self._sourcegraph_overrides(context))
+                    agent = self.get_agent(
+                        agent_name, **self._sourcegraph_overrides(context)
+                    )
                     agent_context = self._build_agent_context(agent_name, context)
 
                     output = await asyncio.wait_for(
@@ -840,7 +841,9 @@ class Orchestrator:
         for level in levels:
             tasks = []
             for step in level:
-                agent = self.get_agent(step.agent_name, **self._sourcegraph_overrides(context))
+                agent = self.get_agent(
+                    step.agent_name, **self._sourcegraph_overrides(context)
+                )
                 agent_context = self._build_agent_context(step.agent_name, context)
                 tasks.append(
                     asyncio.wait_for(
@@ -902,7 +905,9 @@ class Orchestrator:
                     continue
 
             try:
-                agent = self.get_agent(step.agent_name, **self._sourcegraph_overrides(context))
+                agent = self.get_agent(
+                    step.agent_name, **self._sourcegraph_overrides(context)
+                )
                 agent_context = self._build_agent_context(step.agent_name, context)
 
                 output = await asyncio.wait_for(

@@ -1,4 +1,5 @@
 """依赖解析器 - 从生成的代码中自动检测和安装依赖"""
+
 from __future__ import annotations
 
 import re
@@ -91,6 +92,7 @@ MODULE_TO_PACKAGE: dict[str, str] = {
 @dataclass
 class DependencyInfo:
     """依赖信息"""
+
     module_name: str  # import X 中的 X
     package_name: str  # 对应的 pip 包名
     is_standard_lib: bool = False  # 是否是标准库
@@ -99,6 +101,7 @@ class DependencyInfo:
 @dataclass
 class ResolutionResult:
     """依赖解析结果"""
+
     needed: list[DependencyInfo] = field(default_factory=list)
     missing: list[DependencyInfo] = field(default_factory=list)
     installed: list[DependencyInfo] = field(default_factory=list)
@@ -110,31 +113,106 @@ class DependencyResolver:
 
     # Python 标准库模块（不需要安装）
     STANDARD_LIBS = {
-        "os", "sys", "re", "json", "html", "xml", "csv", "io", "datetime",
-        "collections", "itertools", "functools", "operator", "math", "random",
-        "statistics", "logging", "warnings", "threading", "multiprocessing",
-        "asyncio", "concurrent", "subprocess", "queue", "socket", "ssl",
-        "base64", "hashlib", "hmac", "secrets", "platform", "locale",
-        "argparse", "getopt", "configparser", "optparse", "shutil", "tempfile",
-        "pathlib", "glob", "fnmatch", "linecache", "tokenize", "keyword",
-        "ast", "dis", "types", "copy", "pickle", "marshal", "gc",
-        "weakref", "typing", "abc", "contextlib", "dataclasses",
-        "enum", "graphlib", "pprint", "textwrap", "unicodedata", "string",
-        "struct", "codecs", "encoding", "formatter", "atexit", "traceback",
-        "sysconfig", "builtins", "__future__",
+        "os",
+        "sys",
+        "re",
+        "json",
+        "html",
+        "xml",
+        "csv",
+        "io",
+        "datetime",
+        "collections",
+        "itertools",
+        "functools",
+        "operator",
+        "math",
+        "random",
+        "statistics",
+        "logging",
+        "warnings",
+        "threading",
+        "multiprocessing",
+        "asyncio",
+        "concurrent",
+        "subprocess",
+        "queue",
+        "socket",
+        "ssl",
+        "base64",
+        "hashlib",
+        "hmac",
+        "secrets",
+        "platform",
+        "locale",
+        "argparse",
+        "getopt",
+        "configparser",
+        "optparse",
+        "shutil",
+        "tempfile",
+        "pathlib",
+        "glob",
+        "fnmatch",
+        "linecache",
+        "tokenize",
+        "keyword",
+        "ast",
+        "dis",
+        "types",
+        "copy",
+        "pickle",
+        "marshal",
+        "gc",
+        "weakref",
+        "typing",
+        "abc",
+        "contextlib",
+        "dataclasses",
+        "enum",
+        "graphlib",
+        "pprint",
+        "textwrap",
+        "unicodedata",
+        "string",
+        "struct",
+        "codecs",
+        "encoding",
+        "formatter",
+        "atexit",
+        "traceback",
+        "sysconfig",
+        "builtins",
+        "__future__",
     }
 
     # 常见的标准库子模块（需要单独处理）
     STANDARD_LIB_SUBMODULES = {
-        "urllib.parse", "urllib.request", "urllib.error", "urllib.response",
-        "http.server", "http.client", "http.cookies", "http.cookiejar",
-        "xml.etree", "xml.dom", "xml.sax", "html.parser",
-        "collections.abc", "concurrent.futures", "configparser",
-        "dataclasses", "contextlib", "typing", "tkinter",
+        "urllib.parse",
+        "urllib.request",
+        "urllib.error",
+        "urllib.response",
+        "http.server",
+        "http.client",
+        "http.cookies",
+        "http.cookiejar",
+        "xml.etree",
+        "xml.dom",
+        "xml.sax",
+        "html.parser",
+        "collections.abc",
+        "concurrent.futures",
+        "configparser",
+        "dataclasses",
+        "contextlib",
+        "typing",
+        "tkinter",
     }
 
     def __init__(self):
-        self._package_cache: dict[str, bool | None] = {}  # package_name -> True/False/None
+        self._package_cache: dict[
+            str, bool | None
+        ] = {}  # package_name -> True/False/None
 
     def extract_from_code(self, code: str) -> list[DependencyInfo]:
         """从代码字符串中提取依赖"""
@@ -144,13 +222,13 @@ class DependencyResolver:
         # 正则匹配 import 语句
         # 匹配: import x, import x as y, from x import y, from x import y as z
         patterns = [
-            r'^from\s+([a-zA-Z_][a-zA-Z0-9_.]*)',
-            r'^import\s+([a-zA-Z_][a-zA-Z0-9_]*)',
+            r"^from\s+([a-zA-Z_][a-zA-Z0-9_.]*)",
+            r"^import\s+([a-zA-Z_][a-zA-Z0-9_]*)",
         ]
 
-        for line in code.split('\n'):
+        for line in code.split("\n"):
             line = line.strip()
-            if not line or line.startswith('#'):
+            if not line or line.startswith("#"):
                 continue
 
             for pattern in patterns:
@@ -158,21 +236,23 @@ class DependencyResolver:
                 if match:
                     module = match.group(1)
                     # 去除 as 后面的别名
-                    if ' as ' in module:
-                        module = module.split(' as ')[0]
+                    if " as " in module:
+                        module = module.split(" as ")[0]
 
                     # 只取顶层模块名
-                    root_module = module.split('.')[0]
+                    root_module = module.split(".")[0]
 
                     if root_module and root_module not in seen:
                         seen.add(root_module)
                         pkg = self._map_to_package(root_module)
                         is_std = self._is_standard_lib(root_module)
-                        dependencies.append(DependencyInfo(
-                            module_name=root_module,
-                            package_name=pkg,
-                            is_standard_lib=is_std,
-                        ))
+                        dependencies.append(
+                            DependencyInfo(
+                                module_name=root_module,
+                                package_name=pkg,
+                                is_standard_lib=is_std,
+                            )
+                        )
                     break
 
         return dependencies
@@ -189,7 +269,7 @@ class DependencyResolver:
 
         # 检查是否是标准库的子模块
         for submod in self.STANDARD_LIB_SUBMODULES:
-            if module_name.startswith(submod.split('.')[0]):
+            if module_name.startswith(submod.split(".")[0]):
                 return True
 
         return False
@@ -212,7 +292,9 @@ class DependencyResolver:
             self._package_cache[package_name] = False
             return False
 
-    def check_dependencies(self, dependencies: list[DependencyInfo]) -> ResolutionResult:
+    def check_dependencies(
+        self, dependencies: list[DependencyInfo]
+    ) -> ResolutionResult:
         """检查依赖是否已安装"""
         result = ResolutionResult()
 
@@ -230,9 +312,7 @@ class DependencyResolver:
         return result
 
     def install_missing(
-        self,
-        missing: list[DependencyInfo],
-        quiet: bool = True
+        self, missing: list[DependencyInfo], quiet: bool = True
     ) -> ResolutionResult:
         """安装缺失的依赖"""
         result = ResolutionResult()
@@ -254,7 +334,7 @@ class DependencyResolver:
                     result.installed.append(dep)
                     self._package_cache[dep.package_name] = True
                 else:
-                    error = proc.stderr.decode('utf-8', errors='replace')
+                    error = proc.stderr.decode("utf-8", errors="replace")
                     result.failed.append((dep.package_name, error))
             except subprocess.TimeoutExpired:
                 result.failed.append((dep.package_name, "Installation timeout"))

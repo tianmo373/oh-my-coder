@@ -39,8 +39,14 @@ def show(
 
     # 全局配置（从 .env）
     console.print("[bold]全局配置：[/bold]")
-    global_keys = ["DEFAULT_MODEL", "DEFAULT_WORKFLOW", "DEEPSEEK_API_KEY",
-                   "DEEPSEEK_BASE_URL", "KIMI_API_KEY", "DOUBAO_API_KEY"]
+    global_keys = [
+        "DEFAULT_MODEL",
+        "DEFAULT_WORKFLOW",
+        "DEEPSEEK_API_KEY",
+        "DEEPSEEK_BASE_URL",
+        "KIMI_API_KEY",
+        "DOUBAO_API_KEY",
+    ]
     for k in global_keys:
         val = os.getenv(k, "")
         masked = _mask_secret(val)
@@ -73,12 +79,15 @@ def show(
         console.print("[dim]无按模型配置，使用全局默认值[/dim]")
 
     console.print()
-    console.print("[dim]帮助: omc config --help   设置模型: omc config set -m <model> -k <key> -v <value>[/dim]")
+    console.print(
+        "[dim]帮助: omc config --help   设置模型: omc config set -m <model> -k <key> -v <value>[/dim]"
+    )
 
 
 @app.command()
 def list():
     """列出所有配置项"""
+
     def _mask_secret(val: str) -> str:
         if not val:
             return ""
@@ -103,8 +112,12 @@ def list():
         if val:
             console.print(f"       当前: {masked}")
     console.print()
-    console.print("[bold]按模型配置：[/bold] omc config set -m <model> -k <key> -v <value>")
-    console.print("[dim]模型可用 key: api_key / base_url / temperature / max_tokens / system_prompt[/dim]")
+    console.print(
+        "[bold]按模型配置：[/bold] omc config set -m <model> -k <key> -v <value>"
+    )
+    console.print(
+        "[dim]模型可用 key: api_key / base_url / temperature / max_tokens / system_prompt[/dim]"
+    )
 
 
 @app.command()
@@ -154,7 +167,9 @@ def set(
             console.print(f"[yellow]✓ 已移除[/yellow] [cyan]{model}[/cyan].{key}")
         else:
             cfg["models"][model][key] = value
-            console.print(f"[green]✓ 已设置[/green] [cyan]{model}[/cyan].{key} = {value}")
+            console.print(
+                f"[green]✓ 已设置[/green] [cyan]{model}[/cyan].{key} = {value}"
+            )
         _save(cfg)
         console.print(f"[dim]已保存到 {CONFIG_FILE}[/dim]")
     else:
@@ -168,7 +183,9 @@ def set(
                     env_vars[k2.strip()] = v2.strip()
         env_vars[key] = value
         env_path.write_text("\n".join(f"{k}={v}" for k, v in env_vars.items()) + "\n")
-        console.print(f"[green]✓ 已设置（全局）[/green] [cyan]{key}[/cyan] = {_mask_secret(value)}")
+        console.print(
+            f"[green]✓ 已设置（全局）[/green] [cyan]{key}[/cyan] = {_mask_secret(value)}"
+        )
         console.print("[dim]已写入 .env 文件[/dim]")
 
 
@@ -197,7 +214,9 @@ def models():
     models = cfg.get("models", {})
     if not models:
         console.print("[dim]尚未配置任何模型[/dim]")
-        console.print("\n[bold]快速开始：[/bold] omc config set -m kimi -k api_key -v <your-key>")
+        console.print(
+            "\n[bold]快速开始：[/bold] omc config set -m kimi -k api_key -v <your-key>"
+        )
     else:
         console.print(f"[bold]已配置 {len(models)} 个模型：[/bold]\n")
         for name, opts in models.items():

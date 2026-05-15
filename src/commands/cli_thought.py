@@ -91,7 +91,9 @@ def complete_chain(
 @app.command("show")
 def show_chain(
     chain_id: str = typer.Argument(..., help="思维链 ID"),
-    format: str = typer.Option("text", "--format", "-f", help="格式: text/html/mermaid"),
+    format: str = typer.Option(
+        "text", "--format", "-f", help="格式: text/html/mermaid"
+    ),
 ):
     """查看思维链"""
     recorder = ChainOfThoughtRecorder()

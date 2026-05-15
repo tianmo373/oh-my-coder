@@ -24,6 +24,7 @@ from src.core.tool import tool
 
 class WeatherResult(BaseModel):
     """Structured weather result."""
+
     city: str = Field(description="City name")
     temperature: str = Field(description="Current temperature")
     condition: str = Field(description="Weather condition")

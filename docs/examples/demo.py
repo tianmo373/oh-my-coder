@@ -11,6 +11,7 @@ Oh My Coder - 多智能体协作演示脚本
     cd ~/.qclaw/workspace-agent-bf627e2b/projects/oh-my-coder
     python demo.py
 """
+
 import asyncio
 import os
 from pathlib import Path
@@ -50,8 +51,8 @@ def init_oh_my_coder():
 
     # 创建路由器配置
     config = RouterConfig(
-        deepseek_api_key=api_key,    # DeepSeek API Key
-        daily_budget=10.0,           # 每日预算（元）
+        deepseek_api_key=api_key,  # DeepSeek API Key
+        daily_budget=10.0,  # 每日预算（元）
     )
 
     # 初始化路由器
@@ -106,7 +107,7 @@ async def run_workflow(router: ModelRouter, project_path: Path):
 
     explore_agent = ExploreAgent(router)
     explore_context = AgentContext(
-        project_path=project_path,           # 项目路径
+        project_path=project_path,  # 项目路径
         task_description="探索项目结构，了解现有代码组织方式",
     )
 
@@ -236,7 +237,9 @@ async def main():
     print()
     print("╔" + "═" * 68 + "╗")
     print("║" + " " * 20 + "🎯 Oh My Coder 演示" + " " * 21 + "║")
-    print("║" + " " * 15 + "多智能体协作 - Explore → Analyst → Executor" + " " * 6 + "║")
+    print(
+        "║" + " " * 15 + "多智能体协作 - Explore → Analyst → Executor" + " " * 6 + "║"
+    )
     print("╚" + "═" * 68 + "╝")
     print()
 

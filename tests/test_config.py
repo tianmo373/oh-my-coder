@@ -97,7 +97,10 @@ class TestConfigManager:
         temp_config.set("temperature", 0.7, model="deepseek")
         temp_config.set("api_base_url", "https://api.deepseek.com", model="deepseek")
         assert temp_config.get("temperature", model="deepseek") == 0.7
-        assert temp_config.get("api_base_url", model="deepseek") == "https://api.deepseek.com"
+        assert (
+            temp_config.get("api_base_url", model="deepseek")
+            == "https://api.deepseek.com"
+        )
 
     def test_model_config_isolation(self, temp_config):
         """测试3: 模型配置隔离"""

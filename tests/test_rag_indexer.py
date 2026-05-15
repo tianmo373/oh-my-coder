@@ -22,25 +22,45 @@ from src.rag.indexer import (
 class TestPythonParser:
     """PythonParser 测试"""
 
-    @pytest.mark.parametrize("source,expected_name,expected_type,expected_docstring", [
-        ("""
+    @pytest.mark.parametrize(
+        "source,expected_name,expected_type,expected_docstring",
+        [
+            (
+                """
 def hello(name: str) -> str:
     '''Say hello'''
     return f"Hello, {name}"
-""", "hello", CodeElementType.FUNCTION, "Say hello"),
-        ("""
+""",
+                "hello",
+                CodeElementType.FUNCTION,
+                "Say hello",
+            ),
+            (
+                """
 class MyClass:
     '''A test class'''
     def __init__(self):
         pass
-""", "MyClass", CodeElementType.CLASS, "A test class"),
-        ("""
+""",
+                "MyClass",
+                CodeElementType.CLASS,
+                "A test class",
+            ),
+            (
+                """
 async def fetch_data(url: str) -> dict:
     '''Fetch data from URL'''
     return {}
-""", "fetch_data", CodeElementType.FUNCTION, "Fetch data from URL"),
-    ])
-    def test_parse_elements(self, source, expected_name, expected_type, expected_docstring):
+""",
+                "fetch_data",
+                CodeElementType.FUNCTION,
+                "Fetch data from URL",
+            ),
+        ],
+    )
+    def test_parse_elements(
+        self, source, expected_name, expected_type, expected_docstring
+    ):
         """测试解析函数/类/异步函数定义"""
         parser = PythonParser()
         elements = parser.parse(source, "test.py")
@@ -125,14 +145,17 @@ def hello():
         # 直接检查排除模式匹配
         assert "__pycache__" in pycache_path
 
-    @pytest.mark.parametrize("filename,expected_lang", [
-        ("main.py", ProgrammingLanguage.PYTHON),
-        ("test.js", ProgrammingLanguage.JAVASCRIPT),
-        ("test.ts", ProgrammingLanguage.TYPESCRIPT),
-        ("test.go", ProgrammingLanguage.GO),
-        ("app.java", ProgrammingLanguage.JAVA),
-        ("main.rs", ProgrammingLanguage.RUST),
-    ])
+    @pytest.mark.parametrize(
+        "filename,expected_lang",
+        [
+            ("main.py", ProgrammingLanguage.PYTHON),
+            ("test.js", ProgrammingLanguage.JAVASCRIPT),
+            ("test.ts", ProgrammingLanguage.TYPESCRIPT),
+            ("test.go", ProgrammingLanguage.GO),
+            ("app.java", ProgrammingLanguage.JAVA),
+            ("main.rs", ProgrammingLanguage.RUST),
+        ],
+    )
     def test_detect_language(self, temp_project, filename, expected_lang):
         """测试语言检测"""
         config = IndexConfig(root_path=temp_project)
@@ -180,6 +203,7 @@ def hello():
 
         # 没有实际嵌入客户端时应该正常返回
         import asyncio
+
         asyncio.run(indexer.generate_embeddings())
 
         # 验证不会崩溃即可
