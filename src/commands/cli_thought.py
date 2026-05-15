@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import os
+
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -106,8 +108,9 @@ def show_chain(
     output = visualize_chain(chain, format)
 
     if format == "html":
-        # 保存到文件
-        output_path = f"/tmp/chain_{chain_id}.html"
+        # 保存到临时文件
+        import tempfile
+        output_path = os.path.join(tempfile.gettempdir(), f"chain_{chain_id}.html")
         with open(output_path, "w") as f:
             f.write(output)
         console.print(f"[green]HTML 已保存:[/green] {output_path}")

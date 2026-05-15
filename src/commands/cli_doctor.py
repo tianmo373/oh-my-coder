@@ -136,18 +136,14 @@ def _check_config_file() -> tuple[bool, str, str]:
 
 def _check_network(url: str, timeout: float = 5.0) -> tuple[bool, str]:
     """测试网络连通性"""
-    import urllib.error
-    import urllib.request
+    import requests
 
     try:
-        req = urllib.request.Request(url, method="HEAD")
-        req.add_header("User-Agent", "omc-doctor/1.0")
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.status < 500, f"HTTP {resp.status}"
-    except urllib.error.HTTPError as e:
-        # 4xx 是连通的（只是未授权），5xx 才是服务问题
-        return e.code < 500, f"HTTP {e.code}"
-    except urllib.error.URLError:
+        resp = requests.head(url, timeout=timeout, headers={"User-Agent": "omc-doctor/1.0"})
+        return resp.status_code < 500, f"HTTP {resp.status_code}"
+    except requests.exceptions.Timeout:
+        return False, "超时"
+    except requests.exceptions.ConnectionError:
         return False, "连接失败"
     except Exception as e:
         return False, type(e).__name__

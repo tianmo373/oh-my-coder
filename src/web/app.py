@@ -118,21 +118,17 @@ def _preprocess_target(target: str, target_type: str, task_id: str) -> tuple:
     elif target_type == "url":
         # Fetch 网页内容
         try:
-            import urllib.request
+            import requests
 
-            req = urllib.request.Request(
+            resp = requests.get(
                 target,
+                timeout=30,
                 headers={
                     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
                 },
             )
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                raw = resp.read()
-                # 尝试 utf-8，失败用 latin-1
-                try:
-                    content = raw.decode("utf-8")
-                except UnicodeDecodeError:
-                    content = raw.decode("latin-1")
+            # 自动检测编码
+            content = resp.text
             # 简单 HTML → 文本：去标签
             text = re.sub(r"<script[^>]*>[\s\S]*?</script>", "", content, flags=re.I)
             text = re.sub(r"<style[^>]*>[\s\S]*?</style>", "", text, flags=re.I)
