@@ -1,9 +1,7 @@
 'use strict';
 
-const React = require('react');
-const { useState, useRef, useCallback, useEffect } = React;
-const whisperLoader = require('../whisper-loader.js');
-const { loadWhisper, transcribeAudio } = whisperLoader;
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { loadWhisper, transcribeAudio } from '../whisper-loader.js';
 
 // ---------------------------------------------------------------------------
 // VoiceInput Component
@@ -11,19 +9,24 @@ const { loadWhisper, transcribeAudio } = whisperLoader;
 // Works in: Electron renderer, Chrome, Safari, Firefox — Windows + Mac + Linux.
 // ---------------------------------------------------------------------------
 
-const VoiceInput = ({
+interface VoiceInputProps {
+  onResult: (text: string) => void;
+  disabled?: boolean;
+}
+
+export const VoiceInput = ({
   onResult,
   disabled = false,
-}) => {
+}: VoiceInputProps) => {
   const [isListening, setIsListening] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [interimText, setInterimText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const mediaRecorderRef = useRef(null);
-  const chunksRef = useRef([]);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const whisperLoadedRef = useRef(false);
-  const whisperLoadErrorRef = useRef(null);
+  const whisperLoadErrorRef = useRef<string | null>(null);
 
   const isSupported =
     typeof window !== 'undefined' &&
@@ -34,9 +37,9 @@ const VoiceInput = ({
   useEffect(() => {
     loadWhisper()
       .then(() => { whisperLoadedRef.current = true; })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.warn('[VoiceInput] Whisper WASM load failed:', err);
-        whisperLoadErrorRef.current = err.message || String(err);
+        whisperLoadErrorRef.current = err instanceof Error ? err.message : String(err);
       });
   }, []);
 
@@ -109,7 +112,7 @@ const VoiceInput = ({
             } else {
               setErrorMsg('未能识别到语音内容');
             }
-          } catch (err) {
+          } catch (err: unknown) {
             console.error('[VoiceInput] Transcribe error:', err);
             setErrorMsg('语音识别失败，请重试');
           } finally {
@@ -127,9 +130,9 @@ const VoiceInput = ({
         // Record in 1-second chunks so we can stop quickly on button press.
         mediaRecorder.start(1000);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error('[VoiceInput] getUserMedia error:', err);
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        if (err instanceof Error && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
           setErrorMsg('请在系统设置中允许麦克风权限');
         } else {
           setErrorMsg('无法访问麦克风');
