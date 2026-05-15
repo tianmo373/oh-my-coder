@@ -1121,22 +1121,23 @@
                 <div class="code-content">
                     <span class="comment"># 1. 安装（需要 Python 3.9+）</span><br>
                     pip3 install oh-my-coder<br><br>
-<span class="comment"># 1.1 ⚠️ 配置 PATH（否则 omc 命令找不到）</span><br>
-                    <span class="comment"># 将以下行加入 ~/.zshrc（macOS）或 ~/.bashrc（Linux）：</span><br>
+                    <span class="comment"># 1.1 ⚠️ 配置 PATH（否则 omc 命令找不到）</span><br>
+                    <span class="comment"># 将以下行加入 ~/.zshrc（macOS）或 ~/.bashrc（Linux），</span><br>
+                    <span class="comment"># 按实际 Python 版本调整，如 3.10、3.11、3.12：</span><br>
                     export PATH="$HOME/Library/Python/3.9/bin:$PATH"<br>
                     source ~/.zshrc<br><br>
                     <span class="comment"># 2. 验证安装</span><br>
                     omc --version<br><br>
                     <span class="comment"># 3. 配置 API Key（免费模型 GLM-4.7-Flash）</span><br>
                     <span class="comment"># 获取 Key：https://open.bigmodel.cn → 注册 → API Keys → 创建</span><br>
-                    omc config set glm_api_key <span class="string">"your-api-key"</span><br>
-                    omc config set default_model glm-4-flash<br><br>
+                    omc config set -m glm -k api_key -v <span class="string">"your-api-key"</span><br>
+                    omc config set -k DEFAULT_MODEL -v glm-4-flash<br><br>
                     <span class="comment"># 4. 开始使用！直接输入需求即可</span><br>
                     omc run <span class="string">"帮我分析这个项目的架构"</span><br><br>
                     <span class="comment"># 其他常用命令：</span><br>
-                    <span class="comment"># omc models list         查看可用模型</span><br>
+                    <span class="comment"># omc model list         查看可用模型</span><br>
                     <span class="comment"># omc review --path ./src 代码审查</span><br>
-                    <span class="comment"># omc agents              查看所有 Agent</span><br>
+                    <span class="comment"># omc agent              查看所有 Agent</span><br>
                 </div>
             </div>
         </div>
