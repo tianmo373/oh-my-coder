@@ -1,144 +1,169 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+'use strict';
 
-interface VoiceInputProps {
-  onResult: (text: string) => void;
-  disabled?: boolean;
-  lang?: string;
-}
+const React = require('react');
+const { useState, useRef, useCallback, useEffect } = React;
+const whisperLoader = require('../whisper-loader.js');
+const { loadWhisper, transcribeAudio } = whisperLoader;
 
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-}
+// ---------------------------------------------------------------------------
+// VoiceInput Component
+// Uses whisper-loader.js for WASM-based speech recognition.
+// Works in: Electron renderer, Chrome, Safari, Firefox — Windows + Mac + Linux.
+// ---------------------------------------------------------------------------
 
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-}
-
-export const VoiceInput: React.FC<VoiceInputProps> = ({ 
-  onResult, 
+const VoiceInput = ({
+  onResult,
   disabled = false,
-  lang = 'zh-CN'
 }) => {
   const [isListening, setIsListening] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [interimText, setInterimText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const recognitionRef = useRef<any>(null);
-  const isSupported = typeof window !== 'undefined' && 
-    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
-  // Check if actually available (Electron may have the API but not the service)
-  // TODO: 语音输入待集成 Whisper.cpp，暂时隐藏按钮
-  const VOICE_ENABLED = false;
-  const [actuallyAvailable, setActuallyAvailable] = useState(isSupported && VOICE_ENABLED);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const whisperLoadedRef = useRef(false);
+  const whisperLoadErrorRef = useRef(null);
 
+  const isSupported =
+    typeof window !== 'undefined' &&
+    navigator.mediaDevices &&
+    typeof navigator.mediaDevices.getUserMedia === 'function';
+
+  // Pre-load whisper model once on mount so first recording is instant.
+  useEffect(() => {
+    loadWhisper()
+      .then(() => { whisperLoadedRef.current = true; })
+      .catch((err) => {
+        console.warn('[VoiceInput] Whisper WASM load failed:', err);
+        whisperLoadErrorRef.current = err.message || String(err);
+      });
+  }, []);
+
+  // Clean up on unmount.
   useEffect(() => {
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
       }
     };
   }, []);
 
-  // Clear error after 4s
+  // Auto-clear error after 3 seconds.
   useEffect(() => {
     if (!errorMsg) return;
-    const t = setTimeout(() => setErrorMsg(''), 4000);
+    const t = setTimeout(() => setErrorMsg(''), 3000);
     return () => clearTimeout(t);
   }, [errorMsg]);
 
   const toggleListening = useCallback(() => {
-    if (!isSupported || !actuallyAvailable) {
-      setErrorMsg('语音输入仅支持浏览器版本，桌面端暂不可用');
+    if (!isSupported) {
+      setErrorMsg('当前环境不支持录音');
       return;
     }
 
     if (isListening) {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
       }
       setIsListening(false);
-      setInterimText('');
       return;
     }
 
-    const SpeechRecognition = (window as any).SpeechRecognition || 
-                              (window as any).webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    
-    recognition.lang = lang;
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
+    chunksRef.current = [];
 
-    recognition.onstart = () => {
-      setIsListening(true);
-      setInterimText('');
-      setErrorMsg('');
-    };
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then((stream) => {
+        const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        mediaRecorderRef.current = mediaRecorder;
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let interim = '';
-      let final = '';
-      
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          final += transcript;
+        mediaRecorder.onstart = () => {
+          setIsListening(true);
+          setInterimText('');
+          setErrorMsg('');
+        };
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            chunksRef.current.push(e.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          setIsListening(false);
+
+          // Release microphone.
+          stream.getTracks().forEach((t) => t.stop());
+
+          if (chunksRef.current.length === 0) return;
+
+          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+
+          setIsTranscribing(true);
+          setInterimText('识别中...');
+
+          try {
+            const text = await transcribeAudio(blob);
+            if (text) {
+              onResult(text);
+            } else {
+              setErrorMsg('未能识别到语音内容');
+            }
+          } catch (err) {
+            console.error('[VoiceInput] Transcribe error:', err);
+            setErrorMsg('语音识别失败，请重试');
+          } finally {
+            setIsTranscribing(false);
+            setInterimText('');
+          }
+        };
+
+        mediaRecorder.onerror = () => {
+          setIsListening(false);
+          setInterimText('');
+          setErrorMsg('录音出错');
+        };
+
+        // Record in 1-second chunks so we can stop quickly on button press.
+        mediaRecorder.start(1000);
+      })
+      .catch((err) => {
+        console.error('[VoiceInput] getUserMedia error:', err);
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          setErrorMsg('请在系统设置中允许麦克风权限');
         } else {
-          interim += transcript;
+          setErrorMsg('无法访问麦克风');
         }
-      }
+      });
+  }, [isListening, isSupported, onResult]);
 
-      setInterimText(interim);
-
-      if (final) {
-        onResult(final);
-        setInterimText('');
-      }
-    };
-
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.error('[VoiceInput] Error:', event.error);
-      setIsListening(false);
-      setInterimText('');
-      
-      if (event.error === 'not-allowed') {
-        setErrorMsg('请在系统设置中允许麦克风权限');
-      } else if (event.error === 'network' || event.error === 'service-not-available') {
-        setActuallyAvailable(false);
-        setErrorMsg('语音输入仅支持浏览器版本，桌面端暂不可用');
-      } else if (event.error === 'no-speech') {
-        // Silent - user just didn't speak
-      } else if (event.error !== 'aborted') {
-        setErrorMsg(`语音识别出错: ${event.error}`);
-      }
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-      setInterimText('');
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-  }, [isListening, isSupported, actuallyAvailable, lang, onResult]);
-
-  if (!VOICE_ENABLED) return null;
+  // Compute button status label.
+  const btnTitle = isListening
+    ? '点击停止'
+    : isTranscribing
+    ? '识别中...'
+    : whisperLoadErrorRef.current
+    ? '语音模型加载失败'
+    : whisperLoadedRef.current
+    ? '语音输入'
+    : '加载语音模型...';
 
   return (
-    <div className="voice-input" title={isListening ? '点击停止' : (actuallyAvailable ? '语音输入' : '语音输入仅支持浏览器版本')}>
+    <div className="voice-input">
       <button
-        className={`voice-input__btn ${isListening ? 'voice-input__btn--active' : ''} ${!actuallyAvailable ? 'voice-input__btn--disabled' : ''}`}
+        className={`voice-input__btn ${isListening ? 'voice-input__btn--active' : ''} ${isTranscribing ? 'voice-input__btn--transcribing' : ''}`}
         onClick={toggleListening}
-        disabled={disabled}
+        disabled={disabled || !!whisperLoadErrorRef.current}
+        title={btnTitle}
         type="button"
       >
         {isListening ? (
+          // Stop icon (filled square)
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <rect x="6" y="6" width="12" height="12" rx="2"/>
           </svg>
         ) : (
+          // Microphone icon
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -147,15 +172,19 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
           </svg>
         )}
       </button>
-      {isListening && (
+
+      {(isListening || isTranscribing) && (
         <div className="voice-input__indicator">
-          <span className="voice-input__dot"></span>
+          <span className="voice-input__dot" />
           {interimText && <span className="voice-input__interim">{interimText}</span>}
         </div>
       )}
+
       {errorMsg && (
         <div className="voice-input__error">{errorMsg}</div>
       )}
     </div>
   );
 };
+
+module.exports = { VoiceInput };
