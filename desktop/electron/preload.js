@@ -57,6 +57,21 @@ contextBridge.exposeInMainWorld('omc', {
   modelConfigDelete: (modelId) => ipcRenderer.invoke('omc:model:config:delete', modelId),
   modelConfigTest: (modelId, config) => ipcRenderer.invoke('omc:model:config:test', { modelId, config }),
 
+  // Task
+  taskExecute: (opts) => ipcRenderer.invoke('omc:task:execute', opts),
+  taskList: () => ipcRenderer.invoke('omc:task:list'),
+  taskRead: (opts) => ipcRenderer.invoke('omc:task:read', opts),
+  onTaskChunk: (cb) => {
+    const h = (_, data) => cb(data);
+    ipcRenderer.on('omc:task:chunk', h);
+    return () => ipcRenderer.removeListener('omc:task:chunk', h);
+  },
+  onTaskError: (cb) => {
+    const h = (_, data) => cb(data);
+    ipcRenderer.on('omc:task:error', h);
+    return () => ipcRenderer.removeListener('omc:task:error', h);
+  },
+
   // Whisper
   whisper: {
     transcribe: (audioBuffer) => ipcRenderer.invoke('omc:whisper:transcribe', audioBuffer),

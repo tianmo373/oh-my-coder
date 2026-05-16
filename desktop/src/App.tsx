@@ -390,35 +390,37 @@ export default function App() {
   
   // Track if current message is a task (for conditional TaskProgress display)
   const [isTaskMode, setIsTaskMode] = useState(false);
-  const isTaskRequest = (text: string): boolean => {
-    // Require explicit action + target pattern, not single vague keywords
-    const taskPatterns = [
-      /帮?(我)?写(一个?|一下)?(函数|组件|接口|脚本|模块|页面|文件|类|方法|服务|工具)/i,
-      /帮?(我)?实现(一个?|一下)?(功能|需求|逻辑|接口|算法|特性)/i,
-      /帮?(我)?修复?(一下)?(这个?|那个?)?(bug|错误|问题|漏洞)/i,
-      /帮?(我)?创建?(一个?|一下)?(项目|文件|组件|页面|接口|仓库)/i,
-      /帮?(我)?添加?(一个?|一下)?(功能|字段|接口|组件|参数|配置)/i,
-      /帮?(我)?删除?(一个?|一下)?(文件|代码|行|函数|组件|模块)/i,
-      /帮?(我)?重构?(一下)?(这个?|那个?)?(代码|模块|组件|函数|项目)/i,
-      /帮?(我)?优化?(一下)?(这个?|那个?)?(代码|性能|逻辑|结构|查询)/i,
-      /帮?(我)?配置?(一下)?(环境|服务器|数据库|部署|CI)/i,
-      /帮?(我)?生成?(一个?|一下)?(代码|文档|接口|模板|配置)/i,
-      /帮?(我)?部署?(一下)?(项目|服务|应用|网站)/i,
-      /帮?(我)?测试?(一下)?(这个?|那个?)?(功能|接口|代码|模块)/i,
-      /写(一个?|一下)?(代码|函数|组件|脚本|测试|接口|文档)/i,
-      /修复?(一下)?(这个?|那个?)?(bug|错误|问题|漏洞)/i,
-      /实现(一个?|一下)?(功能|需求|接口|逻辑)/i,
-      /创建?(一个?|一下)?(项目|文件|组件|页面)/i,
-      /添加?(一个?|一下)?(功能|接口|组件|字段)/i,
-      /重构?(一下)?(代码|模块|组件)/i,
-      /优化?(一下)?(代码|性能|逻辑|结构)/i,
-      /(build|fix|create|implement|add|remove|refactor|test|deploy|configure|write|generate)\s+(a |the |this |that |my )?\S+/i,
+  // Classify message: 'task' for explicit omc CLI commands, 'chat' for everything else
+  const classifyMessage = (text: string): { type: 'task'; command: string; args: string[] } | { type: 'chat' } => {
+    const t = text.trim();
+    // Explicit /command prefix
+    const slashMatch = t.match(/^\/(\S+)\s*(.*)/);
+    if (slashMatch) {
+      const cmd = slashMatch[1];
+      const validCmds = ['explore', 'run', 'wiki', 'scan', 'analyze', 'quest'];
+      const cmdMap: Record<string, string> = { scan: 'explore', analyze: 'explore' };
+      const omcCmd = cmdMap[cmd] || cmd;
+      if (validCmds.includes(omcCmd)) {
+        return { type: 'task', command: omcCmd, args: slashMatch[2] ? [slashMatch[2]] : [] };
+      }
+    }
+    // Explicit Chinese task triggers — must include clear intent + target
+    const taskTriggers = [
+      { pattern: /分析(?:一下)?(?:这个)?(?:项目|代码|代码库|仓库|工程)/i, command: 'explore', args: [] },
+      { pattern: /扫描(?:一下)?(?:这个)?(?:项目|代码|代码库)/i, command: 'explore', args: [] },
+      { pattern: /探索(?:一下)?(?:这个)?(?:项目|代码)/i, command: 'explore', args: [] },
+      { pattern: /(?:生成|写)(?:一下)?(?:项目的?)?(?:wiki|文档|文档报告)/i, command: 'wiki', args: [] },
+      { pattern: /执行(?:一下)?(?:任务|这个任务)/i, command: 'run', args: [] },
     ];
-    return taskPatterns.some(p => p.test(text));
+    for (const trigger of taskTriggers) {
+      const m = t.match(trigger.pattern);
+      if (m) return { type: 'task', command: trigger.command, args: trigger.args };
+    }
+    return { type: 'chat' };
   };
   
   // Task progress state
-  const [taskStages, setTaskStages] = useState([
+  const [taskStages, setTaskStages] = useState<Array<{ name: string; status: 'pending' | 'active' | 'completed' }>>([
     { name: '需求分析', status: 'pending' as const },
     { name: '方案设计', status: 'pending' as const },
     { name: '代码编写', status: 'pending' as const },
@@ -725,7 +727,10 @@ export default function App() {
     };
     if (!activeId) { createSession(currentModel); }
     addMessage(userMsg);
-    setIsTaskMode(isTaskRequest(text));
+
+    const classification = classifyMessage(text);
+    const isTask = classification.type === 'task';
+    setIsTaskMode(isTask);
     setLoading(true);
 
     try {
@@ -794,33 +799,79 @@ export default function App() {
         endpoint = DEFAULT_ENDPOINTS[provider] || '';
       }
 
-      console.log('[Chat] Sending to', endpoint, 'model=', currentModel, 'key=', apiKey ? apiKey.slice(0, 10) + '...' : 'EMPTY!');
-      const result = await omcApi.chatDirect({ endpoint, model: currentModel, apiKey, message: text.trim() });
+      console.log('[Chat] Classification:', classification.type, isTask ? `(omc ${classification.command})` : '(direct LLM)');
 
-      // Parse SSE stream output to extract plain text content
-      let parsedContent = '';
-      if (result.stdout) {
-        const lines = result.stdout.split('\n');
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed.startsWith(':') || trimmed === '[DONE]') continue;
-          if (trimmed.startsWith('data: ')) {
-            try {
-              const json = JSON.parse(trimmed.slice(6));
-              const delta = json.choices?.[0]?.delta?.content;
-              if (delta) parsedContent += delta;
-            } catch { /* skip malformed JSON */ }
+      let responseContent = '';
+
+      if (isTask && classification.type === 'task') {
+        // ── Task mode: execute actual omc CLI ──────────────────────────────
+        if (!window.omc?.taskExecute) {
+          addMessage({ id: (Date.now() + 1).toString(), role: 'assistant', content: 'Error: Task execution not available. Please run in Electron.', timestamp: Date.now() });
+          setLoading(false);
+          return;
+        }
+        // Listen for real-time output
+        const unsubChunk = window.omc.onTaskChunk((chunk: string) => {
+          setLiveLogs(prev => [...prev, { timestamp: Date.now(), message: chunk }]);
+        });
+        const unsubError = window.omc.onTaskError((err: string) => {
+          setLiveLogs(prev => [...prev, { timestamp: Date.now(), message: `⚠️ ${err}`, isError: true }]);
+        });
+        // Advance task stages progressively
+        setTaskStages(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'active' as const } : s));
+        setCurrentStage(0);
+
+        const taskResult = await window.omc.taskExecute({
+          command: classification.command,
+          args: classification.args,
+          projectPath: undefined, // TODO: let user select project
+        });
+
+        unsubChunk();
+        unsubError();
+
+        // Mark stages complete
+        setTaskStages(prev => prev.map(s => ({ ...s, status: 'completed' as const })));
+        setCurrentStage(taskStages.length);
+
+        responseContent = taskResult.stdout || taskResult.stderr || 'Task completed with no output.';
+        if (taskResult.outputFile) {
+          responseContent += `\n\n📄 **Result saved**: \`${taskResult.outputFile}\``;
+        }
+        if (taskResult.code !== 0) {
+          responseContent = `❌ Task failed (exit code ${taskResult.code})\n\n${responseContent}`;
+        } else {
+          responseContent = `✅ Task completed successfully\n\n${responseContent}`;
+        }
+      } else {
+        // ── Chat mode: direct LLM API call (existing behavior) ────────────
+        console.log('[Chat] Sending to', endpoint, 'model=', currentModel, 'key=', apiKey ? apiKey.slice(0, 10) + '...' : 'EMPTY!');
+        const result = await omcApi.chatDirect({ endpoint, model: currentModel, apiKey, message: text.trim() });
+
+        // Parse SSE stream output
+        if (result.stdout) {
+          const lines = result.stdout.split('\n');
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith(':') || trimmed === '[DONE]') continue;
+            if (trimmed.startsWith('data: ')) {
+              try {
+                const json = JSON.parse(trimmed.slice(6));
+                const delta = json.choices?.[0]?.delta?.content;
+                if (delta) responseContent += delta;
+              } catch { /* skip */ }
+            }
           }
         }
+        responseContent = responseContent || result.stderr || (result.code === 0 ? '(empty response)' : `Error: exit code ${result.code}`);
       }
 
-      const assistantMsg: Message = {
+      addMessage({
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: parsedContent || result.stderr || (result.code === 0 ? '(empty response)' : `Error: exit code ${result.code}`),
+        content: responseContent,
         timestamp: Date.now(),
-      };
-      addMessage(assistantMsg);
+      });
     } catch (e: any) {
       addMessage({
         id: (Date.now() + 1).toString(),

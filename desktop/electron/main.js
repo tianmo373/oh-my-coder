@@ -124,6 +124,108 @@ function setupIpc() {
     return ApiBridge.chatSend(event, opts);
   });
 
+  // Task — execute actual omc CLI command (explore / run)
+  // Payload: { command, args, projectPath }
+  // Returns: { code, stdout, stderr, outputFile }
+  ipcMain.handle('omc:task:execute', async (event, { command, args, projectPath }) => {
+    log('[task:execute] command=', command, 'args=', args, 'project=', projectPath);
+    try {
+      const omcBin = resolveOmcBinary();
+      const taskDir = path.join(CONFIG_PATH, 'tasks');
+      fs.mkdirSync(taskDir, { recursive: true });
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const outputFile = path.join(taskDir, `task_${timestamp}.md`);
+
+      const cmdArgs = [command, ...args];
+      if (projectPath) cmdArgs.push(projectPath);
+
+      log('[task:execute] running:', omcBin, cmdArgs.join(' '));
+      const child = spawn(omcBin, cmdArgs, {
+        cwd: projectPath || OMC_ROOT,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+        shell: false,
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      // Stream output to renderer
+      child.stdout.on('data', (chunk) => {
+        const text = chunk.toString();
+        stdout += text;
+        if (event && event.sender && !event.sender.isDestroyed()) {
+          event.sender.send('omc:task:chunk', text);
+        }
+      });
+
+      child.stderr.on('data', (chunk) => {
+        const text = chunk.toString();
+        stderr += text;
+        if (event && event.sender && !event.sender.isDestroyed()) {
+          event.sender.send('omc:task:error', text);
+        }
+      });
+
+      return new Promise((resolve) => {
+        child.on('close', (code) => {
+          // Save result to MD file
+          const header = `# Task Report\n\n- **Command**: \`omc ${cmdArgs.join(' ')}\`\n- **Time**: ${new Date().toLocaleString('zh-CN')}\n- **Status**: ${code === 0 ? '✅ Success' : '❌ Failed (exit ' + code + ')'}\n- **Project**: ${projectPath || './'}\n\n---\n\n`;
+          const content = header + '## Output\n\n' + stdout;
+          if (stderr) {
+            fs.writeFileSync(outputFile, content + '\n\n## Errors\n\n```
+' + stderr + '\n```', 'utf-8');
+          } else {
+            fs.writeFileSync(outputFile, content, 'utf-8');
+          }
+          log('[task:execute] done, saved to', outputFile);
+          resolve({ code, stdout, stderr, outputFile });
+        });
+
+        child.on('error', (e) => {
+          log('[task:execute] error:', e.message);
+          resolve({ code: 1, stdout: '', stderr: e.message, outputFile: '' });
+        });
+
+        // Timeout after 5 minutes
+        setTimeout(() => {
+          child.kill('SIGTERM');
+          resolve({ code: 124, stdout, stderr: 'Task timed out (5 min)', outputFile: '' });
+        }, 300000);
+      });
+    } catch (e) {
+      log('[task:execute] exception:', e.message);
+      return { code: 1, stdout: '', stderr: e.message, outputFile: '' };
+    }
+  });
+
+  // Task — list saved task results
+  ipcMain.handle('omc:task:list', async () => {
+    const taskDir = path.join(CONFIG_PATH, 'tasks');
+    if (!fs.existsSync(taskDir)) return [];
+    const files = fs.readdirSync(taskDir)
+      .filter(f => f.endsWith('.md'))
+      .sort((a, b) => b.localeCompare(a))
+      .slice(0, 50);
+    return files.map(f => ({
+      name: f,
+      path: path.join(taskDir, f),
+      mtime: fs.statSync(path.join(taskDir, f)).mtimeMs,
+      size: fs.statSync(path.join(taskDir, f)).size,
+    }));
+  });
+
+  // Task — read a saved task result
+  ipcMain.handle('omc:task:read', async (_, { filePath }) => {
+    try {
+      if (!fs.existsSync(filePath)) return { error: 'File not found' };
+      return { content: fs.readFileSync(filePath, 'utf-8') };
+    } catch (e) {
+      return { error: e.message };
+    }
+  });
+
   // Chat — direct LLM API call (quick fix: bypasses omc run)
   // Payload: { endpoint, model, apiKey, message }
   ipcMain.handle('omc:chat:direct', async (event, { endpoint, model, apiKey, message }) => {
