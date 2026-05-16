@@ -1018,7 +1018,12 @@ export default function App() {
               disabled={loading}
             />
             <VoiceInput
-              onResult={(text) => setInput(prev => prev ? prev + ' ' + text : text)}
+              onResult={(text) => {
+                const newText = input ? input + ' ' + text : text;
+                setInput(newText);
+                // Auto-send after voice transcription
+                setTimeout(() => handleSend(), 300);
+              }}
               disabled={loading}
             />
             <button className="input-area__send" onClick={handleSend} disabled={loading || !input.trim()}>
