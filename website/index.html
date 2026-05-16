@@ -1165,11 +1165,28 @@
 
         <!-- Tab: Desktop 桌面端 -->
         <div class="qs-content hidden" id="qs-tab-desktop">
-            <div class="qs-note" style="margin-bottom: 12px; background: #fef3c7; padding: 10px 14px; border-radius: 8px; border-left: 4px solid #f59e0b;">
-                <strong>📋 前置要求</strong><br>
-                • <strong>Node.js ≥ 18</strong>（终端执行 <code>node --version</code> 检查，未安装去 <a href="https://nodejs.org" target="_blank">nodejs.org</a> 下载 LTS 版）<br>
-                • macOS / Windows 10+ / Linux（macOS 用户建议用内置 Terminal，不要用 VS Code 内嵌终端）<br>
-                • Git（终端执行 <code>git --version</code> 检查）
+            <div class="qs-note" style="margin-bottom: 16px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 16px 18px; border-radius: 12px; border-left: 5px solid #f59e0b; line-height: 1.8;">
+                <div style="font-size: 17px; font-weight: 700; margin-bottom: 10px;">📋 第 0 步：打开终端 + 检查环境（必做！）</div>
+
+                <div style="margin-bottom: 12px;"><strong>🖥️ 怎么打开终端（命令行窗口）：</strong></div>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:12px; font-size:14px;">
+                    <tr><td style="padding:6px 10px; background:#fff3cd; border-radius:6px; font-weight:600;width:90px;">🍎 Mac 电脑</td><td style="padding:6px 10px;">按住 <kbd style="background:#fff;border:1px solid #ccc;border-radius:4px;padding:2px 8px;font-family:monospace;font-size:13px;">⌘ Command</kbd> + <kbd style="background:#fff;border:1px solid #ccc;border-radius:4px;padding:2px 8px;font-family:monospace;font-size:13px;">空格键</kbd>，输入 <code style="background:#fff;padding:2px 6px;border-radius:3px;font-family:monospace;">Terminal</code> 或「终端」，按回车打开</td></tr>
+                    <tr><td style="padding:6px 10px; background:#dbeafe; border-radius:6px; font-weight:600;">🪟 Windows</td><td style="padding:6px 10px;">按 <kbd style="background:#fff;border:1px solid #ccc;border-radius:4px;padding:2px 8px;font-family:monospace;font-size:13px;">Win</kbd> + <kbd style="background:#fff;border:1px solid #ccc;border-radius:4px;padding:2px 8px;font-family:monospace;font-size:13px;">R</kbd>，输入 <code style="background:#fff;padding:2px 6px;border-radius:3px;font-family:monospace;">cmd</code>，按回车打开</td></tr>
+                </table>
+
+                <div style="margin-bottom: 8px;"><strong>打开终端后，依次复制粘贴下面两行命令，每行粘贴后按回车：</strong></div>
+                <div class="code-block" style="margin: 8px 0;">
+                    <div class="code-content" style="font-size:14px;">
+                        node --version<br>
+                        git --version
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                    ✅ 如果看到 <code style="background:#fff;padding:2px 6px;border-radius:3px;font-family:monospace;">v18...</code> 或 <code style="background:#fff;padding:2px 6px;border-radius:3px;font-family:monospace;">v20...</code> 或更高版本号 → <strong>没问题，继续！</strong><br>
+                    ❌ 如果提示 <code style="background:#fff;padding:2px 6px;border-radius:3px;font-family:monospace;">command not found</code> 或「不是内部命令」→ 需要先安装：<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;👉 <a href="https://nodejs.org" target="_blank" style="color:#d97706;font-weight:600;text-decoration:none;border-bottom:1px dashed #d97706;">点这里下载 Node.js（选 LTS 版本）</a> → 下载后双击安装 → <strong>装完重新打开终端</strong>再检查
+                </div>
             </div>
             <div class="code-block">
                 <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
