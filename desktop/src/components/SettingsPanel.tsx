@@ -365,7 +365,8 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
         let cfgData: ModelConfig = {};
         
         try {
-          modelList = await (window.omc as any).modelList();
+          const modelResult = await (window.omc as any).modelList();
+          modelList = Array.isArray(modelResult) ? modelResult : (modelResult?.models || []);
           cfgData = await (window.omc as any).modelConfigList();
         } catch {
           // API not available, use fallback models
