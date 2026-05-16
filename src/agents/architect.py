@@ -182,7 +182,7 @@ project/
         context: AgentContext,
     ) -> AgentOutput:
         """后处理"""
-        return AgentOutput(
+        return AgentOutput(agent_name=self.name, 
             agent_name=self.name,
             status=AgentStatus.COMPLETED,
             result=result,

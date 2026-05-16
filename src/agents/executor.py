@@ -346,7 +346,7 @@ def test_add():
             ]
         )
 
-        return AgentOutput(
+        return AgentOutput(agent_name=self.name, 
             agent_name=self.name,
             status=AgentStatus.COMPLETED,
             result=result,

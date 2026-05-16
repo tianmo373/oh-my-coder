@@ -108,7 +108,7 @@ def etl_pipeline():
         return response.content
 
     def _post_process(self, result: str, context: AgentContext) -> AgentOutput:
-        return AgentOutput(
+        return AgentOutput(agent_name=self.name, 
             agent_name=self.name,
             status=AgentStatus.COMPLETED,
             result=result,
