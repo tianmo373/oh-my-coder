@@ -28,15 +28,16 @@ async function getWhisper() {
 async function transcribeAudio(audioBytes) {
   const { WhisperFullParams, WhisperSamplingStrategy } = await import('@napi-rs/whisper');
   const w = await getWhisper();
+  const { decodeAudioAsync } = await import('@napi-rs/whisper');
 
   // audioBytes comes as a number array from IPC (Array.from(Uint8Array))
   const buf = Buffer.from(audioBytes);
   console.log('[voice] Received', buf.length, 'bytes');
 
-  // Decode WAV → PCM Float32Array
+  // Decode WAV → PCM Float32Array (module-level function, not instance method)
   let pcm;
   try {
-    pcm = await w.decodeAudioAsync(buf, 'audio.wav');
+    pcm = await decodeAudioAsync(buf, 'audio.wav');
     console.log('[voice] Decoded PCM, samples:', pcm.length);
   } catch (decodeErr) {
     console.error('[voice] decodeAudioAsync failed:', decodeErr.message);
