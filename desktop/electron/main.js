@@ -19,6 +19,14 @@ let omcReady = false;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function log(...args) {
+
+// ── Process-level error protection ────────────────────────────────────────
+process.on("uncaughtException", (err) => {
+  log("UNCAUGHT EXCEPTION:", err.message, err.stack?.slice(0, 200));
+});
+process.on("unhandledRejection", (reason) => {
+  log("UNHANDLED REJECTION:", reason);
+});
   const ts = new Date().toISOString().slice(11, 23);
   console.log(`[omc:electron:${ts}]`, ...args);
 }
@@ -475,6 +483,18 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => { mainWindow.show(); });
   mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+
+  // Auto-retry when Vite dev server is temporarily unreachable
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDesc, validatedURL, isMainFrame) => {
+    if (!isMainFrame) return;
+    log('Failed to load:', errorDesc, '— retrying in 2s...');
+    setTimeout(() => {      if (mainWindow && !mainWindow.isDestroyed()) {
+        log('Retrying load...');
+        mainWindow.loadURL('http://localhost:1420');
+      }
+    }, 2000);
+  });
+
     const levels = ['verbose','info','warning','error'];
     console.log(`[renderer:${levels[level] || level}] ${message} (${sourceId}:${line})`);
   });
