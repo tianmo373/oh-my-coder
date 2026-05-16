@@ -173,9 +173,20 @@ class RouterConfig:
             "yes",
         )
 
-        # 3b) 读取用户配置的默认模型（优先级高于硬编码 fallback_order）
-        # 兼容 OMC_DEFAULT_MODEL（环境变量）和 DEFAULT_MODEL（.env / omc config set）
+        # 3b) 读取用户配置的默认模型（优先级：环境变量 > config.json）
+        # 兼容 OMC_DEFAULT_MODEL（环境变量）、DEFAULT_MODEL（.env）和 defaults.model（config.json）
         default_model = os.getenv("OMC_DEFAULT_MODEL") or os.getenv("DEFAULT_MODEL", "")
+        if not default_model:
+            # 尝试从 ~/.omc/config.json 读取 defaults.model
+            try:
+                config_path = Path.home() / ".omc" / "config.json"
+                if config_path.exists():
+                    import json
+                    with open(config_path, encoding="utf-8") as f:
+                        data = json.load(f)
+                    default_model = data.get("defaults", {}).get("model", "")
+            except Exception:
+                pass
 
         # 4) 默认故障转移顺序（优先本地模型，然后免费/便宜的云端）
         # 用户配置的默认模型永远排在第一位，而不是硬编码 deepseek
