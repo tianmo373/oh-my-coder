@@ -391,8 +391,30 @@ export default function App() {
   // Track if current message is a task (for conditional TaskProgress display)
   const [isTaskMode, setIsTaskMode] = useState(false);
   const isTaskRequest = (text: string): boolean => {
-    const taskKeywords = ['写', '创建', '实现', '修复', '代码', 'bug', '功能', '改', '加', '添加', '删除', '重构', '优化', '测试', '部署', '配置', '创建', '编写', '生成', '帮我', 'build', 'fix', 'create', 'implement', 'add', 'remove', 'refactor', 'test', 'deploy', 'configure', 'write', 'generate'];
-    return taskKeywords.some(k => text.toLowerCase().includes(k));
+    // Require explicit action + target pattern, not single vague keywords
+    const taskPatterns = [
+      /帮?(我)?写(一个?|一下)?(函数|组件|接口|脚本|模块|页面|文件|类|方法|服务|工具)/i,
+      /帮?(我)?实现(一个?|一下)?(功能|需求|逻辑|接口|算法|特性)/i,
+      /帮?(我)?修复?(一下)?(这个?|那个?)?(bug|错误|问题|漏洞)/i,
+      /帮?(我)?创建?(一个?|一下)?(项目|文件|组件|页面|接口|仓库)/i,
+      /帮?(我)?添加?(一个?|一下)?(功能|字段|接口|组件|参数|配置)/i,
+      /帮?(我)?删除?(一个?|一下)?(文件|代码|行|函数|组件|模块)/i,
+      /帮?(我)?重构?(一下)?(这个?|那个?)?(代码|模块|组件|函数|项目)/i,
+      /帮?(我)?优化?(一下)?(这个?|那个?)?(代码|性能|逻辑|结构|查询)/i,
+      /帮?(我)?配置?(一下)?(环境|服务器|数据库|部署|CI)/i,
+      /帮?(我)?生成?(一个?|一下)?(代码|文档|接口|模板|配置)/i,
+      /帮?(我)?部署?(一下)?(项目|服务|应用|网站)/i,
+      /帮?(我)?测试?(一下)?(这个?|那个?)?(功能|接口|代码|模块)/i,
+      /写(一个?|一下)?(代码|函数|组件|脚本|测试|接口|文档)/i,
+      /修复?(一下)?(这个?|那个?)?(bug|错误|问题|漏洞)/i,
+      /实现(一个?|一下)?(功能|需求|接口|逻辑)/i,
+      /创建?(一个?|一下)?(项目|文件|组件|页面)/i,
+      /添加?(一个?|一下)?(功能|接口|组件|字段)/i,
+      /重构?(一下)?(代码|模块|组件)/i,
+      /优化?(一下)?(代码|性能|逻辑|结构)/i,
+      /(build|fix|create|implement|add|remove|refactor|test|deploy|configure|write|generate)\s+(a |the |this |that |my )?\S+/i,
+    ];
+    return taskPatterns.some(p => p.test(text));
   };
   
   // Task progress state
