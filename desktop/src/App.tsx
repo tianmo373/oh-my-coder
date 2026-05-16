@@ -1030,9 +1030,10 @@ export default function App() {
             <VoiceInput
               onResult={(text) => {
                 const newText = input ? input + ' ' + text : text;
-                setInput(newText);
                 // Auto-send: call handleSendMessage directly to avoid stale input state
-                setTimeout(() => handleSendMessage(newText), 300);
+                handleSendMessage(newText);
+                // Clear input after sending
+                setInput('');
               }}
               disabled={loading}
             />

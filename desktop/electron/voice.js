@@ -56,6 +56,7 @@ async function transcribeAudio(audioBytes) {
   // Build params for Chinese transcription
   const params = new WhisperFullParams(WhisperSamplingStrategy.Greedy);
   params.language = 'zh';
+  params.initial_prompt = '这是一段中文语音，请识别并添加标点符号。你好，今天天气怎么样？我觉得这个想法很好！请问你叫什么名字？';
   params.printProgress = false;
   params.printRealtime = false;
   params.printTimestamps = false;
