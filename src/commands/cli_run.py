@@ -416,11 +416,14 @@ def _run_simple_task(router: ModelRouter, task: str) -> None:
                                 "你是一个任务执行助手。请将用户的任务描述转换为一条或多条 shell 命令。"
                                 "只输出 JSON 数组格式，不要多余的文字。\n"
                                 '格式: [{"cmd": "命令", "desc": "步骤说明"}, ...]\n'
-                                "注意：\n"
-                                "1. 如果是创建文件，用 echo 或 cat 命令\n"
-                                "2. 路径用绝对路径（如 ~/Desktop/xxx）\n"
-                                "3. 每个命令必须独立可执行\n"
-                                '4. 如果任务不需要任何命令（如纯问答），输出 []'
+                                "【严格规则 - 必须遵守】\n"
+                                "1. 只做用户明确要求的事，不要自作主张添加额外步骤\n"
+                                "2. 绝对不能执行 rm/del/remove/unlink 等任何删除操作\n"
+                                "3. 绝对不能修改或覆盖用户已存在的文件\n"
+                                "4. 如果是创建文件，用 echo 或 cat 命令\n"
+                                "5. 路径用绝对路径（如 ~/Desktop/xxx）\n"
+                                "6. 每个命令必须独立可执行\n"
+                                '7. 如果任务不需要任何命令（如纯问答），输出 []'
                             ),
                         ),
                         Message(role="user", content=f"任务: {task}"),
@@ -453,6 +456,19 @@ def _run_simple_task(router: ModelRouter, task: str) -> None:
         except json.JSONDecodeError:
             console.print("[red]模型返回结果解析失败[/red]")
             console.print(f"原始输出:\n{raw}")
+            return
+
+    # 安全过滤：阻止危险命令
+    DANGEROUS_PREFIXES = ("rm ", "rm -rf", "rmdir ", "dd ", "> /dev/", ":(){ :|:& };:")
+    for cmd_info in commands:
+        cmd = cmd_info.get("cmd", "")
+        if any(cmd.strip().startswith(p) for p in DANGEROUS_PREFIXES):
+            console.print(f"[red]⛔ 安全拦截：检测到危险命令 — {cmd}[/red]")
+            console.print(Panel.fit(
+                "[yellow]已阻止执行，这是模型自主生成的命令，不是你要求的。\n"
+                "如需执行危险操作，请直接在工作流模式下运行。[/yellow]",
+                border_style="yellow",
+            ))
             return
 
     # 执行命令
