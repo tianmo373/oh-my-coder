@@ -295,16 +295,52 @@ docker compose up -d</code></pre>
                 </div>
                 <div class="faq-answer">
                     <div class="faq-answer-content">
-                        <p>三种配置方式，推荐环境变量：</p>
-                        <pre><code># 方式1: 环境变量（推荐）
-export DEEPSEEK_API_KEY=your_key_here
+                        <p>三种配置方式，按优先级从高到低：</p>
+                        <p><strong>方式1：环境变量（高优先级）</strong></p>
+                        <pre><code># DeepSeek（代码能力强）
+export DEEPSEEK_API_KEY=sk_xxxxxxxx
 
-# 方式2: .env 文件
-cp examples/.env.example .env
-# 编辑 .env 填入 Key
+# 智谱 GLM（完全免费，推荐入门）
+export ZHIPUAI_API_KEY=xxxxxxxx
 
-# 方式3: CLI 配置
-omc config set -k DEEPSEEK_API_KEY -v "your_key"</code></pre>
+# Kimi（128K 长上下文）
+export MOONSHOT_API_KEY=sk_xxxxxxxx</code></pre>
+                        <p><strong>方式2：CLI 配置命令</strong></p>
+                        <pre><code># 设置 DeepSeek Key
+omc config set -k DEEPSEEK_API_KEY -v "sk_xxxxxxxx"
+
+# 设置智谱 GLM Key
+omc config set -k ZHIPUAI_API_KEY -v "xxxxxxxx"
+
+# 设置默认模型
+omc config set --default-model glm-4-flash
+
+# 查看当前配置
+omc status</code></pre>
+                        <p><strong>方式3：直接编辑配置文件</strong>（~/.omc/config.json）</p>
+                        <pre><code>{
+  "defaults": {
+    "model": "glm-4-flash"
+  },
+  "models": {
+    "deepseek": {
+      "api_key": "sk_xxxxxxxx"
+    },
+    "glm": {
+      "api_key": "xxxxxxxx"
+    }
+  }
+}</code></pre>
+                        <div class="tip-box">
+                            <div class="tip-box-title">🎯 零成本入门</div>
+                            <p>用智谱 GLM-4-Flash 完全免费，不需要充值。去 <a href="https://open.bigmodel.cn/" target="_blank">open.bigmodel.cn</a> 注册获取 API Key 即可。</p>
+                        </div>
+                        <p><strong>⚠️ 常见陷阱：</strong></p>
+                        <ul>
+                            <li>如果配置了智谱 Key 但 CLI 仍然报 DeepSeek 错误 → 检查默认模型是否设为智谱：<code>omc config set --default-model glm-4-flash</code></li>
+                            <li>环境变量名注意大小写：DeepSeek 用 <code>DEEPSEEK_API_KEY</code>，智谱用 <code>ZHIPUAI_API_KEY</code></li>
+                            <li>环境变量设置后要重新打开终端才生效</li>
+                        </ul>
                         <p><strong>获取 API Key：</strong></p>
                         <ul>
                             <li><a href="https://platform.deepseek.com/" target="_blank">DeepSeek</a> - 推荐首选，代码能力强</li>
@@ -322,16 +358,42 @@ omc config set -k DEEPSEEK_API_KEY -v "your_key"</code></pre>
                 </div>
                 <div class="faq-answer">
                     <div class="faq-answer-content">
-                        <pre><code># 1. 验证 CLI
+                        <pre><code># 验证 CLI
 omc --version
 
-# 2. 运行测试
-pytest tests/ -v
+# 查看可用命令
+omc --help</code></pre>
+                        <p>如果提示 <code>omc: command not found</code>，见下一个问题。</p>
+                    </div>
+                </div>
+            </div>
 
-# 3. 启动 Web 界面
-python -m src.web.app
-# 浏览器打开: http://localhost:8000</code></pre>
-                        <p>如果以上命令都能正常执行，说明安装成功。</p>
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>安装后提示 "omc: command not found" 怎么办？</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p><strong>原因：</strong>macOS 使用系统自带 Python 3.9 时，pip 安装的脚本不在默认 PATH 中。</p>
+                        <p><strong>解决：</strong></p>
+                        <ol>
+                            <li>先找到 pip 安装路径：
+                                <pre><code>python3 -m site --user-base</code></pre>
+                            </li>
+                            <li>把 bin 目录加到 PATH：
+                                <pre><code>export PATH="$HOME/Library/Python/3.9/bin:$PATH"</code></pre>
+                            </li>
+                            <li>加到 <code>~/.zshrc</code> 永久生效：
+                                <pre><code>echo 'export PATH="$HOME/Library/Python/3.9/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc</code></pre>
+                            </li>
+                        </ol>
+                        <p>然后重新打开终端，输入 <code>omc --version</code> 验证。</p>
+                        <div class="tip-box">
+                            <div class="tip-box-title">💡 提示</div>
+                            <p>Windows 用户：用 pip 安装后，通常会自动添加到 PATH，如果找不到可以重启终端或重新登录。</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -609,14 +671,34 @@ omc status</code></pre>
                             <li><strong>检查网络</strong>
                                 <pre><code>ping api.deepseek.com</code></pre>
                             </li>
-                            <li><strong>增加超时时间</strong>
-                                <pre><code>export REQUEST_TIMEOUT=120  # 秒</code></pre>
+                            <li><strong>切换模型试试</strong> — 如果正在用 DeepSeek，换成智谱 GLM（免费更快）：
+                                <pre><code>omc config set --default-model glm-4-flash</code></pre>
                             </li>
-                            <li><strong>切换备用模型</strong>
-                                <pre><code># 使用 GLM（完全免费）
-omc config set -k DEFAULT_MODEL -v "glm"</code></pre>
-                            </li>
+                            <li><strong>检查 API Key 是否有效</strong> — 在对应平台后台查看 Key 的状态</li>
                         </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>配置了智谱 API Key，但 CLI 还是报 "DeepSeek API Key 缺失" 怎么办？</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p><strong>原因：</strong>CLI 的默认模型还是 DeepSeek，但 DeepSeek 的 API Key 没配。</p>
+                        <p><strong>解决：</strong></p>
+                        <pre><code># 1. 把默认模型设为智谱
+omc config set --default-model glm-4-flash
+
+# 2. 验证
+omc status</code></pre>
+                        <p>或者把 DeepSeek Key 也配置上，让系统自动选择可用模型。</p>
+                        <div class="tip-box">
+                            <div class="tip-box-title">💡 原理</div>
+                            <p>系统根据 <code>--default-model</code> 决定哪个模型是首选。配置了智谱 Key 但默认模型还是 DeepSeek，就会先去查 DeepSeek Key，查不到就报错。</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -689,11 +771,26 @@ omc run "使用 my_agent 处理任务"</code></pre>
                     <span class="faq-icon">+</span>
                 </div>
                 <div class="faq-answer">
-                    <p>默认 <code>omc run</code> 会走完整工作流（6个步骤），适合复杂开发任务。对于简单任务（创建文件、运行命令等），加 <code>--simple</code> 或 <code>-s</code> 参数跳过工作流直接执行：</p>
-                    <pre><code># 快速创建文件（不走工作流）
+                    <div class="faq-answer-content">
+                        <p>默认 <code>omc run</code> 会走完整工作流（6个步骤：探索→分析→规划→设计→执行→验证），适合复杂开发任务，但简单任务会很慢。</p>
+                        <p>对于简单任务（创建文件、运行命令、查询信息等），加 <code>--simple</code> 或 <code>-s</code> 参数跳过工作流直接执行：</p>
+                        <pre><code># 快速创建文件（不走工作流）
 omc run --simple "帮我在桌面创建一个 hello.txt"
 # 简写
-omc run -s "帮我打印当前目录结构"</code></pre>
+omc run -s "帮我打印当前目录结构"
+omc run -s "查看当前 Python 版本"</code></pre>
+                        <div class="tip-box">
+                            <div class="tip-box-title">🛡️ 安全提示</div>
+                            <p><code>--simple</code> 模式自动阻止危险命令（rm -rf、sudo、del 等），保护你的系统安全。</p>
+                        </div>
+                        <p><strong>什么情况用 --simple，什么情况不用？</strong></p>
+                        <ul>
+                            <li>✅ 创建文件、改配置、查信息 → 用 --simple</li>
+                            <li>✅ 运行一个 shell 命令 → 用 --simple</li>
+                            <li>❌ 新功能开发、代码重构 → 不用 --simple，走完整工作流</li>
+                            <li>❌ Bug 修复、代码审查 → 不用 --simple</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
