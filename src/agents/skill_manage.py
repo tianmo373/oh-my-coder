@@ -336,7 +336,6 @@ updated_at: 2026-04-12
 
     def _post_process(self, result: str, context: AgentContext) -> AgentOutput:
         return AgentOutput(agent_name=self.name, 
-            agent_name=self.name,
             status=AgentStatus.COMPLETED,
             result=result,
             recommendations=[

@@ -500,7 +500,6 @@ export const PageLayout: React.FC = () => {
                     artifacts[filename] = str(output_dir / filename)
 
         return AgentOutput(agent_name=self.name, 
-            agent_name=self.name,
             status=AgentStatus.COMPLETED,
             result=result,
             artifacts=artifacts,
