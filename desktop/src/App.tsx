@@ -720,26 +720,35 @@ export default function App() {
       }
 
       // Quick fix: use direct LLM API call instead of `omc run`
-      // Get API key + endpoint for current model from SettingsPanel encrypted storage
+      // Get API key + endpoint for current model
       let endpoint = '';
       let apiKey = '';
       try {
-        const stored = localStorage.getItem('omc-model-configs');
-        if (stored) {
-          // XOR decrypt (same as SettingsPanel.tsx)
-          const decoded = atob(stored);
-          let decrypted = '';
-          const key = 'omc-v1-key-2024';
-          for (let i = 0; i < decoded.length; i++) {
-            decrypted += String.fromCharCode(decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-          }
-          const configs = JSON.parse(decrypted);
-          const cfg = configs[currentModel] || {};
-          endpoint = cfg.endpoint || '';
+        // Priority 1: Read from IPC (~/.omc/config.json) via Electron main process
+        if (window.omc?.modelConfigList) {
+          const ipcConfigs = await window.omc.modelConfigList();
+          const cfg = ipcConfigs[currentModel] || {};
+          endpoint = cfg.base_url || '';
           apiKey = cfg.api_key || '';
         }
+        // Priority 2: Fallback to localStorage (encrypted)
         if (!apiKey) {
-          // Fallback: legacy unencrypted omc-api-keys
+          const stored = localStorage.getItem('omc-model-configs');
+          if (stored) {
+            const decoded = atob(stored);
+            let decrypted = '';
+            const key = 'omc-v1-key-2024';
+            for (let i = 0; i < decoded.length; i++) {
+              decrypted += String.fromCharCode(decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+            }
+            const configs = JSON.parse(decrypted);
+            const cfg = configs[currentModel] || {};
+            endpoint = cfg.endpoint || '';
+            apiKey = cfg.api_key || '';
+          }
+        }
+        // Priority 3: Legacy unencrypted omc-api-keys
+        if (!apiKey) {
           const saved = localStorage.getItem('omc-api-keys');
           if (saved) {
             const entries = JSON.parse(saved);
@@ -763,6 +772,7 @@ export default function App() {
         endpoint = DEFAULT_ENDPOINTS[provider] || '';
       }
 
+      console.log('[Chat] Sending to', endpoint, 'model=', currentModel, 'key=', apiKey ? apiKey.slice(0, 10) + '...' : 'EMPTY!');
       const result = await omcApi.chatDirect({ endpoint, model: currentModel, apiKey, message: text.trim() });
 
       // Parse SSE stream output to extract plain text content

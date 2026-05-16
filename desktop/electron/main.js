@@ -119,6 +119,7 @@ function setupIpc() {
   // Chat — direct LLM API call (quick fix: bypasses omc run)
   // Payload: { endpoint, model, apiKey, message }
   ipcMain.handle('omc:chat:direct', async (event, { endpoint, model, apiKey, message }) => {
+    console.log('[chatDirect] endpoint=', endpoint, 'model=', model, 'hasKey=', !!apiKey, 'keyLen=', apiKey?.length);
     try {
       const { execFileSync } = require('child_process');
       const { spawn } = require('child_process');
@@ -489,8 +490,18 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
-  stopOmcServer();
-  app.quit();
+  // On macOS, keep app running even when all windows are closed
+  if (process.platform !== 'darwin') {
+    stopOmcServer();
+    app.quit();
+  }
+});
+
+// On macOS, re-create window when clicking dock icon
+app.on('activate', () => {
+  if (mainWindow === null) {
+    createWindow();
+  }
 });
 
 app.on('before-quit', () => stopOmcServer());

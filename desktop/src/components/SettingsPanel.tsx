@@ -57,7 +57,18 @@ function xorEncrypt(text: string, key: string): string {
   for (let i = 0; i < text.length; i++) {
     result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
   }
-  return btoa(result); // base64 encode
+  // Use TextEncoder to handle Unicode characters (btoa only supports Latin1)
+  try {
+    return btoa(unescape(encodeURIComponent(result)));
+  } catch {
+    // Fallback: encode as UTF-8 bytes then base64
+    const bytes = new TextEncoder().encode(result);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
 }
 
 function xorDecrypt(encoded: string, key: string): string {
@@ -67,7 +78,12 @@ function xorDecrypt(encoded: string, key: string): string {
     for (let i = 0; i < text.length; i++) {
       result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
     }
-    return result;
+    // Handle Unicode characters
+    try {
+      return decodeURIComponent(escape(result));
+    } catch {
+      return result; // fallback if not URI-encoded
+    }
   } catch {
     return encoded; // fallback for unencrypted data
   }
