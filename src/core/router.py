@@ -712,7 +712,12 @@ class ModelRouter:
         3. 任务类型识别：自动降级/升级 tier
         4. override_model：用户指定模型时直接使用，忽略自动选择
         """
-        # 0. 处理用户指定的模型覆盖
+        # 0. 兼容 dict 消息格式（自动转为 Message 对象）
+        if messages and isinstance(messages[0], dict):
+            from ..models.base import Message
+            messages = [Message(**m) if isinstance(m, dict) else m for m in messages]
+
+        # 0b. 处理用户指定的模型覆盖
         forced_provider: Optional[str] = None
         forced_tier: Optional[str] = None
         if override_model:
