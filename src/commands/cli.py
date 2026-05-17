@@ -302,6 +302,7 @@ def agents():
         DocumentAgent,
         DesignerAgent,
         DevOpsAgent,
+        DocumentAgent,
         ExecutorAgent,
         ExploreAgent,
         GitMasterAgent,
