@@ -299,6 +299,7 @@ def agents():
         DataAgent,
         DatabaseAgent,
         DebuggerAgent,
+        DocumentAgent,
         DesignerAgent,
         DevOpsAgent,
         ExecutorAgent,
@@ -375,6 +376,11 @@ def agents():
             "skill-manage",
             SkillManageAgent.description,
             SkillManageAgent.default_tier,
+        ),
+        (
+            "document",
+            DocumentAgent.description,
+            DocumentAgent.default_tier,
         ),
     ]
 
