@@ -45,13 +45,35 @@ docker compose up -d
 # 验证 CLI
 omc --version
 
-# 运行测试
-pytest tests/ -v
-
-# 启动 Web 界面
-python -m src.web.app
-# 浏览器打开: http://localhost:8000
+# 查看可用命令
+omc --help
 ```
+
+如果提示 `omc: command not found`，见下一个问题。
+
+### Q3.1: 安装后提示 "omc: command not found" 怎么办？
+
+**A:** macOS 使用系统自带 Python 3.9 时，pip 安装的脚本不在默认 PATH 中。
+
+**解决：**
+
+1. 先找到 pip 安装路径：
+   ```bash
+   python3 -m site --user-base
+   ```
+2. 把 bin 目录加到 PATH：
+   ```bash
+   export PATH="$HOME/Library/Python/3.9/bin:$PATH"
+   ```
+3. 加到 `~/.zshrc` 永久生效：
+   ```bash
+   echo 'export PATH="$HOME/Library/Python/3.9/bin:$PATH"' >> ~/.zshrc
+   source ~/.zshrc
+   ```
+
+然后重新打开终端，输入 `omc --version` 验证。
+
+> 💡 Windows 用户：pip 安装后通常会自动添加到 PATH，如果找不到可以重启终端或重新登录。
 
 ---
 
@@ -73,19 +95,58 @@ python -m src.web.app
 
 ### Q5: API Key 如何配置？
 
-**A:** 提供三种配置方式：
+**A:** 三种配置方式，按优先级从高到低：
 
+**方式1：环境变量（高优先级）**
 ```bash
-# 方式1: 环境变量（推荐）
-export DEEPSEEK_API_KEY=your_key_here
+# DeepSeek（代码能力强）
+export DEEPSEEK_API_KEY=sk_xxxxxxxx
 
-# 方式2: .env 文件
-echo "DEEPSEEK_API_KEY=your_key_here" > .env
+# 智谱 GLM（完全免费，推荐入门）
+export ZHIPUAI_API_KEY=xxxxxxxx
 
-# 方式3: 代码中配置
-from src.core.router import RouterConfig
-config = RouterConfig(deepseek_api_key="your_key_here")
+# Kimi（128K 长上下文）
+export MOONSHOT_API_KEY=sk_xxxxxxxx
 ```
+
+**方式2：CLI 配置命令**
+```bash
+# 设置 DeepSeek Key
+omc config set -k DEEPSEEK_API_KEY -v "sk_xxxxxxxx"
+
+# 设置智谱 GLM Key
+omc config set -k ZHIPUAI_API_KEY -v "xxxxxxxx"
+
+# 设置默认模型
+omc config set --default-model glm-4-flash
+
+# 查看当前配置
+omc status
+```
+
+**方式3：直接编辑配置文件**（~/.omc/config.json）
+```json
+{
+  "defaults": {
+    "model": "glm-4-flash"
+  },
+  "models": {
+    "deepseek": {
+      "api_key": "sk_xxxxxxxx"
+    },
+    "glm": {
+      "api_key": "xxxxxxxx"
+    }
+  }
+}
+```
+
+> 🎯 **零成本入门**：用智谱 GLM-4-Flash 完全免费，不需要充值。去 [open.bigmodel.cn](https://open.bigmodel.cn/) 注册获取 API Key 即可。
+
+**⚠️ 常见陷阱：**
+- 如果配置了智谱 Key 但 CLI 仍然报 DeepSeek 错误 → 检查默认模型：`omc config set --default-model glm-4-flash`
+- 环境变量名注意大小写：DeepSeek 用 `DEEPSEEK_API_KEY`，智谱用 `ZHIPUAI_API_KEY`
+- 环境变量设置后要重新打开终端才生效
 
 ### Q6: API Key 泄露了怎么办？
 
@@ -176,12 +237,23 @@ omc status
    omc run "重构 src/api 模块，使其符合 RESTful 规范"
    ```
 
-2. **使用更快的模型**
+2. **简单任务用 --simple 模式**
    ```bash
-   export DEEPSEEK_MODEL=deepseek-chat  # DeepSeek 推荐模型
+   # 创建文件、查信息等简单任务
+   omc run --simple "帮我在桌面创建一个 hello.txt"
+   # 简写
+   omc run -s "查看当前 Python 版本"
+   ```
+   > `--simple` 模式跳过6步工作流直接执行，自动阻止危险命令（rm -rf、sudo 等）。
+   > ✅ 创建文件、改配置、查信息 → 用 --simple
+   > ❌ 新功能开发、代码重构 → 不用 --simple
+
+3. **使用更快的模型**
+   ```bash
+   omc config set --default-model glm-4-flash  # 免费且快
    ```
 
-3. **分步执行**
+4. **分步执行**
    ```bash
    # 先探索
    omc explore .
@@ -210,9 +282,24 @@ omc status
 ```
 
 常见原因：
-- Key 名称拼写错误
-- 未重启终端/IDE
-- .env 文件路径错误
+- Key 名称拼写错误（注意：智谱用 `ZHIPUAI_API_KEY`，不是 `GLM_API_KEY`）
+- 未重启终端/IDE（环境变量需重新加载）
+- .env 文件路径错误（应在项目根目录）
+
+### Q12.1: 配置了智谱 API Key，但 CLI 还是报 "DeepSeek API Key 缺失" 怎么办？
+
+**A:** CLI 的默认模型还是 DeepSeek，但 DeepSeek 的 API Key 没配。
+
+**解决：**
+```bash
+# 把默认模型设为智谱
+omc config set --default-model glm-4-flash
+
+# 验证
+omc status
+```
+
+> 💡 系统根据 `--default-model` 决定哪个模型是首选。配置了智谱 Key 但默认模型还是 DeepSeek，就会先去查 DeepSeek Key，查不到就报错。
 
 ### Q13: 模型调用超时怎么办？
 
@@ -399,4 +486,4 @@ save_summary(summary, format="txt")   # 纯文本
 
 ---
 
-**最后更新**: 2026-04-08
+**最后更新**: 2026-05-17
