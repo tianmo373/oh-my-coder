@@ -166,6 +166,12 @@ web_dir = Path(__file__).parent
 app.mount("/static", StaticFiles(directory=web_dir / "static"), name="static")
 templates = Jinja2Templates(directory=web_dir / "templates")
 
+
+@app.get("/favicon.ico")
+async def favicon():
+    from fastapi.responses import FileResponse
+    return FileResponse(web_dir / "static" / "favicon.svg", media_type="image/svg+xml")
+
 # 注册增强路由
 app.include_router(history_router)
 app.include_router(agent_router)

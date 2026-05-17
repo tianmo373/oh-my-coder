@@ -244,10 +244,18 @@ def _load_api_key_from_config() -> Optional[str]:
 
 
 def _open_browser(url: str) -> None:
-    import webbrowser
+    import platform
+    import subprocess
 
     with contextlib.suppress(Exception):
-        webbrowser.open(url)
+        system = platform.system()
+        if system == "Darwin":
+            subprocess.Popen(["open", url])
+        elif system == "Windows":
+            subprocess.Popen(["cmd", "/c", "start", url])
+        else:
+            import webbrowser
+            webbrowser.open(url)
 
 
 @app.callback(invoke_without_command=True)
