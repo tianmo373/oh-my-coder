@@ -1260,9 +1260,12 @@
                     <span class="comment"># 第 4 步：验证安装成功（应该看到 v33.x.x 版本号）</span><br>
                     npx electron --version<br><br>
                     <span class="comment"># ✅ 到这里如果都没报错，说明安装成功了！下面启动：</span><br>
-                    <span class="comment"># 第 5 步：启动！（大概 5-10 秒后会自动弹出一个桌面窗口 🎉）</span><br>
-                    <span class="comment"># 启动后不要关闭这个终端窗口！关闭窗口就退出了</span><br>
-                    npm run electron:dev
+                    <span class="comment"># 第 5 步：分两步启动（更稳定，方便排查问题）</span><br>
+                    <span class="comment"># 5a. 先启动前端服务（看到「ready in xxx ms」就对了 ✅）</span><br>
+                    npx vite<br><br>
+                    <span class="comment"># ⚠️ 不要关闭上面这个终端！新开一个终端窗口，继续：</span><br>
+                    <span class="comment"># 5b. 启动桌面窗口（会自动弹出来 🎉）</span><br>
+                    npx electron .
                 </div>
             </div>
             <div class="code-block" style="margin-top: 16px;">
@@ -1283,8 +1286,9 @@
                     &nbsp;&nbsp;→ 再试一次：<code style="background:#fff;padding:2px 6px;border-radius:3px;">rm -rf node_modules package-lock.json &amp;&amp; npm install</code><br><br>
                     <strong>2. 跑 <code>npx electron --version</code> 说找不到命令</strong><br>
                     &nbsp;&nbsp;→ 说明第 3 步没装成功，重新做第 2 步 + 第 3 步（记得先设 ELECTRON_MIRROR）<br><br>
-                    <strong>3. 跑 <code>npm run electron:dev</code> 后光标停住不动、没反应</strong><br>
-                    &nbsp;&nbsp;→ 先跑 <code>npx electron --version</code>，如果报错就重新做第 3 步<br><br>
+                    <strong>3. 跑 <code>npx vite</code> 后光标停住不动、没反应</strong><br>
+                    &nbsp;&nbsp;→ 试试用 <code style="background:#fff;padding:2px 6px;border-radius:3px;">zsh --no-rcs</code> 启动一个干净终端再跑（排除 zsh 插件干扰）<br>
+                    &nbsp;&nbsp;→ 如果 <code>zsh --no-rcs</code> 能正常启动，说明是你的终端配置问题，可以忽略或重置 zsh 配置<br><br>
                     <strong>4. 提示「port 1420 被占用」</strong><br>
                     &nbsp;&nbsp;→ 粘贴这行命令：<code style="background:#fff;padding:2px 6px;border-radius:3px;">lsof -ti:1420 | xargs kill -9</code>，然后再启动<br><br>
                     <strong>5. 窗口是白的 / 没内容</strong><br>
