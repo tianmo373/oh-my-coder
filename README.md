@@ -174,14 +174,14 @@ Oh My Coder 是一个**多智能体协作编程系统**，通过多个专业 Age
 ### 三步快速配置
 
 ```bash
-# 方式1: DeepSeek（推荐）
-omc config set -k DEEPSEEK_API_KEY -v "your_key"
-
-# 方式2: 智谱 GLM（需注册获取 API Key，有免费额度）
+# 方式1: 智谱 GLM（推荐，完全免费）
 omc config set -k GLM_API_KEY -v "your_key"  # https://open.bigmodel.cn/
 
-# 方式3: MiMo（长上下文支持）
-omc config set -k MIMOX_API_KEY -v "your_key"
+# 方式2: DeepSeek（新用户赠送余额，128K 上下文）
+omc config set -k DEEPSEEK_API_KEY -v "your_key"  # https://platform.deepseek.com/
+
+# 方式3: 小米 MiMo（长上下文支持）
+omc config set -k MIMOX_API_KEY -v "your_key"  # https://platform.xiaomimimo.com/
 ```
 
 ### 免费模型对比
@@ -190,11 +190,11 @@ omc config set -k MIMOX_API_KEY -v "your_key"
 
 | 模型 | 免费额度 | 上下文 | 推荐理由 |
 |------|----------|--------|----------|
-| **DeepSeek V4** | 新用户赠送余额 | **128K** | 首选，代码能力强，性价比高 |
-| **智谱 GLM-4.7-Flash** | **完全免费** | **200K** | 零成本，中文优化，128K 输出 |
+| **智谱 GLM-4.7-Flash** | **完全免费** | **200K** | 首选，零成本，中文优化，128K 输出 |
+| **DeepSeek V4** | 新用户赠送余额 | **128K** | 代码能力强，性价比高 |
 | **小米 MiMo** | 免费一周活动 | 长上下文 | 小米出品，大文件处理 |
 
-💡 **推荐策略**：先用 GLM-4.7-Flash（完全免费），不够再切换 DeepSeek
+💡 **推荐策略**：先用 GLM-4.7-Flash（完全免费），不够再切换 DeepSeek，长文档用 MiMo
 
 详细对比: [免费模型推荐](docs/guide/free-models.md)
 
