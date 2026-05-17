@@ -1249,7 +1249,8 @@
                 <div class="code-header"><span class="code-lang">👉 跟着做：复制每行，粘贴到终端，按回车，等完成再粘贴下一行</span><button class="copy-btn" onclick="copyCode(this)">复制全部</button></div>
                 <div class="code-content">
                     <span class="comment"># 第 1 步：把项目下载到电脑（大概 10 秒）</span><br>
-                    git clone https://github.com/VOBC/oh-my-coder.git<br>
+                    <span class="comment"># ⚠️ 如果提示「目录已存在」，说明你之前下过，跳过这行，直接做下一行 cd</span><br>
+                    git clone https://github.com/VOBC/oh-my-coder.git || true<br>
                     cd oh-my-coder/desktop<br><br>
                     <span class="comment"># 第 2 步：设置国内下载加速（国内用户必须做，否则会卡住）</span><br>
                     export ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/<br><br>
@@ -1258,7 +1259,9 @@
                     npm install<br><br>
                     <span class="comment"># 第 4 步：验证安装成功（应该看到 v33.x.x 版本号）</span><br>
                     npx electron --version<br><br>
-                    <span class="comment"># 第 5 步：启动！（大概 5-10 秒后弹出窗口）</span><br>
+                    <span class="comment"># ✅ 到这里如果都没报错，说明安装成功了！下面启动：</span><br>
+                    <span class="comment"># 第 5 步：启动！（大概 5-10 秒后会自动弹出一个桌面窗口 🎉）</span><br>
+                    <span class="comment"># 启动后不要关闭这个终端窗口！关闭窗口就退出了</span><br>
                     npm run electron:dev
                 </div>
             </div>
