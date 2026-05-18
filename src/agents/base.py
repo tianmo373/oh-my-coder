@@ -128,7 +128,7 @@ class BaseAgent(ABC):
 
     # 可选属性
     icon: str = "🤖"
-    tools: list[str] = field(default_factory=lambda: ["web_fetch"])  # 可用工具列表，默认启用 web_fetch
+    tools: list[str] = ["web_fetch"]  # 可用工具列表，默认启用 web_fetch
 
     def __init__(
         self,
