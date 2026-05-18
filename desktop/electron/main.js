@@ -368,12 +368,10 @@ function setupIpc() {
             }
             await new Promise(r => setTimeout(r, 30));
           }
-        } else {
-          // No content, send done signal
-          const doneData = JSON.stringify({ choices: [{ delta: { content: '' } }] });
-          if (event && event.sender && !event.sender.isDestroyed()) {
-            event.sender.send('omc:chat:chunk', 'data: ' + doneData + '\n\n');
-          }
+        }
+        // Send [DONE] to signal end of stream
+        if (event && event.sender && !event.sender.isDestroyed()) {
+          event.sender.send('omc:chat:chunk', 'data: [DONE]\n\n');
         }
         return { code: 0, stdout: finalResponse, stderr: '' };
       } else {
