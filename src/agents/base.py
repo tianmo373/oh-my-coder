@@ -28,6 +28,7 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
+from src.models.base import Message, ModelResponse
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,6 @@ WEB_FETCH_TOOL_SCHEMA = {
 SUPPORTED_TOOLS = {"web_fetch": WEB_FETCH_TOOL_SCHEMA}
 
 if TYPE_CHECKING:
-    from src.models.base import Message, ModelResponse
     from src.models.router import ModelRouter
 
 
@@ -418,20 +418,34 @@ class BaseAgent(ABC):
 
         return response
 
-    async def _web_fetch_tool(self, args: dict) -> str:
-        """web_fetch 工具：获取 URL 的网页文本内容"""
+    async def _web_fetch_tool(self, args_json) -> str:
+        """web_fetch 工具：获取 URL 的网页文本内容（HTML 转纯文本）"""
+        import json, re, subprocess
+        # 接受 dict（直接调用）或 JSON 字符串（call_model 传过来）
+        if isinstance(args_json, dict):
+            args = args_json
+        else:
+            try:
+                args = json.loads(args_json)
+            except Exception:
+                return f"[web_fetch error] Invalid arguments (not JSON): {str(args_json)[:200]}"
+        
         url = args.get("url", "")
         if not url:
-            return "Error: missing url parameter"
-        import subprocess
+            return "[web_fetch error] Missing url parameter"
+        
         try:
             result = subprocess.run(
                 ["curl", "-s", "-L", "--max-time", "15", url],
                 capture_output=True, timeout=20
             )
-            return result.stdout.decode("utf-8", errors="replace")[:8000]
+            html = result.stdout.decode("utf-8", errors="replace")[:8000]
+            # 简单去除 HTML 标签
+            text = re.sub(r'<[^>]+>', ' ', html)
+            text = re.sub(r'\s+', ' ', text).strip()
+            return text[:8000]
         except Exception as e:
-            return f"Error: {e}"
+            return f"[web_fetch error] {type(e).__name__}: {e}"
 
     def get_last_output(self) -> Optional[AgentOutput]:
         """获取最后一次输出"""

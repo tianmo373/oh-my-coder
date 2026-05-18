@@ -122,6 +122,10 @@ class MimoModel(BaseModel):
             item = {"role": msg.role, "content": msg.content}
             if msg.name:
                 item["name"] = msg.name
+            if msg.tool_calls:  # assistant 消息的工具调用
+                item["tool_calls"] = msg.tool_calls
+            if msg.tool_call_id:  # tool 消息的工具调用 ID
+                item["tool_call_id"] = msg.tool_call_id
             formatted.append(item)
         return formatted
 

@@ -147,6 +147,10 @@ class WenxinModel(BaseModel):
                 system_content = msg.content
             else:
                 item = {"role": msg.role, "content": msg.content}
+                if msg.tool_calls:
+                    item["tool_calls"] = msg.tool_calls
+                if msg.tool_call_id:
+                    item["tool_call_id"] = msg.tool_call_id
                 formatted.append(item)
 
         # 如果有 system 内容，合并到第一条 user 消息

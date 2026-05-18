@@ -140,9 +140,14 @@ class OllamaModel(BaseModel):
         start_time = time.time()
 
         # 转换消息格式
-        ollama_messages = [
-            {"role": msg.role, "content": msg.content} for msg in messages
-        ]
+        ollama_messages = []
+        for msg in messages:
+            item: dict[str, Any] = {"role": msg.role, "content": msg.content}
+            if msg.tool_calls:
+                item["tool_calls"] = msg.tool_calls
+            if msg.tool_call_id:
+                item["tool_call_id"] = msg.tool_call_id
+            ollama_messages.append(item)
 
         # 构建 Ollama API 请求
         payload = {
@@ -221,9 +226,14 @@ class OllamaModel(BaseModel):
         client = await self._get_client()
 
         # 转换消息格式
-        ollama_messages = [
-            {"role": msg.role, "content": msg.content} for msg in messages
-        ]
+        ollama_messages = []
+        for msg in messages:
+            item: dict[str, Any] = {"role": msg.role, "content": msg.content}
+            if msg.tool_calls:
+                item["tool_calls"] = msg.tool_calls
+            if msg.tool_call_id:
+                item["tool_call_id"] = msg.tool_call_id
+            ollama_messages.append(item)
 
         payload = {
             "model": self.model_name,

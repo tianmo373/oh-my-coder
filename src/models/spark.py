@@ -98,7 +98,12 @@ class SparkModel(BaseModel):
             if msg.role == "system":
                 formatted.append({"role": "user", "content": msg.content})
             else:
-                formatted.append({"role": msg.role, "content": msg.content})
+                item = {"role": msg.role, "content": msg.content}
+                if msg.tool_calls:
+                    item["tool_calls"] = msg.tool_calls
+                if msg.tool_call_id:
+                    item["tool_call_id"] = msg.tool_call_id
+                formatted.append(item)
         return formatted
 
     async def generate(self, messages: list[Message], **kwargs) -> ModelResponse:
