@@ -361,10 +361,7 @@ function setupIpc() {
           for (let i = 0; i < chunks.length; i++) {
             const isLast = i === chunks.length - 1;
             const doneData = JSON.stringify({
-              content: chunks[i],
-              done: isLast,
-              usage: finalData.usage || {},
-              model: finalData.model || model,
+              choices: [{ delta: { content: chunks[i] } }],
             });
             if (event && event.sender && !event.sender.isDestroyed()) {
               event.sender.send('omc:chat:chunk', 'data: ' + doneData + '\n\n');
@@ -373,7 +370,7 @@ function setupIpc() {
           }
         } else {
           // No content, send done signal
-          const doneData = JSON.stringify({ content: '', done: true });
+          const doneData = JSON.stringify({ choices: [{ delta: { content: '' } }] });
           if (event && event.sender && !event.sender.isDestroyed()) {
             event.sender.send('omc:chat:chunk', 'data: ' + doneData + '\n\n');
           }
