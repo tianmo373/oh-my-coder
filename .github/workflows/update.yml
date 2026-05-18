@@ -16,7 +16,7 @@ jobs:
         with:
           ref: main
 
-      - name: Sync upstream changes
+      - name: update changes
         uses: repo-sync/pull-request@v2
         with:
           source_branch: "main"
