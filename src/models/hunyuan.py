@@ -167,6 +167,7 @@ class HunyuanModel(BaseModel):
                 "messages": self._format_messages(messages),
                 "max_tokens": kwargs.get("max_tokens", self.config.max_tokens),
                 "temperature": kwargs.get("temperature", self.config.temperature),
+                **({"tools": kwargs["tools"]} if "tools" in kwargs and kwargs["tools"] else {}),
             }
         )
 

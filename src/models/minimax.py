@@ -115,6 +115,9 @@ class MiniMaxModel(BaseModel):
             "max_tokens": kwargs.get("max_tokens", self.config.max_tokens),
             "temperature": kwargs.get("temperature", self.config.temperature),
         }
+        if "tools" in kwargs and kwargs["tools"]:
+            request_body["tools"] = kwargs["tools"]
+            request_body["tool_choice"] = kwargs.get("tool_choice", "auto")
 
         if "top_p" in kwargs:
             request_body["top_p"] = kwargs["top_p"]
@@ -129,6 +132,7 @@ class MiniMaxModel(BaseModel):
 
             choice = data["choices"][0]
             content = choice["messages"][-1]["content"]
+            tool_calls = choice.get("tool_calls", [])
 
             usage_data = data.get("usage", {})
             usage = Usage(
@@ -146,6 +150,7 @@ class MiniMaxModel(BaseModel):
                 usage=usage,
                 finish_reason=choice.get("finish_reason", "stop"),
                 latency_ms=latency_ms,
+                tool_calls=tool_calls,
             )
 
         except httpx.HTTPStatusError as e:

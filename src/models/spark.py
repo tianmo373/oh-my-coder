@@ -117,6 +117,8 @@ class SparkModel(BaseModel):
                 "message": {"text": self._format_messages(messages)},
             },
         }
+        if "tools" in kwargs and kwargs["tools"]:
+            request_body["payload"]["tools"] = kwargs["tools"]
         url = f"{self.config.base_url}?host=spark-api.xf-yun.com"
         start_time = time.time()
         try:

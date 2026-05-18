@@ -156,6 +156,8 @@ class OllamaModel(BaseModel):
                 "num_ctx": kwargs.get("max_tokens", 4096),
             },
         }
+        if "tools" in kwargs and kwargs["tools"]:
+            payload["tools"] = kwargs["tools"]
 
         try:
             response = await client.post(
@@ -168,7 +170,7 @@ class OllamaModel(BaseModel):
 
             # 解析响应
             content = data.get("message", {}).get("content", "")
-            tool_calls = []
+            tool_calls = data.get("message", {}).get("tool_calls", [])
             model = data.get("model", self.model_name)
 
             # Ollama 返回的 token 统计

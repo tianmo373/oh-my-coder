@@ -138,6 +138,10 @@ class TongyiModel(BaseModel):
                 "max_tokens": kwargs.get("max_tokens", self.config.max_tokens),
             },
         }
+        # 注入工具定义（function calling）
+        if "tools" in kwargs and kwargs["tools"]:
+            request_body["tools"] = kwargs["tools"]
+            request_body["tool_choice"] = kwargs.get("tool_choice", "auto")
 
         start_time = time.time()
 
