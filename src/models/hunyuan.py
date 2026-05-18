@@ -216,6 +216,7 @@ class HunyuanModel(BaseModel):
                 usage=usage,
                 finish_reason=choice.get("finish_reason", "stop"),
                 latency_ms=latency_ms,
+                tool_calls=tool_calls,
             )
 
         except httpx.HTTPStatusError as e:

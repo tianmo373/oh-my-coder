@@ -155,6 +155,7 @@ class TongyiModel(BaseModel):
             output = data.get("output", {})
             content = output.get("text", "")
             finish_reason = output.get("finish_reason", "stop")
+            tool_calls = []
 
             # 使用统计
             usage_data = data.get("usage", {})
@@ -177,7 +178,7 @@ class TongyiModel(BaseModel):
                 metadata={
                     "request_id": data.get("request_id"),
                 },
-            tool_calls=tool_calls if "tool_calls" in dir() else [],
+            tool_calls=tool_calls,
             )
 
         except httpx.HTTPStatusError as e:

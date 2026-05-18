@@ -126,6 +126,7 @@ class SparkModel(BaseModel):
             latency_ms = (time.time() - start_time) * 1000
             choices = data.get("payload", {}).get("choices", {}).get("text", [])
             content = choices[0]["content"] if choices else ""
+            tool_calls = []
             usage_data = data.get("payload", {}).get("usage", {}).get("text", {})
             usage = Usage(
                 prompt_tokens=usage_data.get("prompt_tokens", 0),
@@ -142,7 +143,7 @@ class SparkModel(BaseModel):
                 finish_reason="stop",
                 latency_ms=latency_ms,
                 metadata={"app_id": self.app_id},
-            tool_calls=tool_calls if "tool_calls" in dir() else [],
+            tool_calls=tool_calls,
             )
         except httpx.HTTPStatusError as e:
             raise SparkAPIError(f"讯飞星火 API 错误 ({e.response.status_code}): {e}")

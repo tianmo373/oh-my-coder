@@ -191,6 +191,7 @@ class WenxinModel(BaseModel):
             # 解析响应
             content = data.get("result", "")
             finish_reason = data.get("finish_reason", "stop")
+            tool_calls = []
 
             # 使用统计
             usage_data = data.get("usage", {})
@@ -214,7 +215,7 @@ class WenxinModel(BaseModel):
                     "id": data.get("id"),
                     "created": data.get("created"),
                 },
-            tool_calls=tool_calls if "tool_calls" in dir() else [],
+            tool_calls=tool_calls,
             )
 
         except httpx.HTTPStatusError as e:

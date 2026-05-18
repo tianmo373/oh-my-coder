@@ -168,6 +168,7 @@ class OllamaModel(BaseModel):
 
             # 解析响应
             content = data.get("message", {}).get("content", "")
+            tool_calls = []
             model = data.get("model", self.model_name)
 
             # Ollama 返回的 token 统计
@@ -194,7 +195,7 @@ class OllamaModel(BaseModel):
                     "local": True,
                     "base_url": self.base_url,
                 },
-            tool_calls=tool_calls if "tool_calls" in dir() else [],
+            tool_calls=tool_calls,
             )
 
         except httpx.HTTPStatusError as e:
