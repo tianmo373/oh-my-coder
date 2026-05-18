@@ -128,7 +128,7 @@ class BaseAgent(ABC):
 
     # 可选属性
     icon: str = "🤖"
-    tools: list[str] = field(default_factory=list)  # 可用工具列表
+    tools: list[str] = field(default_factory=lambda: ["web_fetch"])  # 可用工具列表，默认启用 web_fetch
 
     def __init__(
         self,
@@ -361,11 +361,10 @@ class BaseAgent(ABC):
         支持工具调用：self.tools 非空时自动注入工具定义，
         模型返回 tool_calls 时自动执行工具并回传结果，最多 5 轮。
         """
-        # 构建工具定义列表
-        if self.tools and "tools" not in kwargs:
-            tools_param = [SUPPORTED_TOOLS[t] for t in self.tools if t in SUPPORTED_TOOLS]
-            if tools_param:
-                kwargs["tools"] = tools_param
+        # 强制注入 web_fetch 工具（所有 Agent 默认可用）
+        if "tools" not in kwargs:
+            if "web_fetch" in SUPPORTED_TOOLS:
+                kwargs["tools"] = [SUPPORTED_TOOLS["web_fetch"]]
 
         available_tools = {"web_fetch": self._web_fetch_tool}
         current_messages: list[Message] = list(messages)
