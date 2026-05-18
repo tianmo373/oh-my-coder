@@ -88,6 +88,15 @@ function parseDiffFromMessage(content: string): FileDiff | null {
 // ── Tier display config ───────────────────────────────────────────────────────
 const TIER_ICON: Record<string, string> = { free: '◈', low: '◇', medium: '◆', high: '★' };
 const TIER_COLOR: Record<string, string> = { free: '#4ade80', low: '#94a3b8', medium: '#d4a017', high: '#f59e0b' };
+const formatRelativeTime = (ts: number): string => {
+  const d = new Date(ts), n = new Date();
+  const diff = Math.floor((n.getTime() - d.getTime()) / 1000);
+  if (diff < 60) return '刚刚';
+  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}天前`;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+};
 
 // ── API helpers ────────────────────────────────────────────────────────────────
 declare global { interface Window { omc: any; } }
@@ -1006,8 +1015,29 @@ export default function App() {
                 ))}
               </div>
             ) : (
-              <div className="sidebar__models">
+              <div className="sidebar__chat-panel">
                 <button className="sidebar__new-chat" onClick={() => createSession(currentModel)}>+ New Chat</button>
+                <div className="sidebar__session-list">
+                  {sessions.length === 0 ? (
+                    <div className="sidebar__sessions-empty">暂无历史对话</div>
+                  ) : sessions.map(s => (
+                    <div
+                      key={s.id}
+                      className={`sidebar__session-item ${s.id === activeId ? 'active' : ''}`}
+                      onClick={() => handleHistorySelect(s.id)}
+                    >
+                      <div className="sidebar__session-info">
+                        <span className="sidebar__session-title">{s.title}</span>
+                        <span className="sidebar__session-time">{formatRelativeTime(s.updatedAt)}</span>
+                      </div>
+                      <button
+                        className="sidebar__session-delete"
+                        onClick={(e) => { e.stopPropagation(); handleHistoryDelete(s.id); }}
+                        title="删除"
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
