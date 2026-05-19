@@ -19,7 +19,6 @@ API: https://open.bigmodel.cn/api/paas/v4
 import json
 import time
 from collections.abc import AsyncIterator
-from typing import Any, Optional
 
 import httpx
 

@@ -19,6 +19,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Optional
 
+import httpx
+
 
 class ModelTier(Enum):
     """模型性能层级 - 对应原项目的 haiku/sonnet/opus 三层"""
@@ -130,7 +132,7 @@ class BaseModel(ABC):
     async def _get_client(self) -> httpx.AsyncClient:
         """
         获取或创建 HTTP 客户端（延迟初始化）
-        
+
         子类可以覆盖此方法以提供自定义的客户端配置。
         默认实现使用 OpenAI 兼容的 API 格式（base_url + Bearer token）。
         """
@@ -226,7 +228,7 @@ class BaseModel(ABC):
     def _format_messages(self, messages: list[Message]) -> list[dict[str, str]]:
         """
         将统一消息格式转换为 OpenAI 兼容的 API 格式
-        
+
         子类可以覆盖此方法以提供不同 API 格式的消息转换。
         """
         formatted = []
@@ -252,7 +254,7 @@ class BaseModel(ABC):
     ) -> dict[str, Any]:
         """
         构建 OpenAI 兼容的请求体基础部分
-        
+
         子类可以调用此方法来构建基础请求体，然后添加模型特定的参数。
         """
         request_body: dict[str, Any] = {
@@ -276,7 +278,7 @@ class BaseModel(ABC):
     async def _parse_response(self, response: httpx.Response) -> dict[str, Any]:
         """
         解析 HTTP 响应，统一处理错误
-        
+
         Raises:
             httpx.HTTPStatusError: 当 API 返回错误状态码时
             httpx.RequestError: 当网络请求失败时
