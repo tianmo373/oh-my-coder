@@ -74,7 +74,6 @@ class GLMModel(BaseModel):
         config.cost_per_1k_completion = model_info["cost_per_1k_completion"]
 
         super().__init__(config, tier)
-        self._client: Optional[httpx.AsyncClient] = None
 
     @property
     def provider(self) -> ModelProvider:
@@ -84,58 +83,23 @@ class GLMModel(BaseModel):
     def model_name(self) -> str:
         return GLM_MODELS[self.tier.value]["name"]
 
-    async def _get_client(self) -> httpx.AsyncClient:
-        if self._client is None or self._client.is_closed:
-            self._client = httpx.AsyncClient(
-                base_url=self.config.base_url,
-                headers={
-                    "Authorization": f"Bearer {self.config.api_key}",
-                    "Content-Type": "application/json",
-                },
-                timeout=self.config.timeout,
-            )
-        return self._client
-
-    async def close(self):
-        if self._client and not self._client.is_closed:
-            await self._client.aclose()
-            self._client = None
-
-    def _format_messages(self, messages: list[Message]) -> list[dict[str, str]]:
-        formatted = []
-        for msg in messages:
-            item: dict[str, str] = {"role": msg.role, "content": msg.content}
-            if msg.name:
-                item["name"] = msg.name
-            if msg.tool_calls:  # assistant 消息的工具调用
-                item["tool_calls"] = msg.tool_calls  # type: ignore
-            if msg.tool_call_id:  # tool 消息的工具调用 ID
-                item["tool_call_id"] = msg.tool_call_id
-            formatted.append(item)
-        return formatted
-
     async def generate(self, messages: list[Message], **kwargs) -> ModelResponse:
         client = await self._get_client()
 
-        request_body: dict[str, Any] = {
-            "model": self.model_name,
-            "messages": self._format_messages(messages),
-            "max_tokens": kwargs.get("max_tokens", self.config.max_tokens),
-            "temperature": kwargs.get("temperature", self.config.temperature),
-        }
-
-        if "top_p" in kwargs:
-            request_body["top_p"] = kwargs["top_p"]
-        if "stop" in kwargs:
-            request_body["stop"] = kwargs["stop"]
-        if "tools" in kwargs and kwargs["tools"]:
-            request_body["tools"] = kwargs["tools"]
-            request_body["tool_choice"] = kwargs.get("tool_choice", "auto")
+        # 使用基类方法构建请求体
+        request_body = self._build_request_body(messages, **kwargs)
 
         start_time = time.time()
 
-        try:
+        async def _do_request():
+            """核心请求逻辑，供重试机制调用"""
             response = await client.post("/chat/completions", json=request_body)
+            response.raise_for_status()
+            return response
+
+        try:
+            # 使用基类的重试机制
+            response = await self._execute_with_retry(_do_request)
             response.raise_for_status()
             data = response.json()
             latency_ms = (time.time() - start_time) * 1000
@@ -180,13 +144,9 @@ class GLMModel(BaseModel):
     async def stream(self, messages: list[Message], **kwargs) -> AsyncIterator[str]:
         client = await self._get_client()
 
-        request_body: dict[str, Any] = {
-            "model": self.model_name,
-            "messages": self._format_messages(messages),
-            "max_tokens": kwargs.get("max_tokens", self.config.max_tokens),
-            "temperature": kwargs.get("temperature", self.config.temperature),
-            "stream": True,
-        }
+        # 使用基类方法构建请求体
+        request_body = self._build_request_body(messages, **kwargs)
+        request_body["stream"] = True
 
         try:
             async with client.stream(
