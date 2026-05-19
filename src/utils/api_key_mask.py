@@ -7,7 +7,6 @@ API Key 脱敏工具
 import re
 from typing import Optional
 
-
 # 常见 API Key 模式
 API_KEY_PATTERNS = [
     # OpenAI / DeepSeek / Zhipu AI 等 (sk-...)
