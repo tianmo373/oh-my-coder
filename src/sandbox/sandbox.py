@@ -81,41 +81,62 @@ class Sandbox:
         self._resolve_allowed_dirs()
 
     def _resolve_allowed_dirs(self) -> None:
-        """解析并验证 allowed_dirs"""
+        """解析并验证 allowed_dirs，自动将 working_dir 加入允许列表"""
         self._resolved_dirs: list[Path] = []
         for d in self.config.allowed_dirs:
             p = Path(d).expanduser().resolve()
             self._resolved_dirs.append(p)
+
+        # 自动将 working_dir 加入 allowed_dirs（如缺失）
+        working_dir = Path(self.config.working_dir).expanduser().resolve() if self.config.working_dir else Path.home() / ".omc"
+        working_dir = working_dir.resolve()
+
+        if working_dir not in self._resolved_dirs:
+            self._resolved_dirs.append(working_dir)
+            print(f"[Sandbox] 警告: working_dir {working_dir} 不在 allowed_dirs 中，已自动添加")
 
     def validate_path(self, path: str) -> bool:
         """
         验证路径是否在允许范围内
 
         Args:
-            path: 文件路径（可以是相对路径）
+            path: 文件路径（可以是相对路径、包含 ~ 或 $VAR）
 
         Returns:
             True: 路径安全
             False: 路径超出允许范围
         """
+        ok, _ = self.validate_path_with_reason(path)
+        return ok
+
+    def validate_path_with_reason(self, path: str) -> tuple[bool, str]:
+        """
+        验证路径并返回拒绝原因
+
+        Returns:
+            (是否允许, 拒绝原因)
+        """
         try:
-            p = Path(path).expanduser().resolve()
+            # 1. 展开环境变量 ($VAR / %VAR%)
+            expanded = os.path.expandvars(path)
+            # 2. 展开用户目录 (~)
+            p = Path(expanded).expanduser().resolve()
         except Exception:
-            return False
+            return False, f"路径解析失败: {path}"
 
         for allowed in self._resolved_dirs:
             if allowed == Path("/tmp") or str(allowed).startswith("/tmp"):  # nosec B108
                 if str(p).startswith("/tmp") or str(p).startswith(  # nosec B108
                     "/private/tmp"
                 ):  # nosec B108
-                    return True
+                    return True, ""
             try:
                 p.relative_to(allowed)
-                return True
+                return True, ""
             except ValueError:
                 continue
 
-        return False
+        return False, f"路径超出沙箱范围: {path} (解析为: {p})"
 
     def validate_paths(self, paths: list[str]) -> tuple[bool, list[str]]:
         """
@@ -126,8 +147,9 @@ class Sandbox:
         """
         invalid: list[str] = []
         for path in paths:
-            if not self.validate_path(path):
-                invalid.append(path)
+            ok, reason = self.validate_path_with_reason(path)
+            if not ok:
+                invalid.append(f"{path}: {reason}")
         return (len(invalid) == 0, invalid)
 
     # ── 已知命令的路径参数位置（0-based，命令名本身不计入）───────────
