@@ -12,8 +12,14 @@ from typing import Optional
 - BLOCK：直接拒绝执行
 - WARN：警告但允许执行
 - ALLOW：正常放行
+
+白名单模式（默认启用）：
+- 只有白名单内的 base command 才允许执行
+- 白名单命令仍会经过黑名单检查（深度防御）
+- 设置环境变量 OMC_DISABLE_WHITELIST=1 可临时关闭白名单（仅开发环境）
 """
 
+import os
 import re
 from dataclasses import dataclass
 from enum import Enum
@@ -43,7 +49,110 @@ class BlockedCommandError(Exception):
         self.command = command
         self.reason = reason
         self.risk = risk
-        super().__init__(f"[{risk.value.upper()}] {reason}\n命令: {command}")
+        # 脱敏：不把完整命令写入错误消息，避免敏感信息泄露
+        safe_cmd = _sanitize_for_error(command)
+        super().__init__(f"[{risk.value.upper()}] {reason}\n命令: {safe_cmd}")
+
+
+def _sanitize_for_error(text: str) -> str:
+    """对错误消息中的敏感信息进行脱敏处理"""
+    # 简单脱敏：如果命令长度超过 200 字符，截断
+    if len(text) > 200:
+        return text[:200] + "...[截断]"
+    return text
+
+
+# =============================================================================
+# 白名单模式 - 允许执行的 base command
+# =============================================================================
+
+# 白名单：只有这些 base command 允许执行
+# 设置环境变量 OMC_DISABLE_WHITELIST=1 可临时禁用（仅开发环境）
+ALLOWED_BASE_COMMANDS: set[str] = {
+    # ── 文件读取 ──
+    "ls", "cat", "grep", "find", "head", "tail",
+    "wc", "sort", "uniq", "file", "stat", "tree", "du",
+    # ── 文件操作（危险操作由黑名单覆盖）──
+    "mkdir", "touch", "cp", "mv", "rm", "rmdir",
+    "chmod", "chown", "ln",
+    # ── 解压/归档读取 ──
+    "tar", "unzip", "gunzip", "bunzip2",
+    # ── Python ──
+    "python3", "python", "pip", "pip3", "pytest",
+    # ── Git ──
+    "git",
+    # ── Node.js ──
+    "node", "npm", "npx",
+    # ── C/C++ ──
+    "gcc", "g++", "make", "cmake",
+    # ── Go ──
+    "go",
+    # ── Rust ──
+    "rustc", "cargo",
+    # ── Java ──
+    "java", "javac",
+    # ── 文本处理 ──
+    "sed", "awk", "tr", "cut", "paste",
+    # ── Shell 内建/常用 ──
+    "echo", "printf", "pwd", "whoami", "date", "hostname",
+    "uname", "basename", "dirname", "true", "false", "sleep",
+    # ── 下载（受限）──
+    "curl", "wget",
+    # ── 进程查看 ──
+    "ps", "top",
+    # ── 网络诊断 ──
+    "ping", "netstat", "ss",
+    # ── 环境信息 ──
+    "env", "which", "whereis",
+    # ── 容器 / 编排（危险操作由黑名单覆盖）──
+    "docker", "docker-compose", "podman", "kubectl", "helm",
+    # ── 包管理 / 系统管理（危险操作由黑名单覆盖）──
+    "sudo", "apt-get", "yum", "dnf", "brew", "pacman",
+    # ── 数据库 CLI（危险操作由黑名单覆盖）──
+    "mysql", "psql", "sqlite3",
+}
+
+
+# 需要完整路径匹配的 base command（防止利用 PATH 绕过）
+# 例如：/usr/bin/rm 也会被 extract_base_command 提取为 rm，无需额外处理
+
+
+def is_whitelist_enabled() -> bool:
+    """白名单模式是否启用（可通过环境变量禁用）"""
+    return os.environ.get("OMC_DISABLE_WHITELIST", "0") != "1"
+
+
+def extract_base_command(command: str) -> str:
+    """
+    从完整命令中提取 base command（去路径、去 flags 前缀）
+
+    示例：
+        "python3 script.py" → "python3"
+        "/usr/bin/python3 -c 'print(1)'" → "python3"
+        "git log --oneline" → "git"
+        "PYTHONPATH=/foo python3 -c '...'" → "python3"（跳过环境变量前缀）
+        "sudo python3 script.py" → "sudo"（sudo 需要单独处理）
+    """
+    import shlex
+
+    normalized = " ".join(command.split())
+
+    # 去掉环境变量前缀（KEY=VALUE cmd ...）
+    # 处理多个环境变量前缀的情况
+    while re.match(r"^[A-Za-z_][A-Za-z0-9_]*=\S+\s+", normalized):
+        normalized = re.sub(r"^[A-Za-z_][A-Za-z0-9_]*=\S+\s+", "", normalized, count=1)
+
+    # 去掉 sudo / doas 等提权前缀（这些不应出现在沙箱中）
+    tokens = shlex.split(normalized)
+    if not tokens:
+        return ""
+
+    first = tokens[0]
+
+    # 去掉路径前缀
+    base = first.rsplit("/", 1)[-1]
+
+    return base
 
 
 # =============================================================================
@@ -194,6 +303,16 @@ class DangerousCommandBlocker:
 
         # 去除多余空白，规范化命令
         normalized = " ".join(command.split())
+
+        # ── 白名单检查（最高优先级，在黑名单之前）──
+        if is_whitelist_enabled():
+            base_cmd = extract_base_command(command)
+            if base_cmd and base_cmd not in ALLOWED_BASE_COMMANDS:
+                return BlockReason(
+                    risk=RiskLevel.BLOCK,
+                    reason=f"base command '{base_cmd}' 不在白名单中，禁止执行",
+                    matched_pattern=None,
+                )
 
         # 第一优先级：检查极高危模式（直接拒绝）
         for pattern, msg in self._critical_re:

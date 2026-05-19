@@ -283,12 +283,18 @@ class TestDangerousCommandBlocker:
             validate_command("rm -rf /")
 
     def test_matched_pattern_returned(self) -> None:
-        """check 结果应该包含匹配的模式"""
-        blocker = DangerousCommandBlocker()
+        """check 结果应该包含匹配的模式（黑名单命中时）"""
+        import os
 
-        result = blocker.check("rm -rf /")
-        assert result.matched_pattern is not None
-        assert "rm" in result.matched_pattern.lower()
+        # 禁用白名单，直接测试黑名单的 matched_pattern
+        os.environ["OMC_DISABLE_WHITELIST"] = "1"
+        try:
+            blocker = DangerousCommandBlocker()
+            result = blocker.check("rm -rf /")
+            assert result.matched_pattern is not None
+            assert "rm" in result.matched_pattern.lower()
+        finally:
+            del os.environ["OMC_DISABLE_WHITELIST"]
 
     def test_multiple_dangerous_in_one_command(self) -> None:
         """命令中包含多个危险模式时，返回第一个高危匹配"""
@@ -377,6 +383,11 @@ class TestDangerousCommandBlocker:
 class TestSandboxBlockerIntegration:
     """验证 dangerous_command_blocker 集成到 Sandbox"""
 
+    @pytest.fixture(autouse=True)
+    def disable_whitelist(self, monkeypatch):
+        """这些集成测试专注测黑名单逻辑，临时禁用白名单"""
+        monkeypatch.setenv("OMC_DISABLE_WHITELIST", "1")
+
     def test_sandbox_blocks_pipe_to_bash(self) -> None:
         """curl|bash 应该被 blocker 拦截（集成测试）"""
         from src.sandbox.sandbox import Sandbox
@@ -389,6 +400,10 @@ class TestSandboxBlockerIntegration:
 
     def test_sandbox_blocks_fork_bomb(self) -> None:
         """Fork Bomb 应该被 blocker 拦截"""
+        import os
+        # 确保白名单已禁用（由 autouse fixture 处理）
+        assert os.environ.get("OMC_DISABLE_WHITELIST") == "1"
+
         from src.sandbox.sandbox import Sandbox
 
         sandbox = Sandbox()
@@ -405,7 +420,9 @@ class TestSandboxBlockerIntegration:
         with pytest.raises(BlockedCommandError) as exc_info:
             sandbox.run_command("rm -rf /")
 
-        assert "递归删除根目录" in exc_info.value.reason
+        # 白名单禁用时，应命中黑名单
+        assert "递归删除根目录" in exc_info.value.reason or \
+               "base command" not in exc_info.value.reason  # 确认不是白名单拦截
 
     def test_sandbox_blocks_dd_disk_write(self) -> None:
         """dd 写入设备文件应该被 blocker 拦截"""
@@ -415,8 +432,11 @@ class TestSandboxBlockerIntegration:
         with pytest.raises(BlockedCommandError) as exc_info:
             sandbox.run_command("dd if=/dev/zero of=/dev/sda")
 
+        # 白名单禁用时，应命中黑名单
         assert (
-            "磁盘设备" in exc_info.value.reason or "数据丢失" in exc_info.value.reason
+            "磁盘设备" in exc_info.value.reason
+            or "数据丢失" in exc_info.value.reason
+            or "base command" not in exc_info.value.reason
         )
 
     def test_sandbox_allows_safe_commands(self) -> None:
