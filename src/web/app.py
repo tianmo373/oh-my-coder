@@ -28,6 +28,39 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+from starlette.middleware.base import BaseHTTPMiddleware
+
+# ========================================
+# Security Middleware
+# ========================================
+#
+# CSRF 保护说明:
+# 本项目为纯 API 服务，不使用 cookie-based session，所有 API 调用均通过
+# Authorization Header 或 body 中的 token 认证，因此无需 CSRF 保护。
+# 如果后续引入 Cookie-based 认证，需重新评估是否启用 CSRF。
+#
+# Session Cookie 配置:
+# Starlette SessionMiddleware 默认将 session 数据存在 cookie 中，
+# 已启用 httponly=True, samesite=Lax（通过 SessionMiddleware 默认行为）。
+#
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """为所有 HTTP 响应添加安全相关的 HTTP 头"""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        # 防止 MIME 类型嗅探
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        # 防止 Clickjacking
+        response.headers["X-Frame-Options"] = "DENY"
+        # XSS 过滤器（兼容旧浏览器）
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        # 强制 HTTPS（仅在生产环境生效）
+        response.headers["Strict-Transport-Security"] = "max-age=31536000"
+        # 内容安全策略
+        response.headers["Content-Security-Policy"] = "default-src 'self'"
+        return response
 
 # 确保可以导入 src 模块
 project_root = Path(__file__).parent.parent.parent
@@ -160,6 +193,9 @@ app = FastAPI(
     description="多智能体 AI 编程助手 Web 界面",
     version="0.1.0",
 )
+
+# 注册安全中间件（后注册先执行，按栈顺序）
+app.add_middleware(SecurityHeadersMiddleware)
 
 # 挂载静态文件和模板
 web_dir = Path(__file__).parent
