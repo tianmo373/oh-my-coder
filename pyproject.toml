@@ -8,7 +8,7 @@ version = "0.2.1"
 description = "Multi-agent AI programming assistant with Chinese LLM support"
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 authors = [{name = "VOBC", email = "vobc@example.com"}]
 keywords = ["ai", "agent", "multi-agent", "coding", "llm", "deepseek"]
 classifiers = [
@@ -107,6 +107,7 @@ ignore = [
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = "-ra -q --strict-markers --dist loadscope -n auto"
+fail_under = 70
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
