@@ -12,6 +12,8 @@ from __future__ import annotations
 
 
 import os
+import re
+import shlex
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -128,32 +130,89 @@ class Sandbox:
                 invalid.append(path)
         return (len(invalid) == 0, invalid)
 
+    # ── 已知命令的路径参数位置（0-based，命令名本身不计入）───────────
+    # 格式: "cmd": [arg_index, ...]  |  "cmd": "all"（检查所有参数）
+    _PATH_ARG_COMMANDS: dict[str, list[int] | str] = {
+        # 单文件操作
+        "cat": "all",
+        "head": "all",
+        "tail": "all",
+        "less": "all",
+        "more": "all",
+        "file": "all",
+        "stat": "all",
+        # 多文件操作（检查所有参数）
+        "ls": "all",
+        "grep": "all",
+        "find": "all",
+        "wc": "all",
+        "sort": "all",
+        "uniq": "all",
+        # cp/mv: 除最后一个是源文件，最后一个是目标（都检查）
+        "cp": "all",
+        "mv": "all",
+        "ln": "all",
+        # rm: 所有参数都是路径
+        "rm": "all",
+        "rmdir": "all",
+        # 输出重定向类命令的 -o/--output 参数
+        "gcc": [2],   # gcc -o output src.c （简化：检查所有参数）
+        "g++": [2],
+        "tar": "all",
+        "unzip": "all",
+        "git": "all",  # git 命令复杂，简化检查所有参数
+    }
+
+    def _extract_paths_from_command(self, command: str) -> list[str]:
+        """从命令中提取可能路径参数（使用 shlex 解析）"""
+        paths: list[str] = []
+        try:
+            tokens = shlex.split(command)
+        except ValueError:
+            # shlex 解析失败（如未闭合引号），回退到简单分割
+            tokens = command.split()
+
+        if not tokens:
+            return paths
+
+        base = tokens[0]
+
+        # 1. 检查已知命令的路径参数
+        arg_spec = self._PATH_ARG_COMMANDS.get(base)
+        if arg_spec == "all":
+            # 检查所有参数（跳过选项类参数）
+            for tok in tokens[1:]:
+                if not tok.startswith("-") and (
+                    "/" in tok or tok.startswith("~") or tok.startswith(".")
+                ):
+                    paths.append(tok)
+        elif isinstance(arg_spec, list):
+            for idx in arg_spec:
+                if idx + 1 < len(tokens):
+                    paths.append(tokens[idx + 1])
+
+        # 2. 检查 shell 重定向（> >> < 2> &>）
+        redirect_re = re.compile(
+            r"(?:>>|2>|&>|>|<|<\s)\s*(\S+)"
+        )
+        for m in redirect_re.finditer(command):
+            paths.append(m.group(1))
+
+        # 3. 检查 --output / -o 等常见输出参数
+        output_re = re.compile(r"(?:-o|--output)\s+(\S+)")
+        for m in output_re.finditer(command):
+            paths.append(m.group(1))
+
+        return paths
+
     def validate_command(self, command: str) -> tuple[bool, str]:
         """
-        验证命令是否可以在沙箱中执行
+        验证命令的路径参数是否在沙箱允许范围内
 
         Returns:
             (是否允许, 拒绝原因)
         """
-        import re
-
-        path_patterns = [
-            r"-o\s+([^\s]+)",
-            r"--output\s+([^\s]+)",
-            r">\s*([^\s]+)",
-            r"2>\s*([^\s]+)",
-            r"cp\s+([^\s]+)",
-            r"mv\s+([^\s]+)",
-            r"rm\s+([^\s]+)",
-            r"cat\s+([^\s]+)",
-            r"head\s+([^\s]+)",
-            r"tail\s+([^\s]+)",
-        ]
-
-        paths_to_check: list[str] = []
-        for pat in path_patterns:
-            matches = re.findall(pat, command)
-            paths_to_check.extend(matches)
+        paths_to_check = self._extract_paths_from_command(command)
 
         if paths_to_check:
             ok, invalid = self.validate_paths(paths_to_check)
