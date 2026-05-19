@@ -212,7 +212,8 @@ class TestRouterHTTPErrorFailover:
         glm_model = router._models.get("glm", {}).get("low")
 
         if deepseek_model and glm_model:
-            # glm 在 fallback_order 中先于 deepseek，所以 glm 会被先尝试
+            # 强制 glm 在 fallback_order 中先于 deepseek
+            router.config.fallback_order = ["glm", "deepseek"]
             with patch.object(
                 glm_model, "generate", new_callable=AsyncMock
             ) as mock_glm:
@@ -249,7 +250,7 @@ class TestRouterHTTPErrorFailover:
         glm_model = router._models.get("glm", {}).get("low")
 
         if deepseek_model and glm_model:
-            # glm 在 fallback_order 中先于 deepseek
+            router.config.fallback_order = ["glm", "deepseek"]
             with patch.object(
                 glm_model, "generate", new_callable=AsyncMock
             ) as mock_glm:
@@ -376,7 +377,7 @@ class TestRateLimitDetailed:
         glm_model = router._models.get("glm", {}).get("low")
 
         if deepseek_model and glm_model:
-            # glm 在 fallback_order 中先于 deepseek
+            router.config.fallback_order = ["glm", "deepseek"]
             with patch.object(
                 glm_model, "generate", new_callable=AsyncMock
             ) as mock_glm:
@@ -413,7 +414,7 @@ class TestRateLimitDetailed:
         glm_model = router._models.get("glm", {}).get("low")
 
         if deepseek_model and glm_model:
-            # glm 在 fallback_order 中先于 deepseek
+            router.config.fallback_order = ["glm", "deepseek"]
             with patch.object(
                 glm_model, "generate", new_callable=AsyncMock
             ) as mock_glm:
