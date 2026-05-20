@@ -42,13 +42,8 @@ def get_heading_outline(headings: List[Tuple[int, str]]) -> List[str]:
     return [f"H{level}: {text}" for level, text in headings]
 
 
-def find_md_files(base_path: Path, subdir: str = "", exclude_zh: bool = False) -> Dict[str, Path]:
+def find_md_files(base_path: Path, subdir: str = "") -> Dict[str, Path]:
     """Find all .md files in a directory.
-    
-    Args:
-        base_path: Root path to search
-        subdir: Optional subdirectory within base_path
-        exclude_zh: If True, exclude files under 'zh/' subdirectory
     
     Returns dict mapping relative path to absolute path.
     """
@@ -59,9 +54,6 @@ def find_md_files(base_path: Path, subdir: str = "", exclude_zh: bool = False) -
         return files
     
     for md_file in search_path.rglob("*.md"):
-        # Skip if exclude_zh and file is under 'zh/' subdirectory
-        if exclude_zh and 'zh' in md_file.parts:
-            continue
         rel_path = md_file.relative_to(search_path)
         files[str(rel_path)] = md_file
     
@@ -117,7 +109,7 @@ def check_docs_sync(project_root: Path) -> Tuple[bool, List[str]]:
     issues = []
     
     # Find files in both directories
-    docs_files = find_md_files(docs_dir, exclude_zh=True)
+    docs_files = find_md_files(docs_dir)
     zh_files = find_md_files(zh_dir) if zh_dir.exists() else {}
     
     # Files in both locations
