@@ -30,7 +30,8 @@ from .agents.cross_validation import CrossValidationLayer
 from .capabilities import app as cap_app
 from .commands.cli_checkpoint import app as checkpoint_app
 from .commands.cli_commands import app as commands_app
-from .commands.cli_compact import app as compact_app
+# merged into cli_usage
+# from .commands.cli_compact import app as compact_app
 from .commands.cli_config_ext import app as config_ext_app
 from .commands.cli_context import context_app
 from .commands.cli_lsp import app as lsp_app
@@ -80,9 +81,10 @@ app.add_typer(
 )
 # merged into usage
 # app.add_typer(trace_app, name="trace", help="Trace 执行记录 - 查看 Agent 执行过程")
-app.add_typer(
-    compact_app, name="compact", help="自动压缩统计 - 查看压缩历史和 token 使用情况"
-)
+# merged into usage
+# app.add_typer(
+#     compact_app, name="compact", help="自动压缩统计 - 查看压缩历史和 token 使用情况"
+# )
 # merged into usage
 # app.add_typer(memory_app, name="memory", help="分层记忆管理 - 查看核心/精选/完整记忆")
 app.add_typer(usage_app, name="usage", help="用量统计与追踪 - stats/trace/memory")

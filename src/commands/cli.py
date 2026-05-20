@@ -62,7 +62,8 @@ from .cli_self_config import app as self_config_app
 from .cli_server import app as server_app
 from .cli_skill import app as skill_app
 from .cli_task import app as task_app
-from .cli_thought import app as thought_app
+# merged into cli_usage
+# from .cli_thought import app as thought_app
 # merged into cli_usage
 # from .cli_trace import app as trace_app
 from .cli_tui import app as tui_app
@@ -120,7 +121,8 @@ app.add_typer(review_app, name="review", help="代码审查 - 智能分析代码
 app.add_typer(quality_app, name="quality", help="代码质量检查 - ruff/black 集成")
 app.add_typer(profile_app, name="profile", help="Profile 隔离 - 子 Agent 上下文管理")
 app.add_typer(server_app, name="server", help="远程 Server - HTTP REST API 服务")
-app.add_typer(thought_app, name="thought", help="思维链 - 记录和可视化 Agent 推理过程")
+# merged into cli_usage
+# app.add_typer(thought_app, name="thought", help="思维链 - 记录和可视化 Agent 推理过程")
 
 # 代码清理命令
 try:

@@ -550,5 +550,262 @@ def memory_stats_cmd(
     memory_stats(project_path=project_path)
 
 
+# ============================================================================
+# Compact 子命令（来自 cli_compact.py）
+# ============================================================================
+
+console_compact = Console()
+
+
+@app.command("stats")
+def compact_stats(
+    project_path: Path = typer.Option(".", "--project", "-p", help="项目路径"),
+) -> None:
+    """
+    📊 显示当前会话的压缩统计
+
+    显示内容：
+    - 压缩总次数
+    - 节省的 token 数
+    - 清理的消息数
+    - 工具调用去重次数
+    - 历史错误清理数
+    """
+    from src.memory.manager import MemoryManager
+    manager = MemoryManager.from_project(project_path.resolve())
+    stats = manager.compact_stats
+
+    table = Table(
+        title="🗜️ AutoCompact 统计", show_header=True, header_style="bold cyan"
+    )
+    table.add_column("指标", style="dim")
+    table.add_column("值", justify="right")
+
+    table.add_row("压缩次数", f"{stats['total_compact_count']}")
+    table.add_row("节省 token", f"{stats['total_tokens_saved']:,}")
+    table.add_row("清理消息数", f"{stats['total_messages_removed']:,}")
+    table.add_row("去重 tool_call", f"{stats['total_deduplicated']}")
+    table.add_row("清理错误消息", f"{stats['total_errors_removed']}")
+
+    console_compact.print(table)
+
+    if stats["total_compact_count"] == 0:
+        console_compact.print("\n[dim]尚未执行过压缩，暂无统计数据。[/dim]")
+
+
+@app.command("sweep")
+def compact_sweep(
+    project_path: Path = typer.Option(".", "--project", "-p", help="项目路径"),
+    since_last_user: bool = typer.Option(
+        False,
+        "--since-last-user",
+        help="从最后用户消息开始压缩（丢弃之前的消息）",
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="只显示结果，不实际压缩"),
+) -> None:
+    """
+    🧹 手动触发压缩（sweep）
+
+    可选标志：
+      --since-last-user  从最后用户消息开始清理
+      --dry-run           只显示结果，不实际压缩
+    """
+    from src.memory.manager import MemoryManager
+    manager = MemoryManager.from_project(project_path.resolve())
+    session = manager.get_latest_session()
+
+    if session is None:
+        console_compact.print("[red]未找到活跃会话。[/red]")
+        raise typer.Exit(1)
+
+    if since_last_user:
+        console_compact.print("[cyan]从最后用户消息开始裁剪...[/cyan]")
+        # 找到最后一条 user 消息
+        messages = session.messages
+        last_user_idx = None
+        for i in range(len(messages) - 1, -1, -1):
+            if messages[i].role == "user":
+                last_user_idx = i
+                break
+        if last_user_idx is not None and last_user_idx > 0:
+            session.messages = messages[last_user_idx:]
+            console_compact.print(
+                f"[green]已裁剪到第 {last_user_idx + 1} 条消息（共 {len(messages)} 条）[/green]"
+            )
+        else:
+            console_compact.print("[yellow]未找到更早的用户消息，无需裁剪。[/yellow]")
+            raise typer.Exit(0)
+
+    if dry_run:
+        # 只检查，不压缩
+        result = manager.auto_compact_check(session, force=False, since_last_user=False)
+        if result.compacted:
+            console_compact.print(
+                f"[yellow]Dry-run: 将压缩 {result.messages_removed} 条消息，"
+                f"节省约 {result.tokens_saved} tokens[/yellow]"
+            )
+        else:
+            console_compact.print("[dim]Dry-run: 当前使用率未达到阈值，无需压缩。[/dim]")
+            console_compact.print(f"  当前 token: {result.tokens_before}")
+        raise typer.Exit(0)
+
+    result = manager.auto_compact_check(session, force=True)
+    manager.save_session(session)
+
+    if result.compacted:
+        console_compact.print(
+            f"[green]✅ 压缩完成: 清理 {result.messages_removed} 条消息，"
+            f"节省 ~{result.tokens_saved} tokens[/green]"
+        )
+    else:
+        console_compact.print("[yellow]⚠️  未触发压缩（usage_ratio < threshold）。[/yellow]")
+        console_compact.print(f"  当前 token: {result.tokens_before}")
+
+
+# ============================================================================
+# Thought 子命令（来自 cli_thought.py）
+# ============================================================================
+
+console_thought = Console()
+
+
+@app.command("start")
+def thought_start(
+    task: str = typer.Argument(..., help="任务描述"),
+    agent: str = typer.Option("assistant", "--agent", "-a", help="Agent 名称"),
+) -> None:
+    """开始记录思维链"""
+    from src.core.chain_of_thought import ChainOfThoughtRecorder
+    recorder = ChainOfThoughtRecorder()
+    chain = recorder.start_chain(task, agent)
+
+    console_thought.print("[green]✅ 思维链已启动[/green]")
+    console_thought.print(f"[dim]ID: {chain.chain_id}[/dim]")
+    console_thought.print(f"任务: {chain.task_description}")
+    console_thought.print("\n[dim]使用以下命令添加步骤:[/dim]")
+    console_thought.print(f"  omc thought step {chain.chain_id} -t analysis -d '分析...'")
+
+
+@app.command("step")
+def thought_step(
+    chain_id: str = typer.Argument(..., help="思维链 ID"),
+    step_type: str = typer.Option("analysis", "--type", "-t", help="步骤类型"),
+    description: str = typer.Option(..., "--desc", "-d", help="步骤描述"),
+    reasoning: str = typer.Option("", "--reasoning", "-r", help="推理过程"),
+    conclusion: str = typer.Option("", "--conclusion", "-c", help="结论"),
+    confidence: str = typer.Option("medium", "--confidence", help="置信度"),
+) -> None:
+    """添加推理步骤"""
+    from src.core.chain_of_thought import (
+        ChainOfThoughtRecorder,
+        ConfidenceLevel,
+        ReasoningStepType,
+    )
+    recorder = ChainOfThoughtRecorder()
+
+    try:
+        st = ReasoningStepType(step_type)
+    except ValueError:
+        console_thought.print(f"[red]无效步骤类型: {step_type}[/red]")
+        console_thought.print(f"可用: {[t.value for t in ReasoningStepType]}")
+        raise typer.Exit(1)
+
+    try:
+        conf = ConfidenceLevel(confidence)
+    except ValueError:
+        conf = ConfidenceLevel.MEDIUM
+
+    step = recorder.add_step(
+        chain_id=chain_id,
+        step_type=st,
+        description=description,
+        reasoning=reasoning or description,
+        conclusion=conclusion,
+        confidence=conf,
+    )
+
+    if step:
+        console_thought.print(f"[green]✅ 步骤已添加[/green] [{step.step_id}]")
+    else:
+        console_thought.print(f"[red]思维链不存在: {chain_id}[/red]")
+        raise typer.Exit(1)
+
+
+@app.command("complete")
+def thought_complete(
+    chain_id: str = typer.Argument(..., help="思维链 ID"),
+    conclusion: str = typer.Option("", "--conclusion", "-c", help="最终结论"),
+) -> None:
+    """完成思维链"""
+    from src.core.chain_of_thought import ChainOfThoughtRecorder
+    recorder = ChainOfThoughtRecorder()
+    recorder.complete_chain(chain_id, conclusion)
+    console_thought.print(f"[green]✅ 思维链已完成[/green] {chain_id}")
+
+
+@app.command("show")
+def thought_show(
+    chain_id: str = typer.Argument(..., help="思维链 ID"),
+    format: str = typer.Option(
+        "text", "--format", "-f", help="格式: text/html/mermaid"
+    ),
+) -> None:
+    """查看思维链"""
+    from src.core.chain_of_thought import (
+        ChainOfThoughtRecorder,
+        visualize_chain,
+    )
+    import tempfile
+    recorder = ChainOfThoughtRecorder()
+    chain = recorder.get_chain(chain_id)
+
+    if not chain:
+        console_thought.print(f"[red]思维链不存在: {chain_id}[/red]")
+        raise typer.Exit(1)
+
+    output = visualize_chain(chain, format)
+
+    if format == "html":
+        # 保存到临时文件
+        output_path = os.path.join(tempfile.gettempdir(), f"chain_{chain_id}.html")
+        with open(output_path, "w") as f:
+            f.write(output)
+        console_thought.print(f"[green]HTML 已保存:[/green] {output_path}")
+    else:
+        console_thought.print(output)
+
+
+@app.command("list")
+def thought_list(
+    agent: str = typer.Option(None, "--agent", "-a", help="按 Agent 过滤"),
+) -> None:
+    """列出思维链"""
+    from src.core.chain_of_thought import ChainOfThoughtRecorder
+    recorder = ChainOfThoughtRecorder()
+    chains = recorder.list_chains(agent)
+
+    if not chains:
+        console_thought.print("[dim]没有思维链[/dim]")
+        return
+
+    table = Table(title="思维链列表")
+    table.add_column("ID", style="cyan")
+    table.add_column("任务", style="green")
+    table.add_column("Agent", style="blue")
+    table.add_column("步骤数", justify="right")
+    table.add_column("状态", style="yellow")
+
+    for c in chains:
+        table.add_row(
+            c.chain_id,
+            c.task_description[:40],
+            c.agent_name,
+            str(len(c.steps)),
+            c.status,
+        )
+
+    console_thought.print(table)
+
+
 if __name__ == "__main__":
     app()
