@@ -47,6 +47,7 @@ from ..models.base import (
     Usage,
 )
 from ..models.deepseek import DeepSeekModel
+from ..utils.api_key_mask import mask_api_key
 
 # ============================================================
 # 用户自定义模型目录
@@ -156,7 +157,7 @@ class RouterConfig:
         self.deepseek_api_key = self.deepseek_api_key or os.getenv("DEEPSEEK_API_KEY")
         self.wenxin_api_key = self.wenxin_api_key or os.getenv("WENXIN_API_KEY")
         self.tongyi_api_key = self.tongyi_api_key or os.getenv("TONGYI_API_KEY")
-        self.glm_api_key = self.glm_api_key or os.getenv("GLM_API_KEY")
+        self.glm_api_key = self.glm_api_key or os.getenv("ZHIPUAI_API_KEY")
         self.minimax_api_key = self.minimax_api_key or os.getenv("MINIMAX_API_KEY")
         self.kimi_api_key = self.kimi_api_key or os.getenv("KIMI_API_KEY")
         self.hunyuan_api_key = self.hunyuan_api_key or os.getenv("HUNYUAN_API_KEY")
@@ -439,7 +440,7 @@ class ModelRouter:
                     )
                 logger.info("DeepSeek 模型已初始化")
             except Exception as e:
-                logger.warning(f"DeepSeek 初始化失败: {e}")
+                logger.warning(f"DeepSeek 初始化失败: {mask_api_key(str(e))}")
 
         # 文心一言
         wenxin_secret = os.getenv("WENXIN_SECRET_KEY")
@@ -454,7 +455,7 @@ class ModelRouter:
                     )
                 logger.info("文心一言模型已初始化")
             except Exception as e:
-                logger.warning(f"文心一言初始化失败: {e}")
+                logger.warning(f"文心一言初始化失败: {mask_api_key(str(e))}")
 
         # 通义千问
         if self.config.tongyi_api_key:
@@ -468,7 +469,7 @@ class ModelRouter:
                     )
                 logger.info("通义千问模型已初始化")
             except Exception as e:
-                logger.warning(f"通义千问初始化失败: {e}")
+                logger.warning(f"通义千问初始化失败: {mask_api_key(str(e))}")
 
         # 智谱 GLM
         if self.config.glm_api_key:
@@ -482,7 +483,7 @@ class ModelRouter:
                     )
                 logger.info("智谱 GLM 模型已初始化")
             except Exception as e:
-                logger.warning(f"智谱 GLM 初始化失败: {e}")
+                logger.warning(f"智谱 GLM 初始化失败: {mask_api_key(str(e))}")
 
         # MiniMax
         if self.config.minimax_api_key:
@@ -496,7 +497,7 @@ class ModelRouter:
                     )
                 logger.info("MiniMax 模型已初始化")
             except Exception as e:
-                logger.warning(f"MiniMax 初始化失败: {e}")
+                logger.warning(f"MiniMax 初始化失败: {mask_api_key(str(e))}")
 
         # Kimi
         if self.config.kimi_api_key:
@@ -510,7 +511,7 @@ class ModelRouter:
                     )
                 logger.info("Kimi 模型已初始化")
             except Exception as e:
-                logger.warning(f"Kimi 初始化失败: {e}")
+                logger.warning(f"Kimi 初始化失败: {mask_api_key(str(e))}")
 
         # 腾讯混元
         if self.config.hunyuan_api_key:
@@ -525,7 +526,7 @@ class ModelRouter:
                     )
                 logger.info("腾讯混元模型已初始化")
             except Exception as e:
-                logger.warning(f"腾讯混元初始化失败: {e}")
+                logger.warning(f"腾讯混元初始化失败: {mask_api_key(str(e))}")
 
         # 字节豆包
         if self.config.doubao_api_key:
@@ -539,7 +540,7 @@ class ModelRouter:
                     )
                 logger.info("字节豆包模型已初始化")
             except Exception as e:
-                logger.warning(f"字节豆包初始化失败: {e}")
+                logger.warning(f"字节豆包初始化失败: {mask_api_key(str(e))}")
 
         # ============================================================
         # 加载用户自定义模型配置 (~/.omc/models/*.yaml)
@@ -610,7 +611,7 @@ class ModelRouter:
                 logger.info(f"用户模型已加载: {provider}/{model_name}")
 
             except Exception as e:
-                logger.warning(f"加载 {yaml_file.name} 失败: {e}")
+                logger.warning(f"加载 {yaml_file.name} 失败: {mask_api_key(str(e))}")
 
         if loaded_count > 0:
             logger.info(f"已加载 {loaded_count} 个用户自定义模型")
@@ -825,7 +826,7 @@ class ModelRouter:
 
                     logger.warning(
                         f"请求失败（{provider}/{decision.selected_tier}, "
-                        f"attempt={attempt + 1}/3）: {e}"
+                        f"attempt={attempt + 1}/3）: {mask_api_key(str(e))}"
                     )
                     if attempt < 2:
                         await asyncio.sleep(2 * (attempt + 1))  # 递增等待
@@ -841,9 +842,9 @@ class ModelRouter:
                 f"建议稍后重试或配置更多 API Key。"
             ) from last_error
 
-        logger.error(f"所有提供商均失败: {last_error}")
+        logger.error(f"所有提供商均失败: {mask_api_key(str(last_error))}")
         raise NoModelAvailableError(
-            f"所有模型均不可用（task={task_type}）: {last_error}"
+            f"所有模型均不可用（task={task_type}）: {mask_api_key(str(last_error))}"
         ) from last_error
 
     def get_model(

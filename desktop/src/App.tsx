@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import { getKeyboardShortcutsController } from './controllers/KeyboardShortcutsController';
 import { useChatHistory } from './hooks/useChatHistory';
-import HistoryPanel from './components/HistoryPanel';
 import DiffView, { FileDiff, DiffLine } from './components/DiffView';
 import { ModelSelector } from './components/ModelSelector';
 import { ShortcutsPanel } from './components/ShortcutsPanel';
@@ -88,6 +87,15 @@ function parseDiffFromMessage(content: string): FileDiff | null {
 // ── Tier display config ───────────────────────────────────────────────────────
 const TIER_ICON: Record<string, string> = { free: '◈', low: '◇', medium: '◆', high: '★' };
 const TIER_COLOR: Record<string, string> = { free: '#4ade80', low: '#94a3b8', medium: '#d4a017', high: '#f59e0b' };
+const formatRelativeTime = (ts: number): string => {
+  const d = new Date(ts), n = new Date();
+  const diff = Math.floor((n.getTime() - d.getTime()) / 1000);
+  if (diff < 60) return '刚刚';
+  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}天前`;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+};
 
 // ── API helpers ────────────────────────────────────────────────────────────────
 declare global { interface Window { omc: any; } }
@@ -366,7 +374,6 @@ export default function App() {
   const [currentModel, setCurrentModel] = useState<string>('');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [serverStatus, setServerStatus] = useState<'stopped' | 'starting' | 'running'>('stopped');
   const [tab, setTab] = useState<'chat' | 'models'>('chat');
@@ -549,7 +556,6 @@ export default function App() {
       handler: () => {
         setModelSelectorOpen(false);
         setShowConfig(false);
-        setShowHistory(false);
         setShortcutsPanelOpen(false);
         setInlineInputOpen(false);
         console.log('[Shortcuts] All overlays closed');
@@ -964,28 +970,10 @@ export default function App() {
   return (
     <div className="app">
       {/* Sidebar */}
-      <aside className={`sidebar ${showHistory ? 'sidebar--open' : ''}`}>
+      <aside className="sidebar">
         <div className="sidebar__header">
           <span className="sidebar__logo">⬡ OMC</span>
-          <button className="sidebar__btn" onClick={() => setShowHistory(v => !v)} title="History">
-            {showHistory ? '◀' : '☰'}
-          </button>
         </div>
-
-        {/* History panel */}
-        {showHistory ? (
-          <HistoryPanel
-            sessions={sessions}
-            activeId={activeId}
-            onSelect={handleHistorySelect}
-            onDelete={handleHistoryDelete}
-            onNew={handleHistoryNew}
-            onRename={handleHistoryRename}
-            onExport={handleHistoryExport}
-            onClearAll={handleHistoryClearAll}
-          />
-        ) : (
-          <>
             {/* Tab nav */}
             <div className="sidebar__tabs">
               <button className={`sidebar__tab ${tab === 'chat' ? 'active' : ''}`} onClick={() => setTab('chat')}>Chat</button>
@@ -1006,8 +994,29 @@ export default function App() {
                 ))}
               </div>
             ) : (
-              <div className="sidebar__models">
+              <div className="sidebar__chat-panel">
                 <button className="sidebar__new-chat" onClick={() => createSession(currentModel)}>+ New Chat</button>
+                <div className="sidebar__session-list">
+                  {sessions.length === 0 ? (
+                    <div className="sidebar__sessions-empty">暂无历史对话</div>
+                  ) : sessions.map(s => (
+                    <div
+                      key={s.id}
+                      className={`sidebar__session-item ${s.id === activeId ? 'active' : ''}`}
+                      onClick={() => handleHistorySelect(s.id)}
+                    >
+                      <div className="sidebar__session-info">
+                        <span className="sidebar__session-title">{s.title}</span>
+                        <span className="sidebar__session-time">{formatRelativeTime(s.updatedAt)}</span>
+                      </div>
+                      <button
+                        className="sidebar__session-delete"
+                        onClick={(e) => { e.stopPropagation(); handleHistoryDelete(s.id); }}
+                        title="删除"
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -1020,8 +1029,6 @@ export default function App() {
                 ⌨ 快捷键
               </button>
             </div>
-          </>
-        )}
       </aside>
 
       {/* Main */}

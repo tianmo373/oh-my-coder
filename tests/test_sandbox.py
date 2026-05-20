@@ -30,6 +30,18 @@ class TestSandbox:
         sandbox = Sandbox(config)
         assert sandbox.config.timeout == 30
 
+    def test_working_dir_auto_added_to_allowed_dirs(self) -> None:
+        """working_dir 不在 allowed_dirs 时应自动添加"""
+        config = SandboxConfig(
+            allowed_dirs=["/tmp"],
+            working_dir="/tmp/myproject",
+        )
+        sandbox = Sandbox(config)
+        allowed = sandbox.get_allowed_dirs()
+        assert "/tmp/myproject" in allowed or any(
+            str(p).endswith("/tmp/myproject") for p in allowed
+        )
+
     def test_validate_path_allowed(self) -> None:
         sandbox = Sandbox()
         # /tmp 总是允许
@@ -50,7 +62,7 @@ class TestSandbox:
         sandbox = Sandbox()
         ok, invalid = sandbox.validate_paths(["/tmp/a", "/etc/shadow"])
         assert ok is False
-        assert "/etc/shadow" in invalid
+        assert any("/etc/shadow" in s for s in invalid)
 
         ok2, invalid2 = sandbox.validate_paths(["/tmp/b", "/tmp/c"])
         assert ok2 is True

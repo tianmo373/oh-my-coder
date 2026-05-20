@@ -19,6 +19,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Optional
 
+import httpx
+
 
 class ModelTier(Enum):
     """模型性能层级 - 对应原项目的 haiku/sonnet/opus 三层"""
@@ -125,6 +127,32 @@ class BaseModel(ABC):
         self.config = config
         self.tier = tier
         self._total_usage = Usage()
+        self._client: Optional[httpx.AsyncClient] = None
+
+    async def _get_client(self) -> httpx.AsyncClient:
+        """
+        获取或创建 HTTP 客户端（延迟初始化）
+
+        子类可以覆盖此方法以提供自定义的客户端配置。
+        默认实现使用 OpenAI 兼容的 API 格式（base_url + Bearer token）。
+        """
+        if self._client is None or self._client.is_closed:
+            headers = {
+                "Authorization": f"Bearer {self.config.api_key}",
+                "Content-Type": "application/json",
+            }
+            self._client = httpx.AsyncClient(
+                base_url=self.config.base_url,
+                headers=headers,
+                timeout=self.config.timeout,
+            )
+        return self._client
+
+    async def close(self):
+        """关闭 HTTP 客户端"""
+        if self._client and not self._client.is_closed:
+            await self._client.aclose()
+            self._client = None
 
     @property
     @abstractmethod
@@ -197,11 +225,109 @@ class BaseModel(ABC):
         """重置使用统计"""
         self._total_usage = Usage()
 
+    def _format_messages(self, messages: list[Message]) -> list[dict[str, str]]:
+        """
+        将统一消息格式转换为 OpenAI 兼容的 API 格式
+
+        子类可以覆盖此方法以提供不同 API 格式的消息转换。
+        """
+        formatted = []
+        for msg in messages:
+            item: dict[str, str] = {"role": msg.role, "content": msg.content}
+            if msg.name:
+                item["name"] = msg.name  # type: ignore
+            if msg.tool_calls:  # assistant 消息的工具调用
+                item["tool_calls"] = msg.tool_calls  # type: ignore
+            if msg.tool_call_id:  # tool 消息的工具调用 ID
+                item["tool_call_id"] = msg.tool_call_id
+            formatted.append(item)
+        return formatted
+
     def _build_system_prompt(self, system: Optional[str] = None) -> Optional[Message]:
         """构建系统提示词"""
         if system:
             return Message(role="system", content=system)
         return None
+
+    def _build_request_body(
+        self, messages: list[Message], **kwargs
+    ) -> dict[str, Any]:
+        """
+        构建 OpenAI 兼容的请求体基础部分
+
+        子类可以调用此方法来构建基础请求体，然后添加模型特定的参数。
+        """
+        request_body: dict[str, Any] = {
+            "model": self.model_name,
+            "messages": self._format_messages(messages),
+            "max_tokens": kwargs.get("max_tokens", self.config.max_tokens),
+            "temperature": kwargs.get("temperature", self.config.temperature),
+        }
+
+        # 添加可选参数
+        if "top_p" in kwargs:
+            request_body["top_p"] = kwargs["top_p"]
+        if "stop" in kwargs:
+            request_body["stop"] = kwargs["stop"]
+        if "tools" in kwargs and kwargs["tools"]:
+            request_body["tools"] = kwargs["tools"]
+            request_body["tool_choice"] = kwargs.get("tool_choice", "auto")
+
+        return request_body
+
+    async def _parse_response(self, response: httpx.Response) -> dict[str, Any]:
+        """
+        解析 HTTP 响应，统一处理错误
+
+        Raises:
+            httpx.HTTPStatusError: 当 API 返回错误状态码时
+            httpx.RequestError: 当网络请求失败时
+        """
+        response.raise_for_status()
+        return response.json()
+
+    async def _execute_with_retry(self, func, *args, **kwargs):
+        """
+        带重试的执行（使用 tenacity 指数退避）
+        仅重试网络超时类错误，其他异常直接抛出。
+        """
+        import httpx
+        from tenacity import (
+            AsyncRetrying,
+            retry_if_exception,
+            stop_after_attempt,
+            wait_exponential,
+        )
+
+        # 可重试的异常类型
+        retryable_exceptions = (
+            httpx.ReadTimeout,
+            httpx.ConnectTimeout,
+            httpx.PoolTimeout,
+            httpx.RemoteProtocolError,
+            httpx.ReadError,
+            httpx.ConnectError,
+            ConnectionError,
+            TimeoutError,
+            OSError,
+        )
+
+        def _should_retry(exc: Exception) -> bool:
+            return isinstance(exc, retryable_exceptions)
+
+        async for attempt in AsyncRetrying(
+            stop=stop_after_attempt(self.config.max_retries),
+            wait=wait_exponential(
+                multiplier=self.config.retry_delay,
+                max=self.config.retry_delay * 8,
+            ),
+            retry=retry_if_exception(_should_retry),
+            reraise=True,
+        ):
+            with attempt:
+                return await func(*args, **kwargs)
+
+        return None  # unreachable
 
     async def _execute_with_retry(self, func, *args, **kwargs):
         """

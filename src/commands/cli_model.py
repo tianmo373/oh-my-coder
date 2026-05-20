@@ -4,7 +4,7 @@ from __future__ import annotations
 
 
 """
-Model CLI - 模型切换 + Catwalk 模型仓库
+Model CLI - 模型切换 + Catwalk 模型仓库 + 模型配置分享 + 模型推荐
 
 命令：
 - omc model list [--extended]  # 列出模型（普通/详细）
@@ -13,12 +13,21 @@ Model CLI - 模型切换 + Catwalk 模型仓库
 - omc model catwalk            # 交互式浏览模型（Catwalk）
 - omc model import <url>      # 从 URL 导入模型配置
 - omc model export <name> [--yaml]  # 导出模型配置
+- omc model recommend [--task] # 模型精选推荐
+- omc model share              # 分享模型配置到社区
+- omc model browse             # 浏览社区分享的模型配置
+- omc model show <id>          # 查看模型配置详情
+- omc model shared             # 列出本地分享的配置
+- omc model remove <id>        # 删除已分享的配置
 """
 
 
 import json
 import os
+import subprocess
 import urllib.request
+import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
@@ -43,9 +52,402 @@ console = Console()
 
 app = typer.Typer(
     name="model",
-    help="模型管理 - 查看/切换默认模型，浏览社区模型仓库（Catwalk）",
+    help="模型管理 - 查看/切换默认模型，浏览社区模型仓库（Catwalk），分享/推荐模型配置",
     add_completion=False,
 )
+
+# =============================================================================
+# 本地模型管理子命令 (from cli_local_models.py)
+# =============================================================================
+
+local_app = typer.Typer(help="本地模型管理 - Ollama 支持")
+
+
+@local_app.command("status")
+def local_check_status():
+    """
+    检查 Ollama 服务状态
+
+    示例:
+        omc model local status
+    """
+    import os
+
+    from src.models.ollama import OLLAMA_DEFAULT_URL, OllamaModel
+
+    base_url = os.getenv("OLLAMA_BASE_URL", OLLAMA_DEFAULT_URL)
+
+    console.print(f"[cyan]检测 Ollama 服务 ({base_url})...[/cyan]")
+
+    # 尝试使用健康检查模块（增强版）
+    try:
+        from ..core.ollama_health import OllamaHealthChecker
+
+        health = OllamaHealthChecker(base_url=base_url)
+        status = health.check_ollama()
+
+        if status.running:
+            console.print("[green]✓ Ollama 服务运行中[/green]")
+            console.print(f"  版本: {status.version or '未知'}")
+            console.print(f"  模型数: {status.model_count}")
+            console.print(f"  延迟: {status.latency_ms:.0f}ms")
+
+            # 列出本地模型（使用模型发现）
+            if status.available_models:
+                console.print(
+                    f"\n[bold]本地可用模型 ({len(status.available_models)} 个):[/bold]"
+                )
+                try:
+                    from ..core.local_model_discovery import discover_ollama_models
+
+                    discovered = discover_ollama_models(base_url)
+                    table = Table()
+                    table.add_column("模型名称", style="cyan")
+                    table.add_column("大小")
+                    table.add_column("参数量")
+                    table.add_column("量化")
+
+                    for m in discovered:
+                        size_str = (
+                            f"{m.size_gb:.1f} GB"
+                            if m.size_gb >= 1
+                            else f"{m.size_mb:.0f} MB"
+                        )
+                        table.add_row(
+                            m.model_name,
+                            size_str,
+                            m.parameter_size or "-",
+                            m.quantization or "-",
+                        )
+                    console.print(table)
+                except ImportError:
+                    for name in status.available_models:
+                        console.print(f"  • {name}")
+            else:
+                console.print("[yellow]暂无本地模型[/yellow]")
+                console.print("\n[dim]运行以下命令拉取模型：[/dim]")
+                console.print("[green]  omc model local pull qwen2:7b[/green]")
+        else:
+            console.print("[red]✗ Ollama 服务未运行[/red]")
+            console.print("\n[yellow]请先启动 Ollama：[/yellow]")
+            console.print("[green]  ollama serve[/green]")
+            console.print("\n或安装 Ollama：https://ollama.ai/")
+        return
+    except ImportError:
+        # 回退到基础检测
+        if OllamaModel.is_available(base_url):
+            console.print("[green]✓ Ollama 服务运行中[/green]")
+            models = OllamaModel.list_models(base_url)
+            if models:
+                console.print(f"\n[bold]本地可用模型 ({len(models)} 个):[/bold]")
+
+                table = Table()
+                table.add_column("模型名称", style="cyan")
+                table.add_column("大小")
+                table.add_column("修改时间")
+
+                for m in models:
+                    size = m.get("size", 0)
+                    if size > 1e9:
+                        size_str = f"{size / 1e9:.1f} GB"
+                    else:
+                        size_str = f"{size / 1e6:.0f} MB"
+
+                    table.add_row(
+                        m.get("name", "unknown"),
+                        size_str,
+                        m.get("modified_at", "")[:10] if m.get("modified_at") else "",
+                    )
+
+                console.print(table)
+            else:
+                console.print("[yellow]暂无本地模型[/yellow]")
+                console.print("\n[dim]运行以下命令拉取模型：[/dim]")
+                console.print("[green]  omc model local pull qwen2:7b[/green]")
+        else:
+            console.print("[red]✗ Ollama 服务未运行[/red]")
+            console.print("\n[yellow]请先启动 Ollama：[/yellow]")
+            console.print("[green]  ollama serve[/green]")
+            console.print("\n或安装 Ollama：https://ollama.ai/")
+
+
+@local_app.command("list")
+def local_list_models():
+    """
+    列出本地可用的模型
+
+    示例:
+        omc model local list
+    """
+    from src.models.base import ModelTier
+    from src.models.ollama import OLLAMA_MODELS, OllamaModel
+
+    console.print("[bold]本地模型状态:[/bold]\n")
+
+    # 检查已安装模型
+    installed = OllamaModel.list_models()
+    installed_names = {m["name"] for m in installed}
+
+    # 显示推荐模型
+    for tier in [ModelTier.LOW, ModelTier.MEDIUM, ModelTier.HIGH]:
+        console.print(f"\n[cyan]{tier.value.upper()} Tier:[/cyan]")
+
+        table = Table()
+        table.add_column("模型", style="cyan")
+        table.add_column("描述")
+        table.add_column("状态")
+
+        for m in OLLAMA_MODELS.get(tier, []):
+            status = (
+                "[green]✓ 已安装[/green]"
+                if m["name"] in installed_names
+                else "[dim]未安装[/dim]"
+            )
+            table.add_row(m["name"], m["desc"], status)
+
+        console.print(table)
+
+    console.print(f"\n[dim]已安装 {len(installed)} 个本地模型[/dim]")
+
+
+@local_app.command("pull")
+def local_pull_model(
+    model_name: str = typer.Argument(..., help="模型名称（如 qwen2:7b）"),
+):
+    """
+    拉取模型到本地
+
+    示例:
+        omc model local pull qwen2:7b
+        omc model local pull llama3:8b
+    """
+    from src.models.ollama import OllamaModel
+
+    console.print(f"[cyan]拉取模型: {model_name}[/cyan]")
+    console.print("[dim]这可能需要几分钟，取决于模型大小...[/dim]\n")
+
+    success = OllamaModel.pull_model(model_name)
+
+    if success:
+        console.print(f"\n[green]✓ 模型 {model_name} 拉取成功[/green]")
+        console.print("[dim]使用 [green]omc model local status[/dim] 查看已安装模型[/dim]")
+    else:
+        console.print("\n[red]✗ 拉取失败[/red]")
+        console.print("\n[yellow]请确保：[/yellow]")
+        console.print("  1. Ollama 已安装并运行：ollama serve")
+        console.print("  2. 模型名称正确：https://ollama.ai/library")
+
+
+@local_app.command("run")
+def local_run_ollama(
+    model_name: str = typer.Argument("qwen2:7b", help="默认模型"),
+    port: int = typer.Option(11434, "--port", "-p", help="端口"),
+):
+    """
+    启动 Ollama 服务（如果未运行）
+
+    示例:
+        omc model local run
+        omc model local run --port 11435
+    """
+    import subprocess
+
+    from src.models.ollama import OllamaModel
+
+    if OllamaModel.is_available():
+        console.print("[green]✓ Ollama 已在运行[/green]")
+        return
+
+    console.print("[cyan]启动 Ollama 服务...[/cyan]")
+
+    try:
+        subprocess.Popen(
+            ["ollama", "serve"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        console.print(f"[green]✓ Ollama 已启动 (端口 {port})[/green]")
+        console.print("[dim]默认模型:[/dim] " + model_name)
+    except FileNotFoundError:
+        console.print("[red]✗ Ollama 未安装[/red]")
+        console.print("\n[yellow]请先安装 Ollama：[/yellow]")
+        console.print("[green]  https://ollama.ai/[/green]")
+
+
+@local_app.command("info")
+def local_model_info(
+    model_name: str = typer.Argument(..., help="模型名称"),
+):
+    """
+    显示模型详细信息
+
+    示例:
+        omc model local info qwen2:7b
+    """
+    from src.models.ollama import OLLAMA_MODELS
+
+    # 查找模型描述
+    desc = "开源大语言模型"
+    tier = "medium"
+
+    for t, models in OLLAMA_MODELS.items():
+        for m in models:
+            if m["name"] == model_name:
+                desc = m["desc"]
+                tier = t.value
+                break
+
+    console.print(
+        Panel.fit(
+            f"[bold cyan]{model_name}[/bold cyan]\n\n"
+            f"[dim]描述:[/dim] {desc}\n"
+            f"[dim]层级:[/dim] {tier}\n\n"
+            f"[dim]使用方法:[/dim]\n"
+            f"  1. 拉取模型: [green]omc model local pull {model_name}[/green]\n"
+            f"  2. 设为默认: [green]export OLLAMA_MODEL={model_name}[/green]",
+            title="模型信息",
+            border_style="cyan",
+        )
+    )
+
+
+@local_app.command("chat")
+def local_chat_model(
+    model_name: str = typer.Argument("qwen2:7b", help="模型名称"),
+    system: str = typer.Option(None, "--system", "-s", help="系统提示词"),
+    temperature: float = typer.Option(0.7, "--temp", "-t", help="温度参数"),
+    no_stream: bool = typer.Option(False, "--no-stream", help="禁用流式输出"),
+):
+    """
+    与本地模型聊天（交互式）
+
+    示例:
+        omc model local chat
+        omc model local chat llama3:8b
+        omc model local chat qwen2:7b --system "你是Python专家"
+    """
+    import asyncio
+    import os
+
+    from src.models.base import Message
+    from src.models.ollama import OLLAMA_DEFAULT_URL, OllamaModel
+
+    base_url = os.getenv("OLLAMA_BASE_URL", OLLAMA_DEFAULT_URL)
+
+    # 检查服务状态
+    console.print(f"[cyan]连接 Ollama 服务 ({base_url})...[/cyan]")
+    if not OllamaModel.is_available(base_url):
+        console.print("[red]✗ Ollama 服务未运行[/red]")
+        console.print("\n[yellow]请先启动 Ollama：[/yellow]")
+        console.print("[green]  ollama serve[/green]")
+        raise typer.Exit(1)
+
+    # 检查模型是否存在
+    models = OllamaModel.list_models(base_url)
+    model_names = {m.get("name", "").split(":")[0] for m in models}
+    full_names = {m.get("name", "") for m in models}
+
+    # 尝试精确匹配和前缀匹配
+    target_model = None
+    if model_name in full_names:
+        target_model = model_name
+    elif model_name.split(":")[0] in model_names:
+        # 用户输入了简短名称（如 qwen2），找到完整名称
+        for m in models:
+            name = m.get("name", "")
+            if name.startswith(model_name.split(":")[0]):
+                target_model = name
+                break
+
+    if not target_model:
+        console.print(f"[red]✗ 模型 {model_name} 未安装[/red]")
+        console.print("\n[yellow]可用模型：[/yellow]")
+        for m in models[:10]:
+            console.print(f"  • {m.get('name', 'unknown')}")
+        console.print(f"\n[dim]拉取模型: omc model local pull {model_name}[/dim]")
+        raise typer.Exit(1)
+
+    console.print(f"[green]✓ 已连接模型: {target_model}[/green]")
+    console.print("[dim]输入 /exit 或 /quit 退出，/clear 清空历史[/dim]\n")
+
+    # 初始化模型
+    from src.models.base import ModelConfig
+
+    config = ModelConfig(api_key="", base_url=base_url)
+    model = OllamaModel(config, model_name=target_model)
+
+    # 聊天历史
+    messages: list[Message] = []
+    if system:
+        messages.append(Message(role="system", content=system))
+
+    # 交互循环
+    console.print("[bold cyan]💬 开始聊天[/bold cyan]\n")
+    while True:
+        try:
+            # 读取用户输入
+            user_input = console.input("[bold green]You:[/bold green] ").strip()
+
+            if not user_input:
+                continue
+
+            # 命令处理
+            if user_input in ("/exit", "/quit", "/q"):
+                console.print("\n[dim]退出聊天[/dim]")
+                break
+            elif user_input == "/clear":
+                messages = [m for m in messages if m.role == "system"]
+                console.print("[dim]已清空对话历史[/dim]\n")
+                continue
+            elif user_input == "/help":
+                console.print(
+                    "\n[dim]命令列表：[/dim]\n"
+                    "  /exit, /quit  - 退出聊天\n"
+                    "  /clear        - 清空历史\n"
+                    "  /help         - 显示帮助\n"
+                )
+                continue
+
+            # 添加用户消息
+            messages.append(Message(role="user", content=user_input))
+
+            # 调用模型
+            console.print("[bold blue]Assistant:[/bold blue] ", end="")
+
+            if no_stream:
+                # 非流式
+                response = asyncio.run(
+                    model.complete(messages, temperature=temperature)
+                )
+                console.print(response.content)
+                messages.append(Message(role="assistant", content=response.content))
+            else:
+                # 流式
+                async def stream_chat():
+                    full_response = ""
+                    async for chunk in model.stream(messages, temperature=temperature):
+                        full_response += chunk
+                        console.print(chunk, end="")
+                    console.print()  # 换行
+                    return full_response
+
+                response_text = asyncio.run(stream_chat())
+                messages.append(Message(role="assistant", content=response_text))
+
+            console.print()  # 空行
+
+        except KeyboardInterrupt:
+            console.print("\n[dim]中断，输入 /exit 退出[/dim]\n")
+            continue
+        except Exception as e:
+            console.print(f"\n[red]错误: {e}[/red]\n")
+            # 移除失败的用户消息
+            if messages and messages[-1].role == "user":
+                messages.pop()
+
+
+# 注册 local 子命令到主 app
+app.add_typer(local_app, name="local")
 
 # 配置文件路径
 CONFIG_DIR = Path.home() / ".omc"
@@ -54,6 +456,9 @@ CONFIG_FILE = CONFIG_DIR / "config.json"
 # Catwalk 模型仓库目录（项目内嵌 + 用户扩展）
 CATWALK_DIR = Path(__file__).parent.parent / "models"
 USER_MODELS_DIR = Path.home() / ".omc" / "models"
+
+# 分享配置存储路径
+SHARED_MODELS_DIR = Path.home() / ".oh-my-coder" / "shared_models"
 
 # 内置模型信息（Tier 1 - 免费/低成本）
 SUPPORTED_MODELS = {
@@ -116,7 +521,7 @@ def _get_current_api_key(model_id: str) -> Optional[str]:
     """获取当前模型的 API Key（从环境变量推断）"""
     key_map = {
         "deepseek": "DEEPSEEK_API_KEY",
-        "glm": "ZHIPU_API_KEY",
+        "glm": "ZHIPUAI_API_KEY",
         "wenxin": "ERNIE_API_KEY",
         "tongyi": "DASHSCOPE_API_KEY",
         "minimax": "MINIMAX_API_KEY",
@@ -139,6 +544,256 @@ def _tier_style(tier: str) -> str:
     return {"free": "green", "low": "cyan", "medium": "yellow", "high": "red"}.get(
         tier, "white"
     )
+
+
+# =============================================================================
+# 分享配置工具函数（from cli_models.py）
+# =============================================================================
+
+
+def _ensure_shared_dir() -> None:
+    """确保分享目录存在"""
+    SHARED_MODELS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _list_shared_configs() -> list[dict]:
+    """列出所有已分享的配置"""
+    configs = []
+    if not SHARED_MODELS_DIR.exists():
+        return configs
+
+    for json_file in sorted(SHARED_MODELS_DIR.glob("*.json")):
+        try:
+            with open(json_file, encoding="utf-8") as f:
+                data = json.load(f)
+                data["_file"] = json_file.name
+                configs.append(data)
+        except Exception:
+            continue
+
+    return configs
+
+
+def _get_author_name() -> str:
+    """获取作者名称（优先环境变量，其次 git config）"""
+    # 1. 环境变量
+    author = os.getenv("OMC_AUTHOR_NAME")
+    if author:
+        return author
+
+    # 2. git config
+    try:
+        result = subprocess.run(
+            ["git", "config", "--get", "user.name"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+    except Exception:
+        pass
+
+    # 3. 默认
+    return "Anonymous"
+
+
+# =============================================================================
+# 模型推荐数据与函数（from cli_models_recommend.py）
+# =============================================================================
+
+RECOMMENDATIONS: dict[str, list[dict]] = {
+    "coding": [
+        {
+            "model": "deepseek-chat",
+            "provider": "DeepSeek",
+            "reason": "代码生成与补全能力强，支持 128K 上下文",
+            "free_quota": "500万 tokens/月",
+        },
+        {
+            "model": "qwen2.5-coder-32b-instruct",
+            "provider": "通义千问",
+            "reason": "专为代码场景优化，多语言编程表现出色",
+            "free_quota": "500万 tokens/月",
+        },
+        {
+            "model": "glm-4-flash",
+            "provider": "智谱 AI",
+            "reason": "代码理解与生成速度快，零成本起步",
+            "free_quota": "免费无限量",
+        },
+    ],
+    "reasoning": [
+        {
+            "model": "qwen3-235b-a22b",
+            "provider": "通义千问",
+            "reason": "MoE 架构推理出色，思维链完整透明",
+            "free_quota": "500万 tokens/月",
+        },
+        {
+            "model": "glm-4-plus",
+            "provider": "智谱 AI",
+            "reason": "复杂推理与知识问答表现优异",
+            "free_quota": "赠送额度",
+        },
+    ],
+    "creative": [
+        {
+            "model": "qwen-max",
+            "provider": "通义千问",
+            "reason": "创意写作与多风格文本生成能力突出",
+            "free_quota": "500万 tokens/月",
+        },
+        {
+            "model": "deepseek-chat",
+            "provider": "DeepSeek",
+            "reason": "长文本创作流畅，中文表达自然",
+            "free_quota": "500万 tokens/月",
+        },
+        {
+            "model": "glm-4-flash",
+            "provider": "智谱 AI",
+            "reason": "快速生成创意内容，零成本迭代",
+            "free_quota": "免费无限量",
+        },
+    ],
+    "fast": [
+        {
+            "model": "glm-4-flash",
+            "provider": "智谱 AI",
+            "reason": "响应速度极快，适合高频调用场景",
+            "free_quota": "免费无限量",
+        },
+        {
+            "model": "deepseek-chat",
+            "provider": "DeepSeek",
+            "reason": "首 token 延迟低，吞吐量大",
+            "free_quota": "500万 tokens/月",
+        },
+        {
+            "model": "qwen2.5-7b-instruct",
+            "provider": "通义千问",
+            "reason": "小模型极速推理，适合简单任务",
+            "free_quota": "500万 tokens/月",
+        },
+    ],
+    "chat": [
+        {
+            "model": "glm-4-flash",
+            "provider": "智谱 AI",
+            "reason": "日常对话流畅自然，完全免费",
+            "free_quota": "免费无限量",
+        },
+        {
+            "model": "deepseek-chat",
+            "provider": "DeepSeek",
+            "reason": "对话连贯性好，知识面广",
+            "free_quota": "500万 tokens/月",
+        },
+        {
+            "model": "qwen-turbo",
+            "provider": "通义千问",
+            "reason": "轻量对话模型，响应快成本低",
+            "free_quota": "500万 tokens/月",
+        },
+    ],
+}
+
+TASK_ALIASES: dict[str, str] = {
+    "code": "coding",
+    "写代码": "coding",
+    "编程": "coding",
+    "推理": "reasoning",
+    "逻辑": "reasoning",
+    "创意": "creative",
+    "写作": "creative",
+    "快": "fast",
+    "速度": "fast",
+    "聊天": "chat",
+    "对话": "chat",
+}
+
+VALID_TASKS = list(RECOMMENDATIONS.keys())
+
+
+def _resolve_task(task: str) -> str:
+    """解析任务类型（支持别名）"""
+    task_lower = task.lower().strip()
+    if task_lower in VALID_TASKS:
+        return task_lower
+    if task_lower in TASK_ALIASES:
+        return TASK_ALIASES[task_lower]
+    return task_lower
+
+
+def _show_all_recommendations() -> None:
+    """显示所有类型的推荐表"""
+    console.print()
+    console.print(
+        Panel.fit(
+            "[bold cyan]🏆 模型精选推荐[/bold cyan]  — 免费模型，按场景优选",
+            border_style="cyan",
+        )
+    )
+    console.print()
+
+    for task_type, models in RECOMMENDATIONS.items():
+        table = Table(
+            title=f"📦 {task_type.upper()}",
+            show_lines=False,
+            title_style="bold yellow",
+            expand=True,
+        )
+        table.add_column("模型", style="cyan", no_wrap=True)
+        table.add_column("提供商", style="blue")
+        table.add_column("推荐理由", style="white", no_wrap=False)
+        table.add_column("免费额度", style="green")
+
+        for m in models:
+            table.add_row(m["model"], m["provider"], m["reason"], m["free_quota"])
+
+        console.print(table)
+        console.print()
+
+    console.print(
+        "[dim]💡 使用 [cyan]omc model recommend --task <type>[/cyan] 查看特定类型推荐[/dim]"
+    )
+    console.print(f"[dim]   可用类型: {', '.join(VALID_TASKS)}[/dim]")
+    console.print()
+
+
+def _show_task_recommendation(task: str) -> None:
+    """显示特定任务类型的推荐"""
+    resolved = _resolve_task(task)
+
+    if resolved not in RECOMMENDATIONS:
+        console.print(f"[red]✗ 未知任务类型: {task}[/red]")
+        console.print(f"[dim]可用类型: {', '.join(VALID_TASKS)}[/dim]")
+        raise typer.Exit(1)
+
+    models = RECOMMENDATIONS[resolved]
+    label = resolved.upper()
+
+    console.print()
+    console.print(
+        Panel.fit(
+            f"[bold cyan]🏆 {label} 场景推荐[/bold cyan]",
+            border_style="cyan",
+        )
+    )
+    console.print()
+
+    table = Table(show_lines=False, expand=True)
+    table.add_column("模型", style="cyan", no_wrap=True)
+    table.add_column("提供商", style="blue")
+    table.add_column("推荐理由", style="white", no_wrap=False)
+    table.add_column("免费额度", style="green")
+
+    for m in models:
+        table.add_row(m["model"], m["provider"], m["reason"], m["free_quota"])
+
+    console.print(table)
+    console.print()
 
 
 # =============================================================================
@@ -238,7 +893,7 @@ BUILTIN_CATWALK_MODELS: list[dict[str, Any]] = [
     {
         "name": "GLM-4.7-Flash",
         "provider": "glm",
-        "api_key_env": "ZHIPU_API_KEY",
+        "api_key_env": "ZHIPUAI_API_KEY",
         "endpoint": "https://open.bigmodel.cn/api/paas/v4",
         "model": "glm-4-flash",
         "tier": "free",
@@ -393,7 +1048,7 @@ BUILTIN_CATWALK_MODELS: list[dict[str, Any]] = [
 
 
 # =============================================================================
-# 命令实现
+# 命令实现 - 原有命令
 # =============================================================================
 
 
@@ -1022,12 +1677,353 @@ def sync_models(
     console.print(f"[dim]缓存文件: {discovery.CACHE_FILE}[/dim]")
 
 
-# 别名：支持 omc model switch 和 omc modelswitch
+# =============================================================================
+# 命令实现 - 从 cli_models_recommend.py 合并
+# =============================================================================
+
+
+@app.command("recommend")
+def recommend_model(
+    task: str = typer.Option(
+        None, "--task", "-t", help="任务类型: coding/reasoning/creative/fast/chat"
+    ),
+) -> None:
+    """模型精选推荐 — 按场景推荐免费模型
+
+    示例:
+        omc model recommend
+        omc model recommend --task coding
+        omc model recommend --task fast
+    """
+    if task:
+        _show_task_recommendation(task)
+    else:
+        _show_all_recommendations()
+
+
+# =============================================================================
+# 命令实现 - 从 cli_models.py 合并
+# =============================================================================
+
+
+@app.command("share")
+def share_model(
+    name: str = typer.Option(None, "--name", "-n", help="模型配置名称"),
+    provider: str = typer.Option(
+        None, "--provider", "-p", help="提供商（如 deepseek, glm）"
+    ),
+    base_url: str = typer.Option(None, "--url", "-u", help="API Base URL"),
+    model: str = typer.Option(None, "--model", "-m", help="模型 ID"),
+    description: str = typer.Option(None, "--desc", "-d", help="使用说明/描述"),
+    author: str = typer.Option(None, "--author", "-a", help="作者名称"),
+    interactive: bool = typer.Option(
+        True, "--interactive/--no-interactive", help="交互式输入"
+    ),
+) -> None:
+    """分享模型配置到社区目录
+
+    示例:
+        omc model share
+        omc model share --name "My DeepSeek" --provider deepseek --url https://api.deepseek.com --model deepseek-chat
+    """
+    _ensure_shared_dir()
+
+    console.print()
+    console.print(
+        Panel.fit(
+            "[bold cyan]📤 分享模型配置[/bold cyan]",
+            border_style="cyan",
+        )
+    )
+    console.print()
+
+    # 交互式输入
+    if interactive and not all([name, provider, base_url, model]):
+        console.print("[dim]请输入模型配置信息（Ctrl+C 取消）:[/dim]")
+        console.print()
+
+        if not name:
+            name = Prompt.ask("[bold]配置名称[/]", default="My Model Config")
+
+        if not provider:
+            provider = Prompt.ask(
+                "[bold]提供商[/]",
+                default="deepseek",
+            )
+
+        if not model:
+            model = Prompt.ask(
+                "[bold]模型 ID[/]",
+                default="deepseek-chat",
+            )
+
+        if not base_url:
+            base_url = Prompt.ask(
+                "[bold]API Base URL[/]",
+                default="https://api.deepseek.com/v1",
+            )
+
+        if not description:
+            description = Prompt.ask(
+                "[bold]描述/使用说明[/]",
+                default="",
+            )
+
+    # 验证必填字段
+    if not all([name, provider, base_url, model]):
+        console.print("[red]✗ 缺少必填参数: name, provider, base_url, model[/red]")
+        raise typer.Exit(1)
+
+    # 作者
+    if not author:
+        author = _get_author_name()
+
+    # 构建配置
+    config_id = str(uuid.uuid4())[:8]
+    config = {
+        "id": config_id,
+        "name": name,
+        "provider": provider,
+        "base_url": base_url,
+        "model": model,
+        "description": description or "",
+        "author": author,
+        "created_at": datetime.now().isoformat(),
+        "version": "1.0",
+    }
+
+    # 确认
+    console.print()
+    console.print("[dim]配置预览:[/dim]")
+    console.print(f"  [cyan]名称:[/] {config['name']}")
+    console.print(f"  [cyan]提供商:[/] {config['provider']}")
+    console.print(f"  [cyan]模型 ID:[/] {config['model']}")
+    console.print(f"  [cyan]API URL:[/] {config['base_url']}")
+    console.print(f"  [cyan]作者:[/] {config['author']}")
+    console.print()
+
+    if interactive:
+        if not Confirm.ask("[bold]确认分享此配置？[/]", default=True):
+            console.print("[yellow]已取消[/yellow]")
+            return
+
+    # 保存
+    filename = f"{config_id}-{provider}-{model.replace('/', '-')}.json"
+    filepath = SHARED_MODELS_DIR / filename
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(config, f, ensure_ascii=False, indent=2)
+
+    console.print()
+    console.print("[green]✓ 已分享模型配置[/green]")
+    console.print(f"[dim]保存路径: {filepath}[/dim]")
+    console.print()
+    console.print(
+        "[dim]💡 提示: 可通过 [cyan]omc model browse[/cyan] 查看社区配置[/dim]"
+    )
+
+
+@app.command("browse")
+def browse_models(
+    provider: str = typer.Option(None, "--provider", "-p", help="按提供商过滤"),
+    author: str = typer.Option(None, "--author", "-a", help="按作者过滤"),
+    search: str = typer.Option(None, "--search", "-s", help="搜索关键词"),
+    limit: int = typer.Option(20, "--limit", "-l", help="显示数量限制"),
+) -> None:
+    """浏览社区分享的模型配置
+
+    示例:
+        omc model browse
+        omc model browse --provider deepseek
+        omc model browse --search "免费"
+    """
+    _ensure_shared_dir()
+    configs = _list_shared_configs()
+
+    if not configs:
+        console.print()
+        console.print("[yellow]暂无分享的模型配置[/yellow]")
+        console.print()
+        console.print("[dim]💡 使用 [cyan]omc model share[/cyan] 分享你的配置[/dim]")
+        return
+
+    # 过滤
+    if provider:
+        configs = [c for c in configs if c.get("provider") == provider]
+    if author:
+        configs = [c for c in configs if author.lower() in c.get("author", "").lower()]
+    if search:
+        q = search.lower()
+        configs = [
+            c
+            for c in configs
+            if q in c.get("name", "").lower()
+            or q in c.get("description", "").lower()
+            or q in c.get("model", "").lower()
+        ]
+
+    # 限制数量
+    configs = configs[:limit]
+
+    # 显示
+    console.print()
+    console.print(
+        Panel.fit(
+            f"[bold cyan]📚 社区模型配置[/bold cyan] — 共 {len(configs)} 个",
+            border_style="cyan",
+        )
+    )
+    console.print()
+
+    table = Table(show_lines=True)
+    table.add_column("ID", style="dim", width=8)
+    table.add_column("名称", style="cyan", no_wrap=False)
+    table.add_column("提供商", style="blue")
+    table.add_column("模型", style="green")
+    table.add_column("作者", style="magenta")
+    table.add_column("描述", style="dim", no_wrap=False)
+
+    for cfg in configs:
+        table.add_row(
+            cfg.get("id", "-")[:8],
+            cfg.get("name", "-"),
+            cfg.get("provider", "-"),
+            cfg.get("model", "-"),
+            cfg.get("author", "-"),
+            cfg.get("description", "")[:50] or "-",
+        )
+
+    console.print(table)
+    console.print()
+    console.print(f"[dim]配置目录: {SHARED_MODELS_DIR}[/dim]")
+    console.print("[dim]💡 使用 [cyan]omc model show <id>[/cyan] 查看详情[/dim]")
+
+
+@app.command("show")
+def show_shared_model(
+    config_id: str = typer.Argument(..., help="配置 ID（前 8 位）"),
+    export: bool = typer.Option(False, "--export", "-e", help="导出为 JSON"),
+) -> None:
+    """查看模型配置详情
+
+    示例:
+        omc model show abc12345
+        omc model show abc12345 --export
+    """
+    configs = _list_shared_configs()
+
+    # 查找
+    target = None
+    for cfg in configs:
+        if cfg.get("id", "").startswith(config_id):
+            target = cfg
+            break
+
+    if not target:
+        console.print(f"[red]✗ 未找到配置: {config_id}[/red]")
+        raise typer.Exit(1)
+
+    if export:
+        # 移除内部字段
+        output = dict(target)
+        output.pop("_file", None)
+        console.print_json(json.dumps(output, ensure_ascii=False, indent=2))
+        return
+
+    # 详细显示
+    console.print()
+    console.print(
+        Panel.fit(
+            f"[bold cyan]{target.get('name', 'Unknown')}[/bold cyan]",
+            border_style="cyan",
+        )
+    )
+    console.print()
+    console.print(f"  [dim]ID:[/]       {target.get('id', '-')}")
+    console.print(f"  [dim]提供商:[/]   {target.get('provider', '-')}")
+    console.print(f"  [dim]模型 ID:[/]  {target.get('model', '-')}")
+    console.print(f"  [dim]API URL:[/]  {target.get('base_url', '-')}")
+    console.print(f"  [dim]作者:[/]     {target.get('author', '-')}")
+    console.print(f"  [dim]创建时间:[/] {target.get('created_at', '-')}")
+    console.print(f"  [dim]版本:[/]     {target.get('version', '-')}")
+    console.print()
+    if target.get("description"):
+        console.print(f"  [dim]描述:[/] {target['description']}")
+        console.print()
+    console.print(f"  [dim]文件:[/] {target.get('_file', '-')}")
+    console.print()
+
+
+@app.command("shared")
+def list_shared() -> None:
+    """列出本地分享的所有配置
+
+    示例:
+        omc model shared
+    """
+    configs = _list_shared_configs()
+
+    if not configs:
+        console.print("[yellow]暂无分享的配置[/yellow]")
+        return
+
+    console.print()
+    console.print(f"[bold cyan]本地分享的配置 ({len(configs)} 个):[/]")
+    console.print()
+
+    for cfg in configs:
+        console.print(
+            f"  • [cyan]{cfg.get('id', '-')}[/] - {cfg.get('name', '-')} ({cfg.get('provider', '-')})"
+        )
+
+    console.print()
+    console.print(f"[dim]目录: {SHARED_MODELS_DIR}[/dim]")
+
+
+@app.command("remove")
+def remove_shared_model(
+    config_id: str = typer.Argument(..., help="配置 ID"),
+    force: bool = typer.Option(False, "--force", "-f", help="跳过确认"),
+) -> None:
+    """删除已分享的配置
+
+    示例:
+        omc model remove abc12345
+        omc model remove abc12345 --force
+    """
+    configs = _list_shared_configs()
+
+    # 查找
+    target = None
+    for cfg in configs:
+        if cfg.get("id", "").startswith(config_id):
+            target = cfg
+            break
+
+    if not target:
+        console.print(f"[red]✗ 未找到配置: {config_id}[/red]")
+        raise typer.Exit(1)
+
+    filepath = SHARED_MODELS_DIR / target["_file"]
+
+    if not force:
+        console.print(
+            f"[yellow]即将删除:[/] {target.get('name', '-')} ({target.get('id', '-')})"
+        )
+        if not Confirm.ask("[bold]确认删除？[/]", default=False):
+            console.print("[dim]已取消[/dim]")
+            return
+
+    filepath.unlink()
+    console.print(f"[green]✓ 已删除: {target.get('name', '-')}[/green]")
+
+
 @app.callback(invoke_without_command=True)
 def main(ctx: typer.Context) -> None:
-    """默认显示帮助"""
+    """模型管理 - 查看/切换/分享/推荐"""
     if ctx.invoked_subcommand is None:
         console.print(ctx.get_help())
+
 
 
 if __name__ == "__main__":

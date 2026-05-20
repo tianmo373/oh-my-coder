@@ -30,12 +30,9 @@ from .agents.cross_validation import CrossValidationLayer
 from .capabilities import app as cap_app
 from .commands.cli_checkpoint import app as checkpoint_app
 from .commands.cli_commands import app as commands_app
-from .commands.cli_compact import app as compact_app
 from .commands.cli_config_ext import app as config_ext_app
-from .commands.cli_context import context_app
 from .commands.cli_lsp import app as lsp_app
 from .commands.cli_mcp import app as mcp_app
-from .commands.cli_memory import app as memory_app
 from .commands.cli_migrate import app as migrate_app
 from .commands.cli_multiagent import app as multiagent_app
 from .commands.cli_package_manager import app as pkg_app
@@ -45,8 +42,8 @@ from .commands.cli_self_config import app as self_config_app
 from .commands.cli_server import app as server_app
 from .commands.cli_skill import app as skill_app
 from .commands.cli_task import app as task_app
-from .commands.cli_trace import app as trace_app
 from .commands.cli_tui import app as tui_app
+from .commands.cli_usage import app as usage_app
 from .core.orchestrator import Orchestrator
 from .core.router import ModelRouter, RouterConfig
 from .quest import QuestStatus
@@ -65,7 +62,6 @@ app = typer.Typer(
 )
 
 # 注册子命令
-app.add_typer(context_app, name="context")
 app.add_typer(config_ext_app, name="agent-config")
 app.add_typer(task_app, name="task")
 app.add_typer(multiagent_app, name="multiagent")
@@ -75,11 +71,7 @@ app.add_typer(mcp_app, name="mcp")
 app.add_typer(
     skill_app, name="skill", help="Skill 系统 - 内置和自定义 Skill 管理与执行"
 )
-app.add_typer(trace_app, name="trace", help="Trace 执行记录 - 查看 Agent 执行过程")
-app.add_typer(
-    compact_app, name="compact", help="自动压缩统计 - 查看压缩历史和 token 使用情况"
-)
-app.add_typer(memory_app, name="memory", help="分层记忆管理 - 查看核心/精选/完整记忆")
+app.add_typer(usage_app, name="usage", help="用量统计与追踪 - stats/trace/memory")
 app.add_typer(migrate_app, name="migrate", help="记忆迁移 - 从 Claude/Gemini 导入配置")
 app.add_typer(tui_app, name="tui", help="TUI 交互界面 - 简易终端交互")
 app.add_typer(
@@ -99,28 +91,10 @@ try:
 except Exception:
     pass
 
-# 成本优化命令
-try:
-    from .cli_cost import app as cost_app
-
-    app.add_typer(cost_app, name="cost", help="成本优化 - 根据任务推荐最优模型")
-except Exception:
-    pass
-
-# 本地模型命令
-try:
-    from .cli_local_models import app as local_models_app
-
-    app.add_typer(
-        local_models_app, name="local", help="本地模型管理 - Ollama 零成本运行"
-    )
-except Exception:
-    pass
-
 # model 子命令
 from .commands.cli_model import app as model_app  # noqa: E402
 
-app.add_typer(model_app, name="model", help="模型管理 - 查看/切换默认模型")
+app.add_typer(model_app, name="model", help="模型管理 - 查看/切换默认模型，本地 Ollama 支持")
 
 # gateway 子命令（懒导入，避免 gateway 依赖缺失时报错）
 try:
@@ -1252,7 +1226,7 @@ def status():
         "KIMI_API_KEY": "🟢 生产就绪",
         "DOUBAO_API_KEY": "🟢 生产就绪",
         "MINIMAX_API_KEY": "🟡 Beta",
-        "GLM_API_KEY": "🟡 Beta",
+        "ZHIPUAI_API_KEY": "🟡 Beta",
         "TONGYI_API_KEY": "🟡 Beta",
         "WENXIN_API_KEY": "🔴 待完善",
         "HUNYUAN_API_KEY": "🔴 待完善",
@@ -1377,12 +1351,12 @@ def _check_env() -> bool:
         "kimi": "KIMI_API_KEY",
         "doubao": "DOUBAO_API_KEY",
         "minimax": "MINIMAX_API_KEY",
-        "glm": "GLM_API_KEY",
+        "glm": "ZHIPUAI_API_KEY",
         "tongyi": "TONGYI_API_KEY",
         "wenxin": "WENXIN_API_KEY",
         "hunyuan": "HUNYUAN_API_KEY",
         "mimo": "MINIMAX_API_KEY",
-        "glm-4-flash": "GLM_API_KEY",
+        "glm-4-flash": "ZHIPUAI_API_KEY",
         "deepseek-chat": "DEEPSEEK_API_KEY",
     }
     key_var = key_map.get(default_model, "DEEPSEEK_API_KEY")

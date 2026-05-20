@@ -12,6 +12,8 @@ from __future__ import annotations
 
 
 import os
+import re
+import shlex
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -79,41 +81,62 @@ class Sandbox:
         self._resolve_allowed_dirs()
 
     def _resolve_allowed_dirs(self) -> None:
-        """解析并验证 allowed_dirs"""
+        """解析并验证 allowed_dirs，自动将 working_dir 加入允许列表"""
         self._resolved_dirs: list[Path] = []
         for d in self.config.allowed_dirs:
             p = Path(d).expanduser().resolve()
             self._resolved_dirs.append(p)
+
+        # 自动将 working_dir 加入 allowed_dirs（如缺失）
+        working_dir = Path(self.config.working_dir).expanduser().resolve() if self.config.working_dir else Path.home() / ".omc"
+        working_dir = working_dir.resolve()
+
+        if working_dir not in self._resolved_dirs:
+            self._resolved_dirs.append(working_dir)
+            print(f"[Sandbox] 警告: working_dir {working_dir} 不在 allowed_dirs 中，已自动添加")
 
     def validate_path(self, path: str) -> bool:
         """
         验证路径是否在允许范围内
 
         Args:
-            path: 文件路径（可以是相对路径）
+            path: 文件路径（可以是相对路径、包含 ~ 或 $VAR）
 
         Returns:
             True: 路径安全
             False: 路径超出允许范围
         """
+        ok, _ = self.validate_path_with_reason(path)
+        return ok
+
+    def validate_path_with_reason(self, path: str) -> tuple[bool, str]:
+        """
+        验证路径并返回拒绝原因
+
+        Returns:
+            (是否允许, 拒绝原因)
+        """
         try:
-            p = Path(path).expanduser().resolve()
+            # 1. 展开环境变量 ($VAR / %VAR%)
+            expanded = os.path.expandvars(path)
+            # 2. 展开用户目录 (~)
+            p = Path(expanded).expanduser().resolve()
         except Exception:
-            return False
+            return False, f"路径解析失败: {path}"
 
         for allowed in self._resolved_dirs:
             if allowed == Path("/tmp") or str(allowed).startswith("/tmp"):  # nosec B108
                 if str(p).startswith("/tmp") or str(p).startswith(  # nosec B108
                     "/private/tmp"
                 ):  # nosec B108
-                    return True
+                    return True, ""
             try:
                 p.relative_to(allowed)
-                return True
+                return True, ""
             except ValueError:
                 continue
 
-        return False
+        return False, f"路径超出沙箱范围: {path} (解析为: {p})"
 
     def validate_paths(self, paths: list[str]) -> tuple[bool, list[str]]:
         """
@@ -124,36 +147,94 @@ class Sandbox:
         """
         invalid: list[str] = []
         for path in paths:
-            if not self.validate_path(path):
-                invalid.append(path)
+            ok, reason = self.validate_path_with_reason(path)
+            if not ok:
+                invalid.append(f"{path}: {reason}")
         return (len(invalid) == 0, invalid)
+
+    # ── 已知命令的路径参数位置（0-based，命令名本身不计入）───────────
+    # 格式: "cmd": [arg_index, ...]  |  "cmd": "all"（检查所有参数）
+    _PATH_ARG_COMMANDS: dict[str, list[int] | str] = {
+        # 单文件操作
+        "cat": "all",
+        "head": "all",
+        "tail": "all",
+        "less": "all",
+        "more": "all",
+        "file": "all",
+        "stat": "all",
+        # 多文件操作（检查所有参数）
+        "ls": "all",
+        "grep": "all",
+        "find": "all",
+        "wc": "all",
+        "sort": "all",
+        "uniq": "all",
+        # cp/mv: 除最后一个是源文件，最后一个是目标（都检查）
+        "cp": "all",
+        "mv": "all",
+        "ln": "all",
+        # rm: 所有参数都是路径
+        "rm": "all",
+        "rmdir": "all",
+        # 输出重定向类命令的 -o/--output 参数
+        "gcc": [2],   # gcc -o output src.c （简化：检查所有参数）
+        "g++": [2],
+        "tar": "all",
+        "unzip": "all",
+        "git": "all",  # git 命令复杂，简化检查所有参数
+    }
+
+    def _extract_paths_from_command(self, command: str) -> list[str]:
+        """从命令中提取可能路径参数（使用 shlex 解析）"""
+        paths: list[str] = []
+        try:
+            tokens = shlex.split(command)
+        except ValueError:
+            # shlex 解析失败（如未闭合引号），回退到简单分割
+            tokens = command.split()
+
+        if not tokens:
+            return paths
+
+        base = tokens[0]
+
+        # 1. 检查已知命令的路径参数
+        arg_spec = self._PATH_ARG_COMMANDS.get(base)
+        if arg_spec == "all":
+            # 检查所有参数（跳过选项类参数）
+            for tok in tokens[1:]:
+                if not tok.startswith("-") and (
+                    "/" in tok or tok.startswith("~") or tok.startswith(".")
+                ):
+                    paths.append(tok)
+        elif isinstance(arg_spec, list):
+            for idx in arg_spec:
+                if idx + 1 < len(tokens):
+                    paths.append(tokens[idx + 1])
+
+        # 2. 检查 shell 重定向（> >> < 2> &>）
+        redirect_re = re.compile(
+            r"(?:>>|2>|&>|>|<|<\s)\s*(\S+)"
+        )
+        for m in redirect_re.finditer(command):
+            paths.append(m.group(1))
+
+        # 3. 检查 --output / -o 等常见输出参数
+        output_re = re.compile(r"(?:-o|--output)\s+(\S+)")
+        for m in output_re.finditer(command):
+            paths.append(m.group(1))
+
+        return paths
 
     def validate_command(self, command: str) -> tuple[bool, str]:
         """
-        验证命令是否可以在沙箱中执行
+        验证命令的路径参数是否在沙箱允许范围内
 
         Returns:
             (是否允许, 拒绝原因)
         """
-        import re
-
-        path_patterns = [
-            r"-o\s+([^\s]+)",
-            r"--output\s+([^\s]+)",
-            r">\s*([^\s]+)",
-            r"2>\s*([^\s]+)",
-            r"cp\s+([^\s]+)",
-            r"mv\s+([^\s]+)",
-            r"rm\s+([^\s]+)",
-            r"cat\s+([^\s]+)",
-            r"head\s+([^\s]+)",
-            r"tail\s+([^\s]+)",
-        ]
-
-        paths_to_check: list[str] = []
-        for pat in path_patterns:
-            matches = re.findall(pat, command)
-            paths_to_check.extend(matches)
+        paths_to_check = self._extract_paths_from_command(command)
 
         if paths_to_check:
             ok, invalid = self.validate_paths(paths_to_check)
