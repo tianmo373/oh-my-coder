@@ -23,10 +23,21 @@ omc usage 命令 - 用量统计与追踪
     omc usage memory stats     — 查看记忆统计（条数、token 数）
 """
 
+import asyncio
 import json
 import os
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional
+
+# Forward reference for FileNode (defined in cli.py)
+try:
+    from src.commands.cli import FileNode
+except ImportError:
+    # Type checking only
+    from typing import TYPE_CHECKING
+    if TYPE_CHECKING:
+        from src.commands.cli import FileNode
 
 import click
 import typer
@@ -751,11 +762,12 @@ def thought_show(
     ),
 ) -> None:
     """查看思维链"""
+    import tempfile
+
     from src.core.chain_of_thought import (
         ChainOfThoughtRecorder,
         visualize_chain,
     )
-    import tempfile
     recorder = ChainOfThoughtRecorder()
     chain = recorder.get_chain(chain_id)
 

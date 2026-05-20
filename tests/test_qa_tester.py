@@ -1,8 +1,7 @@
 """Tests for QATesterAgent."""
 
-import pytest
+from src.agents.base import AgentStatus
 from src.agents.qa_tester import QATesterAgent
-from src.agents.base import AgentOutput, AgentStatus
 
 
 def test_agent_properties():
@@ -29,7 +28,7 @@ def test_post_process():
     agent = QATesterAgent()
     result = "## 测试结果\n\n| TC-01 | ✅ PASS |"
     output = agent._post_process(result, None)
-    
+
     assert output.status == AgentStatus.COMPLETED
     assert output.result == result
     assert len(output.recommendations) > 0

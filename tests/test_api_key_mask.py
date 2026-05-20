@@ -64,7 +64,7 @@ class TestMaskApiKey:
 
     def test_mask_char_ignored(self):
         """mask_char parameter is defined but not used (bug?).
-        
+
         Actual behavior: mask_char is ignored, always uses '....'
         """
         key = "sk-abc123def456"

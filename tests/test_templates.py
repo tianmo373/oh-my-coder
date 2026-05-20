@@ -2,11 +2,7 @@
 Tests for src/templates/__init__.py
 """
 
-import json
-import tempfile
 from pathlib import Path
-
-import pytest
 
 from src.templates import (
     TemplateCategory,
